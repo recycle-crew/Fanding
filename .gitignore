@@ -1,0 +1,9 @@
+
+# Harness entrypoint symlinks
+/.claude
+/.codex
+/.agents
+/.github
+/CLAUDE.md
+/AGENTS.md
+/GEMINI.md
