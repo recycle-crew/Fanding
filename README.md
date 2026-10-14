@@ -7,6 +7,7 @@
 直接用瀏覽器開啟 [index.html](index.html)，不需要安裝套件或執行建置。
 
 - [規劃文件](index.html)：系統分工、五個功能模組與待確認問題。
+- [程式架構](architecture.html)：React／FastAPI 目錄結構、模組分工、資料流與待確認決策。
 - [系統 Demo](demo.html)：展示登入、廠商維護、HIS 藥品修改、OTC 入出庫／領用與盤點。
 - [畫面規劃板](board.html)：7 個分類、22 個 Frame，可縮放、拖動畫布、逐步示範及直接操作。
 
