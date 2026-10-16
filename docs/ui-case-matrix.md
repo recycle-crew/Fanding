@@ -1,5 +1,37 @@
 # 畫面測試案例清單
 
+## IA_Map 組織與 Redux 遷移
+
+| 需求 | 預期結果與測試來源 | 待驗證 |
+| --- | --- | --- |
+| 前端子專案 | 根目錄 workspace 指令及 frontend 直接指令可建置，frontend/dist 僅一份 HTML；build 與 build-smoke.spec.js | 正式主機部署 |
+| Redux 狀態 | 登入、權限、主檔、傳票、盤點及歷史成本操作保留原行為；沿用各功能 spec | NAS／HIS／後端正式資料 |
+| Redux 完整性 | 全部案例監看不可序列化及 state mutation 訊息，出現即失敗；tests/test-api.cjs | 未列出的真實資料組合 |
+| 路由與頁面分層 | pages 與 router/routes 搬移後，深連結、上一頁、未完成表單保護、iframe、錯誤重試可用；spa.spec.js、react-flows.spec.js、rwd.spec.js | 正式主機 rewrite |
+| 模組 Layout／子頁 | 五個 pages 模組都有 Layout；Demo 切換子頁保留側欄／頂部導覽，手機選單切換後收合，編輯取消回到列表；rwd.spec.js「RWD Demo Layout 承載子頁並保留工作區」 | 正式身分與權限整合 |
+| 架構文件一致 | 畫面與 Markdown 目錄反映 Layout／Home、Redux 與 workspace；四種尺寸檢視目錄截圖及水平捲動；rwd.spec.js「RWD IA_Map 前端組織與 Redux 文件」 | 後端與正式 OTC API 尚為規劃 |
+| Tailwind 全站樣式 | 官方 Vite plugin 編譯主入口 utilities 與頁面 apply；既有全站與功能截圖維持容許值比對，build-smoke 驗證正式產物 | 正式主機部署 |
+| Tailwind RWD 斷點 | 320／390／768／1440px 全站案例，另以「RWD Tailwind 版面斷點兩側」核對 480／481、700／701、800／801、900／901、1000／1001px 的表單、導覽、文件及規劃板，檢查溢出並比較截圖 | 其他未列出的視窗尺寸、實機設備仍未驗收 |
+| 相機切頁清理 | React effect 非同步釋放後串流與 decoder 均停止；barcode-cases.spec.js 的 close／navigate／logout 共 12 次重跑通過，保留使用者可見截圖 | 真實手機鏡頭與掃碼槍 |
+| 列印及 reduced-motion | Tailwind 遷移保留既有規則 | 本輪未另作獨立畫面驗收 |
+| 畫面一致性 | 320／390／768／1440px 的頁面、導覽、表單、視窗及獨立表格捲動與原基準比對；rwd.spec.js | 實機相機與掃碼槍仍未驗收 |
+
+## SPA 遷移對照
+
+| 需求／案例 | 預期畫面與驗證來源 | 尚需驗證 |
+| --- | --- | --- |
+| 單一入口與深層路由 | 正式 dist 僅一份 index.html，四個主要路由及盤點深連結可直接開啟；`build-smoke.spec.js` | 正式主機 rewrite 與實際部署 |
+| 跨頁資料保留 | Demo 新增廠商後切換規劃、架構、規劃板再返回，登入及資料保留且主視窗沒有 document 請求；`spa.spec.js` | 真實 NAS 身分與後端持久化 |
+| 重新整理與舊連結 | 深層路由重新整理保留網址並回到登入，舊 HTML／盤點 hash 轉向新路徑，保留 embed 參數；`spa.spec.js` | 非 Vite 主機的回退設定 |
+| 未完成表單、取消及重試 | 編輯時上一頁被阻擋，表單及目前網址保留，儲存後可繼續；`react-flows.spec.js` | 瀏覽器重新整理／離站仍依 Demo 規則重置，不提供離站資料復原 |
+| 文件錨點 | 跨路由開啟 details 並捲到指定段落，返回需求表列時顯示正確分頁；`spa.spec.js` | 未列出的特殊錨點組合 |
+| 找不到頁面 | 顯示提示及可操作的返回首頁連結；`spa.spec.js`、`rwd.spec.js` | 無 |
+| 載入失敗／重試 | 模擬頁面模組下載失敗，顯示重載按鈕；解除錯誤後可重新載入；`spa.spec.js` | 正式 CDN 更新／離線情境 |
+| 延遲載入 | 等待模組下載時顯示載入狀態，下載完成後顯示實際頁面；`spa.spec.js` | 真實弱網路與離線恢復 |
+| 手機／平板／桌面 | 跨頁切換、上一頁／下一頁及錯誤頁於 320／390／768／1440px 不溢出並比較截圖；既有模組、表單、視窗與表格獨立捲動沿用 `rwd.spec.js` | 實機相機／掃碼槍仍未驗收 |
+
+SPA 新增與有差異的截圖先透過 capture 模式擷取並檢視，再接受指定基準並執行一般比對。頁面測試須先等待實際標題或登入表單，避免將延遲載入中的畫面接受為基準。下方 React 遷移數量為先前紀錄，本次 SPA 執行結果另記於 ui-testing.md。
+
 ## React 重構對照
 
 | 範圍 | 使用者可見結果與測試來源 |
@@ -12,7 +44,7 @@
 | 領用 | 新增不足時不扣庫、成功後可查詢、刪除回復、查無結果；`react-flows.spec.js` |
 | 盤點 | 草稿、表單未完成時路由保護、確認取消、整批鎖定、歷史更正保留原值與目前庫存、直接連結及上一頁；`react-flows.spec.js` |
 | 出入庫、相機、批次、成本 | 沿用原有四組功能測試，初始化改由測試模式入口，仍驗證可見結果及下載；原有對應 spec |
-| build 產物 | 四個入口、錨點、深連結、iframe、XLSX、本機辨識套件、正式版無測試入口；`build-smoke.spec.js` |
+| build 產物 | 單一 HTML、四個主要路由、錨點、深連結、iframe、XLSX、本機辨識套件、正式版無測試入口；`build-smoke.spec.js` |
 
 此表是本次重構的追蹤範圍，並不把下方尚需驗證的實機、NAS／HIS、正式後端或其他未覆蓋邊界標為完成。
 

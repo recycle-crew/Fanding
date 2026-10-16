@@ -17,9 +17,11 @@
 | HIS 扣庫 | 由 HIS 執行 |
 | 本次交付 | 全站 React 展示前端、靜態 build 與瀏覽器驗證 |
 
-目前四個 HTML 入口位於 `frontend/`，頁面與互動已使用 React 元件實作。根目錄 `npm run build` 產出 `dist/`；四個原有頁面網址保留。展示資料透過 Context＋reducer 保存在記憶體，重新整理重置，不是正式登入或後端整合。
+目前 `frontend/index.html` 是唯一 HTML 入口，頁面與互動使用 React 元件及 React Router 實作。根目錄 `npm run build` 產出 `frontend/dist/`，只含一份 HTML；`/`、`/architecture`、`/board`、`/demo` 由前端路由切換。展示資料透過路由上層的 Redux store 保存在記憶體，站內切換保留、重新整理重置，不是正式登入或後端整合。部署時需將非既存檔案／目錄的頁面請求回退到 `/index.html`；目前 base 為網站根路徑 `/`。
 
-目前 `frontend/src/app` 提供入口，`features/planning` 提供文件與流程播放器，`features/demo` 擁有展示領域資料、交易規則及操作頁，`components/ui` 提供表格、篩選、Excel 與視窗。下方依正式業務分區的前後端目錄仍是後續整合的目標，不代表已建立空 API 或實作 FastAPI。
+前端依 IA_Map 的 IA.Client 組織：`src/main.tsx` 掛載 React、Redux Provider 與 Router；`App.tsx` 提供全站外殼與路由保護，`pages` 放頁面，`features` 放功能元件及業務規則，`router/routes` 放模組路由，`store` 使用 Redux Toolkit，`types` 依領域保存型別，`helpers` 放篩選與 Excel 匯出，`styles` 集中樣式，`components/layout` 與 `components/ui` 提供共用介面。`@/` 對應 src。正式 API、NAS／HIS 與後端仍為規劃。
+
+前端套件、Vite、Playwright、tests 與 scripts 均位於 frontend；根目錄透過 npm workspace 轉送原有指令，正式產物為 `frontend/dist/`。Redux `store/index.ts` 組合 store，`store/hooks.ts` 提供有型別的 dispatch／selector，`store/demo.ts` 管理現有展示資料與跨元件操作狀態；頁面已有的密碼輸入、選單與版面等局部狀態仍由元件持有。尚無正式需求的 global／auth slice 不先建立。
 
 ## 2. 系統與部署邊界
 
@@ -44,21 +46,37 @@ Python＋FastAPI
 ## 3. 建議目錄結構
 
 ```text
-fangding/
+Fanding/
+├─ package.json                # npm workspace 指令入口
+├─ package-lock.json           # workspace 依賴鎖定
 ├─ frontend/
 │  ├─ package.json
+│  ├─ index.html               # SPA 唯一 HTML 入口
+│  ├─ vite.config.ts
+│  ├─ playwright.config.js
+│  ├─ tests/                   # 瀏覽器案例與截圖基準
+│  ├─ scripts/                 # 畫面擷取與正式產物驗證
 │  ├─ tsconfig.json
 │  └─ src/
-│     ├─ app/                    # 程式入口、路由、整體版面
-│     ├─ features/               # 依業務分區
-│     │  ├─ auth/
-│     │  ├─ suppliers/
-│     │  ├─ his/
-│     │  ├─ otc/
-│     │  └─ stocktaking/
+│     ├─ main.tsx              # 掛載 React、Redux Provider 與 Router
+│     ├─ App.tsx               # 全站外殼與路由保護
+│     ├─ pages/
+│     │  ├─ Planning/          # Layout.tsx、Home.tsx
+│     │  ├─ Architecture/      # Layout.tsx、Home.tsx
+│     │  ├─ Board/             # Layout.tsx、Home.tsx
+│     │  ├─ Demo/              # Layout.tsx 共用工作區、Home.tsx 頁面流程
+│     │  └─ Error/             # Layout.tsx、NotFound.tsx
+│     ├─ features/             # demo 功能與交易、planning 場景
 │     ├─ components/
-│     │  └─ ui/                  # 跨模組共用的介面元件
-│     └─ api/                    # HTTP 設定與通用錯誤處理
+│     │  ├─ layout/            # 側欄與版面元件
+│     │  └─ ui/                # 表格、篩選表單與視窗
+│     ├─ router/               # index.tsx、routes 分模組路由
+│     ├─ store/                # Redux store、typed hooks、展示 slice
+│     ├─ constants/            # 模組路徑契約
+│     ├─ helpers/              # 庫存篩選與 Excel 匯出
+│     ├─ styles/               # tailwind.css、layout、themes；全站 Tailwind CSS
+│     ├─ types/                # demo、inventory、suppliers、otc、stocktaking
+│     └─ api/server/           # 正式串接時新增，目前未建立
 ├─ backend/
 │  ├─ pyproject.toml
 │  ├─ app/
@@ -104,27 +122,30 @@ fangding/
    └─ architecture.md
 ```
 
-後端 `app/` 與其下所有 Python 套件目錄統一放置 `__init__.py`，內容可為空。文件、靜態資源等非 Python 套件目錄不需要放置。上述目錄是規劃，不要求在沒有實作需求時先建立空目錄。展示前端已採 Vite，套件版本固定於根目錄 package.json 與 package-lock.json；Python 版本及後端套件管理工具仍待確認。
+後端 `app/` 與其下所有 Python 套件目錄統一放置 `__init__.py`，內容可為空。文件、靜態資源等非 Python 套件目錄不需要放置。後端目錄仍為規劃，不要求在沒有實作需求時先建立空目錄。展示前端已採 Vite，套件版本固定於 frontend/package.json 與根目錄 package-lock.json；Python 版本及後端套件管理工具仍待確認。
 
 ### 前端模組
 
 以 OTC 入庫作為責任分配範例：
 
 ```text
-frontend/src/features/otc/
-├─ pages/
-│  └─ ReceiptPage.tsx           # 資料載入、表單狀態、驗證及提交流程
-├─ components/
-│  └─ ReceiptForm.tsx           # 入庫表單介面
-├─ api.ts                      # OTC API 請求及回應邊界
-└─ types.ts                    # OTC 使用的具體型別
+frontend/src/
+├─ pages/Otc/Layout.tsx        # OTC 模組外殼，以 Outlet 承載子頁（規劃）
+├─ pages/Otc/Receipt.tsx        # 正式入庫頁面（規劃）
+├─ features/otc/ReceiptForm.tsx # OTC 專用表單（規劃）
+├─ router/routes/otcRoutes.tsx  # OTC 路由（規劃）
+├─ api/server/otc.ts           # OTC HTTP 請求（規劃）
+└─ types/otc/index.ts          # OTC 領域型別（已建立）
 ```
 
-- `app/` 組合頁面及版面；業務操作留在對應 `features/`。
+- `App.tsx` 承接全站路由保護與載入狀態。每個 `pages/{Module}/` 沿用 IA_Map 的 Layout／Home 慣例，父路由掛載 `Layout.tsx`，由 `<Outlet />` 呈現 Home 或其他子頁；沒有額外外殼的路由模組仍保留 Layout 作為子路由入口。
+- Layout 擁有共用導覽與版面，Home／其他子頁擁有頁面操作流程。Demo 的 Layout 持有登入、側欄、頂部導覽與共用對話框，切換 Demo 模組沿用同一外殼；功能元件及業務規則留在對應 `features/`。
 - 單一頁面的載入、提交與狀態由該頁面擁有；只有形成清楚的共用行為或獨立元件責任時才拆出。
 - `components/ui/` 放跨模組共用元件；OTC 專用表單留在 OTC 模組。
-- `api/` 處理連線及通用錯誤，不包含入庫規則或頁面狀態。
+- `api/server/` 在正式串接時處理 HTTP 請求，不包含入庫規則或頁面狀態。
 - 前端型別按業務模組歸屬；不建立涵蓋所有領域的通用型別雜物檔。
+- 全站樣式由 Tailwind CSS 4 與官方 Vite plugin 編譯。`styles/tailwind.css` 定義 theme 與 RWD 變體；Layout、頁面與共用元件可直接使用 `tw:` utilities，重複語意樣式以 `@reference`／`@apply` 放在 components layer。保留原生表單預設與特殊 CSS 效果，版面調整的執行時數值仍用 style。
+- 全頁支援 320／390／768／1440px；表格在自己的容器水平捲動，手機導覽可開關，表單與視窗依斷點調整。斷點兩側與實際瀏覽器截圖依 `docs/ui-testing.md` 驗證。
 
 ### 後端分層（沿用 IA_Map）
 
@@ -181,7 +202,7 @@ backend/app/
 
 ```text
 ReceiptPage
-  → OTC api.ts
+  → api/server/otc.ts
   → controllers/otc.py
   → services/otc.py
   → repositories/otc.py
@@ -289,7 +310,7 @@ Authorization Code Flow 讓瀏覽器只把短效的一次性 `code` 帶回 Main�
 
 ### 盤點批次期間與操作歷程
 
-盤點分為兩個獨立路由：`/stocktake/history` 只查已結束批次，`/stocktake/current` 只查與操作進行中的週期。靜態 Demo 使用對應的 hash route（`demo.html#/stocktake/history`、`demo.html#/stocktake/current`），並在登入後進入指定頁面。歷史頁不接受掃碼、新建或送出現有批次；高權限更正只在歷史頁執行。正式 API 亦須依批次狀態隔離查詢與寫入，不只依靠前端頁面區分。
+盤點分為兩個獨立路由：`/stocktake/history` 只查已結束批次，`/stocktake/current` 只查與操作進行中的週期。展示 SPA 使用 React Router 路徑 `/demo/stocktake/history`、`/demo/stocktake/current`，並在登入後進入指定頁面。歷史頁不接受掃碼、新建或送出現有批次；高權限更正只在歷史頁執行。正式 API 亦須依批次狀態隔離查詢與寫入，不只依靠前端頁面區分。
 
 已確認：每次盤點是一段從開始到結束的期間，需記錄期間內的操作，不能只保留最終實盤與差異。
 

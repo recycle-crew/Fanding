@@ -1,6 +1,6 @@
 # 庫存管理系統規劃與客戶展示
 
-React＋TypeScript 的庫存管理展示網站，包含 HIS／OTC 功能規劃、假資料操作 Demo，以及畫面規劃與流程示範。共用樣式位於 `frontend/src/app/`，使用系統字型及本機套件資源。
+React＋TypeScript 的庫存管理展示網站，包含 HIS／OTC 功能規劃、假資料操作 Demo，以及畫面規劃與流程示範。共用樣式位於 `frontend/src/styles/`，使用系統字型及本機套件資源。
 
 ## 開啟方式
 
@@ -11,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-開啟終端顯示的網址，首頁為 `/index.html`。四個頁面網址、文件錨點、盤點 hash route 及規劃板展示參數均保留。
+開啟終端顯示的網址，首頁為 `/`。全站為單一 HTML 入口的 React SPA，文件錨點及規劃板展示參數保留；舊 `.html` 連結由前端轉向對應路由。
 
 ```powershell
 npm run typecheck
@@ -19,18 +19,54 @@ npm run build
 npm run preview
 ```
 
-`build` 產出根目錄 `dist/`，把整個目錄部署至靜態網站服務即可展示；HTML 會引用同目錄內的 JavaScript、CSS 與 vendor 資源。`preview` 在 `http://127.0.0.1:4173` 檢查 build 結果。相機仍需要 HTTPS 或 localhost。
+`build` 產出 `frontend/dist/`，其中只有一份 `index.html`，另含 JavaScript、文件與 vendor 資源。部署完整目錄，並將不存在的頁面路徑回退到 `/index.html`，才能直接開啟或重新整理 `/demo/stocktake/history` 等網址；已存在的資源檔案照常提供。此版本部署在網站根路徑 `/`。`preview` 在 `http://127.0.0.1:4173` 檢查 build 結果。相機仍需要 HTTPS 或 localhost。
 
-開發原始碼在 `frontend/src/`：`app` 負責入口與版面，`features/planning` 放規劃文件及流程播放器，`features/demo` 放展示資料 Context／reducer、交易規則及各操作頁。領域型別分別由 `features/inventory`、`suppliers`、`otc`、`stocktaking` 擁有，Demo state 組合這些型別。`components/ui` 共用表格分頁、Excel 匯出、篩選表單和視窗。這次沒有新增後端 API；正式資料連線仍待後續開發。
+Nginx 可使用 `try_files $uri $uri/ /index.html;`；IIS 使用 URL Rewrite，僅在請求不是既存檔案／目錄時 rewrite 到 `/index.html`。主機未設定回退時，直接開深層網址可能由主機回傳 404；Vite dev／preview 已提供 SPA 回退。
+
+前端依 IA_Map 的 IA.Client 目錄分層，使用 React／TypeScript 實作。`frontend/package.json` 管理前端依賴與指令，根目錄透過 npm workspace 轉送原有指令，依賴由根目錄 package-lock.json 鎖定。`@/` 對應 `frontend/src/`。
+
+`frontend` 同時集中 `index.html`、Vite／TypeScript／Playwright 設定、`public`、`scripts`、`tests` 與建置輸出 `dist`。也可進入 frontend 執行同名 npm 指令。瀏覽器報告位於 `frontend/playwright-report/`，失敗產物位於 `frontend/test-results/`。
+
+```text
+frontend/src/
+├─ main.tsx                  # 掛載 React、Provider 與 Router
+├─ App.tsx                   # 全站外殼、樣式與路由保護
+├─ pages/
+│  ├─ Planning/              # Layout.tsx＋Home.tsx
+│  ├─ Architecture/          # Layout.tsx＋Home.tsx
+│  ├─ Board/                 # Layout.tsx＋Home.tsx
+│  ├─ Demo/                  # Layout.tsx＋Home.tsx，共用工作區外殼
+│  └─ Error/                 # Layout.tsx＋NotFound.tsx
+├─ features/                 # demo 交易規則與功能元件、planning 場景
+├─ components/
+│  ├─ layout/                # 側欄等版面元件
+│  └─ ui/                    # 表格、篩選表單、視窗
+├─ router/
+│  ├─ index.tsx              # 建立 Router
+│  └─ routes/                # 分模組路由與舊網址相容
+├─ store/                    # Redux store、typed hooks、展示 slice 與初始資料
+├─ constants/                # 模組路徑契約
+├─ helpers/                  # 庫存篩選、Excel 匯出
+├─ styles/                   # layout 頁面樣式、themes 共用樣式
+└─ types/                    # demo／inventory／suppliers／otc／stocktaking 型別
+```
+
+路由模組沿用 IA_Map 的 Layout／Home 慣例：父路由載入 `Layout.tsx`，透過 `<Outlet />` 呈現 Home 或其他子頁。Layout 負責模組外殼；Home 負責頁面操作流程，功能元件與業務規則由 `features` 擁有。Demo 的登入、側欄、頂部導覽與共用對話框由 Layout 持有，模組切換沿用同一個工作區外殼；Error Layout 僅承載錯誤子頁。狀態與型別分別歸入 `store`、`types`。正式 API 串接時沿用 IA_Map 的 `api/server` 分層，目前尚未建立 API 或正式資料連線。
+
+全站使用 Tailwind CSS 4.3.3 與官方 `@tailwindcss/vite` plugin。`styles/tailwind.css` 統一 theme、字型及 RWD 變體，`main.tsx` 載入編譯後樣式；utility 使用 `tw:` 前綴，避免既有語意 class 撞名。Layout 與元件直接使用 utilities，跨頁語意樣式在 `styles/layout`、`styles/themes` 以 `@reference`／`@apply` 共用，屬於 components layer；utilities layer 可覆寫它們。原生表單與文件預設樣式沿用，不載入 Preflight reset。CSS counter、複合陰影、焦點外框等保留原生 CSS；側欄位置與畫布縮放等執行時數值保留 style。
+
+RWD 變體為 `tw:phone:`（≤480px）、`tw:board:`（≤700px）、`tw:compact:`（≤800px）、`tw:document:`（≤900px）、`tw:narrow:`（≤1000px）。例如 `tw:grid-cols-2 tw:phone:grid-cols-1`，手機表單改為單欄。原有 1100px 篩選表單／卡片斷點仍在對應頁面樣式。瀏覽器測試涵蓋 320／390／768／1440px，另驗證 480、700、800、900、1000px 斷點兩側的表單、導覽與版面。
+
+全域狀態使用 Redux Toolkit 與 React Redux：store/index.ts 組合 store，store/hooks.ts 提供型別化存取，store/demo.ts 管理現有展示資料及跨元件流程。登入表單、選單、相機與版面等局部狀態維持由元件持有。業務操作及更新 callback 在 thunk 執行，送出可序列化的 Immer patches；reducer 只套用資料更新，Redux 的序列化與不可變檢查維持啟用。不建立尚無正式需求的 global／auth slice。
 
 Demo 左側導覽是一個可移動區塊：拖曳頂部「功能導覽」把手移動整條側欄，拖曳右側拉柄調整寬度，按「恢復位置」回到左側預設位置。把手也支援方向鍵移動，拉柄可用左右鍵調整寬度。版面調整只保留在當次頁面，不改動資料或權限。
 
-- `/index.html`：系統分工、功能需求與待確認問題。
-- `/architecture.html`：React／FastAPI 目錄結構、模組分工、資料流與待確認決策。
-- `/demo.html`：展示登入、廠商維護、HIS 藥品修改、OTC 入出庫／領用、成本與盤點。
-- `/board.html`：7 個分類、24 個 Frame，可縮放、拖動畫布、逐步示範及直接操作。
+- `/`：系統分工、功能需求與待確認問題。
+- `/architecture`：React／FastAPI 目錄結構、模組分工、資料流與待確認決策。
+- `/demo`：展示登入、廠商維護、HIS 藥品修改、OTC 入出庫／領用、成本與盤點；功能路徑如 `/demo/vendors`、`/demo/receipt`。
+- `/board`：7 個分類、24 個 Frame，可縮放、拖動畫布、逐步示範及直接操作。
 
-Demo 可使用預填的展示帳號登入；全部資料保留在記憶體中，重新整理即重置。規劃板的互動視窗共用當次假資料，縮圖則是獨立的初始畫面參考。
+Demo 可使用預填的展示帳號登入；登入與業務資料由路由上層的 Provider 保存，站內切換保留，重新整理即重置。規劃板的互動視窗共用該 iframe 當次假資料，縮圖則是獨立的初始畫面參考；iframe 與主視窗資料各自獨立。未完成的編輯表單或確認視窗會阻擋站內切換及上一頁，需先儲存、取消或完成確認。
 
 所有新增／編輯畫面均自動帶入已有值並鎖定，只允許補填空白欄位（數字 0 也視為已有值）。掃描帶入的條碼為唯讀，下拉欄位沒有值時顯示「請選擇」，不自動指定第一筆。狀態不可編輯，右上角以綠色「啟用」或紅色「未啟用」呈現；新資料預設啟用。儲存或取消後返回原列表，保留搜尋、篩選與分頁。新盤點的實盤數量保持空白，儲存草稿後仍可修改，整批確認送出後鎖定並更新假庫存。這些規則為目前 Demo 行為，正式 HIS 可回寫欄位仍待確認。
 
@@ -70,7 +106,7 @@ OTC 新增「歷史平均成本價」頁：依已送出的入庫傳票保存當�
 
 高權限展示：登入頁可選一般／高權限人員，僅模擬權限，正式來源為 NAS LDAP 群組。一般人員只能補空白欄位；高權限可修改既有主檔及領用資料，保留欄位原值、新值、時間及修改人員，料號／內部識別與 NAS 啟用狀態維持原規則。整批盤點送出後仍鎖定，高權限可用「歷史更正」填數量及必填原因；追加獨立更正紀錄，保留原送出數量、時間與期間，不回溯調整目前庫存。正式群組與權限映射、歷史更正對帳及庫存更正流程仍需確認與後端實作。
 
-盤點分為兩個獨立前端路由：`demo.html#/stocktake/history` 只查已結束批次（含月份歷史、盤差、期間操作及高權限更正），`demo.html#/stocktake/current` 只查與操作進行中的週期（開始、人工填寫、確認送出）。各工作區與路由獨立保存所選批次；歷史頁不提供掃碼、開始或送出現有週期。直接開啟連結會先顯示登入，再進入該路由。
+盤點分為兩個獨立前端路由：`/demo/stocktake/history` 只查已結束批次（含月份歷史、盤差、期間操作及高權限更正），`/demo/stocktake/current` 只查與操作進行中的週期（開始、人工填寫、確認送出）。各工作區與路由獨立保存所選批次；歷史頁不提供掃碼、開始或送出現有週期。直接開啟連結會先顯示登入，再進入該路由。
 
 「出庫／耗用」的「最近 OTC 異動」表提供開始／結束時間搜尋及清除條件，可只填單邊時間，包含起訖分鐘；結束早於開始時提示且保留原搜尋結果。依瀏覽器本地時間輸入，以異動的 ISO 時間戳記比對，不解析顯示文字。搜尋只更新此表並重設頁碼，保留未送出的出庫內容；Excel 匯出篩選後全部分頁。其他表格暫不加入時間篩選。
 
@@ -90,6 +126,8 @@ OTC 新增「歷史平均成本價」頁：依已送出的入庫傳票保存當�
 
 每種新增／修改 case 必須加入實際瀏覽器與截圖驗證，流程見 [畫面測試規範](docs/ui-testing.md)。執行 `npm run test:ui`，用 `npm run test:ui:report` 查看報告；相機與掃碼槍模擬測試不代表實機驗收。
 
-全站 RWD 驗證涵蓋 320／390／768／1440px 的規劃頁、架構頁、流程規劃與互動視窗、Demo 全模組與新增／編輯表單；含表格獨立捲動、導覽遮擋及調整尺寸後保留輸入。執行 `npm run test:ui:rwd`；React 版本 45 個 RWD 案例 × 4 種尺寸 = 180 次執行，另保留原有 80 次掃碼流程測試。
+全站 RWD 驗證涵蓋 320／390／768／1440px 的規劃頁、架構頁、流程規劃與互動視窗、Demo 全模組與新增／編輯表單；含表格獨立捲動、導覽遮擋及調整尺寸後保留輸入。執行 `npm run test:ui:rwd`；目前 49 個 RWD 案例 × 4 種尺寸 = 196 次執行，含 Layout、Tailwind 斷點與架構目錄，另保留原有 80 次掃碼流程測試。
 
-2026-10-16 已通過 TypeScript、build、完整 322 次瀏覽器流程／RWD 截圖比對，以及正式 dist 的 8 次瀏覽器檢查；使用 Windows Chromium 156.0.8078.4。案例與實機待驗證範圍見 [案例清單](docs/ui-case-matrix.md)。
+2026-10-16 Layout／Tailwind 驗證：TypeScript、build、格式檢查通過；完整 348 次執行中 346 次通過，2 次相機切頁檢查補上非同步釋放等待後，相關 12 次重跑全部通過。196 次 RWD 與正式 dist 另 8 次全部通過。新增及有差異截圖已先檢視，容許值不變；完整執行與重跑分開記錄於 [驗證紀錄](docs/ui-testing.md)。案例與實機待驗證範圍見 [案例清單](docs/ui-case-matrix.md)。
+
+先前 SPA 階段紀錄：完整 334 次通過，之後補上延遲載入 2 次，以及正式 dist 8 次；此為 Layout／Tailwind 遷移前的分次執行結果。
