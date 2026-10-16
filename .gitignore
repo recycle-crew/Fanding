@@ -7,3 +7,11 @@
 /CLAUDE.md
 /AGENTS.md
 /GEMINI.md
+/node_modules/
+/test-results/
+/playwright-report/
+/dist/
+/frontend/node_modules/
+/react-*.log
+/test-results-react.json
+/ui-review/
