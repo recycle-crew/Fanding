@@ -1,0 +1,485 @@
+@reference "../tailwind.css";
+@layer components {
+  :root {
+    color-scheme: light;
+    --ink: #17364a;
+    --muted: #617c8e;
+    --primary: #0875ad;
+    --sky: #38bdf8;
+    --paper: #f2faff;
+    --line: #dcecf5;
+  }
+  * {
+    @apply tw:box-border;
+  }
+  body {
+    @apply tw:m-0 tw:font-sans tw:text-[var(--ink)] tw:bg-[var(--paper)] tw:leading-[1.6];
+  }
+  [hidden] {
+    @apply tw:hidden!;
+  }
+  a {
+    @apply tw:text-[var(--primary)] tw:underline-offset-[4px];
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  button {
+    @apply tw:cursor-pointer tw:[border:1px_solid_var(--line)] tw:bg-white tw:text-[var(--ink)] tw:rounded-[8px] tw:p-[9px_15px];
+  }
+  button:hover {
+    @apply tw:bg-[#eaf6fd] tw:border-[#94d4f5];
+  }
+  button:disabled {
+    @apply tw:cursor-not-allowed tw:opacity-[0.5];
+  }
+  .primary {
+    @apply tw:bg-[var(--primary)] tw:border-[var(--primary)] tw:text-white;
+  }
+  .primary:hover {
+    @apply tw:bg-[#056391] tw:text-white;
+  }
+  :focus-visible {
+    outline: 3px solid var(--sky);
+    @apply tw:outline-offset-[3px];
+  }
+  input,
+  select,
+  textarea {
+    @apply tw:w-full tw:min-w-0 tw:p-[10px_12px] tw:[border:1px_solid_#c8dce8] tw:rounded-[7px] tw:bg-white tw:text-[var(--ink)];
+  }
+  input:read-only {
+    @apply tw:bg-[#edf4f8];
+  }
+  label {
+    @apply tw:grid tw:gap-[6px] tw:text-[14px] tw:font-[600];
+  }
+  h1,
+  h2,
+  h3,
+  p {
+    @apply tw:mt-0;
+  }
+  h1 {
+    @apply tw:text-[clamp(36px,_4vw,_60px)] tw:leading-[1.25] tw:tracking-[-1px];
+  }
+  h2 {
+    @apply tw:text-[26px] tw:mb-[8px];
+  }
+  h3 {
+    @apply tw:text-[18px];
+  }
+  .muted {
+    @apply tw:text-[var(--muted)];
+  }
+  .small {
+    @apply tw:text-[12px];
+  }
+  .eyebrow {
+    @apply tw:text-[12px] tw:tracking-[2px] tw:text-[var(--primary)] tw:font-[700];
+  }
+  .brand {
+    @apply tw:text-[23px] tw:font-[750] tw:no-underline tw:text-[var(--ink)] tw:whitespace-nowrap;
+  }
+  .brand span {
+    @apply tw:text-[14px] tw:font-[500] tw:ml-[8px];
+  }
+  .demo-banner {
+    @apply tw:bg-[#dff3ff] tw:text-[#0369a1] tw:text-[12px] tw:p-[7px_24px] tw:font-[700] tw:flex tw:justify-between;
+  }
+  .demo-banner span {
+    @apply tw:font-[400];
+  }
+  .login-layout {
+    @apply tw:min-h-[calc(100vh_-_34px)] tw:grid tw:grid-cols-[1.2fr_1fr] tw:gap-[80px] tw:items-center tw:max-w-[1130px] tw:m-auto tw:p-[60px_40px];
+  }
+  .login-story .brand {
+    @apply tw:mb-[70px];
+  }
+  .login-story > p:not(.eyebrow) {
+    @apply tw:text-[var(--muted)];
+  }
+  .login-tags {
+    @apply tw:flex tw:gap-[12px] tw:mt-[32px];
+  }
+  .login-tags span {
+    @apply tw:p-[8px_14px] tw:[border:1px_solid_#bfe4f8] tw:rounded-[30px] tw:text-[13px];
+  }
+  .login-card {
+    @apply tw:p-[40px] tw:bg-white tw:[border:1px_solid_var(--line)] tw:rounded-[18px];
+    box-shadow: 0 12px 50px #0875ad0b;
+  }
+  .login-card label {
+    @apply tw:m-[20px_0];
+  }
+  .login-card .primary {
+    @apply tw:w-full tw:m-[8px_0_16px];
+  }
+  .workspace {
+    @apply tw:grid tw:grid-cols-[228px_minmax(0,_1fr)] tw:min-h-[calc(100vh_-_34px)];
+  }
+  .sidebar {
+    @apply tw:bg-white tw:[border-right:1px_solid_var(--line)] tw:p-[28px_18px];
+  }
+  .sidebar-caption {
+    @apply tw:text-[var(--muted)] tw:text-[12px] tw:m-[8px_10px_30px];
+  }
+  .sidebar .brand {
+    @apply tw:m-[0_10px];
+  }
+  #module-nav {
+    @apply tw:grid tw:gap-[5px];
+  }
+  /* 選取只改視覺顏色，保留相同字重與邊框尺寸，避免窄側欄換行跳動。 */
+  #module-nav button {
+    @apply tw:text-left tw:p-[12px] tw:font-[600] tw:border-transparent tw:bg-transparent;
+  }
+  #module-nav button.active {
+    @apply tw:bg-[#e0f2fe] tw:text-[#0369a1] tw:border-[#c6e8fa];
+  }
+  .nav-group {
+    @apply tw:text-[var(--muted)] tw:text-[11px] tw:tracking-[1px] tw:m-[20px_12px_5px];
+  }
+  .planning-link {
+    @apply tw:block tw:text-[13px] tw:m-[36px_12px_12px];
+  }
+  .sidebar > .small {
+    @apply tw:m-[0_12px];
+  }
+  .topbar {
+    @apply tw:bg-[#ffffffcc] tw:p-[18px_32px] tw:[border-bottom:1px_solid_var(--line)] tw:flex tw:items-center tw:justify-between tw:gap-[12px];
+  }
+  .workspace-label {
+    @apply tw:[border-left:3px_solid_var(--sky)] tw:pl-[12px] tw:font-[600] tw:text-[14px];
+  }
+  .account {
+    @apply tw:flex tw:items-center tw:gap-[14px] tw:text-[12px];
+  }
+  main {
+    @apply tw:p-[32px] tw:max-w-[1500px] tw:m-auto;
+  }
+  .page-heading {
+    @apply tw:flex tw:justify-between tw:items-start tw:gap-[20px] tw:mb-[24px];
+  }
+  .page-heading p {
+    @apply tw:mb-0 tw:text-[var(--muted)] tw:text-[14px];
+  }
+  .tag {
+    @apply tw:inline-block tw:p-[3px_9px] tw:rounded-[20px] tw:text-[12px] tw:bg-[#e0f2fe] tw:text-[#0369a1] tw:whitespace-nowrap;
+  }
+  .tag.off {
+    @apply tw:bg-[#f1f3f5] tw:text-[#7b8790];
+  }
+  .tag.low {
+    @apply tw:bg-[#fff1d9] tw:text-[#986208];
+  }
+  .cards {
+    @apply tw:grid tw:grid-cols-[repeat(4,_minmax(0,_1fr))] tw:gap-[18px] tw:m-[26px_0];
+  }
+  .metric {
+    @apply tw:text-left tw:p-[24px] tw:bg-white tw:[border:1px_solid_var(--line)] tw:rounded-[12px];
+  }
+  .metric span {
+    @apply tw:text-[var(--muted)] tw:text-[13px] tw:block;
+  }
+  .metric strong {
+    @apply tw:block tw:text-[34px] tw:m-[8px_0];
+  }
+  .panel {
+    @apply tw:bg-white tw:[border:1px_solid_var(--line)] tw:rounded-[12px] tw:p-[24px] tw:mb-[20px] tw:min-w-0;
+  }
+  .two-columns {
+    @apply tw:grid tw:grid-cols-[1fr_1fr] tw:gap-[20px];
+  }
+  .toolbar {
+    @apply tw:flex tw:justify-between tw:gap-[16px] tw:mb-[20px] tw:flex-wrap;
+  }
+  .toolbar input {
+    @apply tw:max-w-[380px];
+  }
+  .table-wrap {
+    @apply tw:overflow-x-auto;
+  }
+  table {
+    @apply tw:border-collapse tw:w-full tw:text-left tw:text-[14px] tw:whitespace-nowrap;
+  }
+  th {
+    @apply tw:bg-[#f5faff] tw:font-[600] tw:text-[var(--muted)] tw:text-[12px];
+  }
+  th,
+  td {
+    @apply tw:p-[14px_12px] tw:[border-bottom:1px_solid_#eaf1f6];
+  }
+  td .actions {
+    @apply tw:flex tw:gap-[6px];
+  }
+  td button {
+    @apply tw:p-[5px_10px] tw:text-[12px];
+  }
+  .empty {
+    @apply tw:text-center tw:p-[36px] tw:text-[var(--muted)];
+  }
+  .callout {
+    @apply tw:bg-[#e6f5fd] tw:[border-left:3px_solid_var(--sky)] tw:p-[13px_18px] tw:rounded-[5px] tw:text-[13px] tw:mb-[22px];
+  }
+  .assumption {
+    @apply tw:bg-[#fff6e6] tw:border-[#efb85a] tw:text-[#82591a];
+  }
+  .scan-form {
+    @apply tw:flex tw:items-end tw:gap-[10px] tw:flex-wrap;
+  }
+  .scan-form label {
+    @apply tw:flex-[1] tw:min-w-[180px];
+  }
+  .movement-time-filter {
+    @apply tw:grid tw:grid-cols-[repeat(2,_minmax(0,_1fr))_auto] tw:gap-[12px] tw:items-end tw:mb-[20px];
+  }
+  .movement-time-filter .full {
+    @apply tw:col-[1/-1] tw:m-0;
+  }
+  .movement-time-filter .error:empty {
+    @apply tw:hidden;
+  }
+  .time-filter-actions {
+    @apply tw:flex tw:gap-[8px] tw:flex-wrap;
+  }
+  .time-filter-shortcuts {
+    @apply tw:flex tw:gap-[8px] tw:flex-wrap;
+  }
+  .time-filter-shortcuts button {
+    @apply tw:text-[13px] tw:p-[7px_12px];
+  }
+  .movement-view-tabs {
+    @apply tw:flex tw:gap-[8px] tw:flex-wrap tw:[border-bottom:1px_solid_var(--line)] tw:pb-[12px] tw:mb-[20px];
+  }
+  .movement-view-tabs button[aria-pressed="true"] {
+    @apply tw:bg-[var(--primary)] tw:text-white tw:border-[var(--primary)];
+  }
+  .overview-movement-filter {
+    @apply tw:flex tw:gap-[12px] tw:flex-wrap tw:items-end tw:mb-[12px];
+  }
+  .overview-movement-filter label {
+    @apply tw:flex-[1_1_160px] tw:min-w-0;
+  }
+  .page-heading-actions {
+    @apply tw:flex tw:items-center tw:gap-[12px] tw:flex-wrap;
+  }
+  .low-stock-bell {
+    @apply tw:inline-flex tw:items-center tw:gap-[7px] tw:text-[13px] tw:p-[7px_10px];
+  }
+  .low-stock-count {
+    @apply tw:text-[#b33434] tw:text-[16px] tw:font-[700];
+  }
+  #low-stock-panel {
+    @apply tw:scroll-mt-[20px];
+  }
+  .barcode-camera-panel {
+    @apply tw:bg-[#f3f6f8] tw:[border:1px_solid_var(--line)] tw:rounded-[10px] tw:p-[14px] tw:mt-[16px];
+  }
+  .barcode-camera-panel video {
+    @apply tw:block tw:w-full tw:max-h-[320px] tw:object-contain tw:bg-[#15232e] tw:rounded-[6px];
+  }
+  @media (max-width: 1100px) {
+    .movement-time-filter {
+      @apply tw:grid-cols-[repeat(2,_minmax(0,_1fr))];
+    }
+    .time-filter-actions {
+      @apply tw:col-[1/-1];
+    }
+  }
+  @media (max-width: 480px) {
+    .movement-time-filter {
+      @apply tw:grid-cols-[minmax(0,_1fr)];
+    }
+  }
+  .samples {
+    @apply tw:flex tw:gap-[8px] tw:flex-wrap tw:m-[14px_0_0];
+  }
+  .samples button {
+    @apply tw:text-[12px];
+  }
+  .form-grid {
+    @apply tw:grid tw:grid-cols-[1fr_1fr] tw:gap-[18px];
+  }
+  .form-grid .full {
+    @apply tw:col-[1/-1];
+  }
+  .inline-form {
+    @apply tw:mt-[24px];
+  }
+  .inline-form button {
+    @apply tw:mt-[18px];
+  }
+  .selection {
+    @apply tw:bg-[#f1faff] tw:p-[16px] tw:mt-[20px] tw:rounded-[8px];
+  }
+  .selection strong {
+    @apply tw:block;
+  }
+  .selection p {
+    @apply tw:m-[5px_0_0] tw:text-[13px] tw:text-[var(--muted)];
+  }
+  .error {
+    @apply tw:text-[#b33434] tw:text-[13px] tw:mt-[12px];
+  }
+  .success {
+    @apply tw:text-[#0369a1];
+  }
+  .count-input {
+    @apply tw:w-[110px];
+  }
+  .positive {
+    @apply tw:text-[#08756d];
+  }
+  .negative {
+    @apply tw:text-[#b33434];
+  }
+  dialog {
+    @apply tw:w-[min(620px,_calc(100%_-_32px))] tw:max-h-[90vh] tw:overflow-auto tw:[border:1px_solid_var(--line)] tw:rounded-[14px] tw:p-[28px] tw:text-[var(--ink)];
+  }
+  dialog::backdrop {
+    @apply tw:bg-[#14374b70];
+  }
+  .dialog-heading {
+    @apply tw:flex tw:justify-between tw:items-start tw:gap-[12px] tw:mb-[22px];
+  }
+  .dialog-heading h2 {
+    @apply tw:text-[22px];
+  }
+  .dialog-heading button {
+    @apply tw:p-[4px_10px];
+  }
+  .dialog-actions {
+    @apply tw:flex tw:justify-end tw:gap-[10px] tw:mt-[24px];
+  }
+  #notice {
+    @apply tw:fixed tw:bottom-[24px] tw:right-[24px] tw:max-w-[calc(100%_-_48px)] tw:p-[14px_22px] tw:rounded-[10px] tw:bg-[#17364a] tw:text-white;
+    box-shadow: 0 8px 30px #17364a33;
+    @apply tw:z-[5];
+  }
+  .mobile-menu {
+    @apply tw:hidden;
+  }
+  .embedded .planning-link,
+  .embedded .login-card > a {
+    @apply tw:hidden;
+  }
+  .embedded .login-layout {
+    @apply tw:gap-[30px] tw:p-[30px];
+  }
+  .embedded .login-story .brand {
+    @apply tw:mb-[32px];
+  }
+  .embedded .sidebar {
+    @apply tw:p-[20px_12px];
+  }
+  .embedded .sidebar-caption {
+    @apply tw:mb-[18px];
+  }
+  .embedded .workspace {
+    @apply tw:grid-cols-[195px_minmax(0,_1fr)];
+  }
+  .embedded main {
+    @apply tw:p-[24px];
+  }
+  .embedded .topbar {
+    @apply tw:p-[12px_24px];
+  }
+  .preview-mode:has(dialog[open])::after {
+    content: "";
+    @apply tw:fixed tw:inset-0 tw:bg-[#14374b70] tw:z-[9];
+  }
+  .preview-mode dialog[open] {
+    @apply tw:fixed tw:top-[50%] tw:left-[50%];
+    transform: translate(-50%, -50%);
+    @apply tw:m-0 tw:z-[10];
+  }
+  @media (max-width: 1100px) {
+    .cards {
+      @apply tw:grid-cols-[1fr_1fr];
+    }
+    .two-columns {
+      @apply tw:grid-cols-[1fr];
+    }
+  }
+  @media (max-width: 800px) {
+    .workspace {
+      @apply tw:grid-cols-[minmax(0,_1fr)];
+    }
+    .sidebar {
+      @apply tw:hidden;
+    }
+    .sidebar.open {
+      @apply tw:block;
+    }
+    .mobile-menu {
+      @apply tw:block;
+    }
+    .topbar {
+      @apply tw:p-[14px_20px] tw:flex-wrap;
+    }
+    main {
+      @apply tw:p-[24px_20px];
+    }
+    .login-layout {
+      @apply tw:grid-cols-[1fr] tw:gap-[30px] tw:p-[32px_24px] tw:max-w-[580px];
+    }
+    .login-story .brand {
+      @apply tw:mb-[24px];
+    }
+    .login-story h1 {
+      @apply tw:text-[36px];
+    }
+    .login-tags {
+      @apply tw:hidden;
+    }
+  }
+  @media (max-width: 480px) {
+    .login-card {
+      @apply tw:p-[24px];
+    }
+    .form-grid {
+      @apply tw:grid-cols-[1fr];
+    }
+    .cards {
+      @apply tw:gap-[10px];
+    }
+    .metric {
+      @apply tw:p-[16px];
+    }
+    .metric strong {
+      @apply tw:text-[28px];
+    }
+    .panel {
+      @apply tw:p-[16px];
+    }
+    .page-heading {
+      @apply tw:flex-col;
+    }
+    .account {
+      @apply tw:gap-[8px];
+    }
+    .workspace-label {
+      @apply tw:order-[3] tw:w-full;
+    }
+    .demo-banner {
+      @apply tw:p-[7px_12px];
+    }
+  }
+  @media (max-width: 800px) {
+    .embedded .workspace {
+      @apply tw:grid-cols-[minmax(0,_1fr)];
+    }
+    .embedded main {
+      @apply tw:p-[20px];
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      @apply tw:scroll-auto;
+    }
+  }
+}

@@ -1,0 +1,24 @@
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme) prefix(tw);
+@import "tailwindcss/utilities.css" layer(utilities) prefix(tw);
+
+/* 保留既有原生表單、details 與文件的預設樣式，不載入 Preflight reset。 */
+@source "../";
+
+@theme {
+  --font-sans: "Segoe UI", "Microsoft JhengHei", Arial, sans-serif;
+  --font-mono: Consolas, "Microsoft JhengHei", monospace;
+  --color-ink: #243847;
+  --color-muted: #526775;
+  --color-paper: #f5f7fa;
+  --color-line: #dce3e9;
+  --color-primary: #24688b;
+}
+
+/* 與既有操作斷點一致；tw:compact:* 表示 800px 以下。 */
+/* max-width 由大到小，較窄斷點在兩者同時成立時優先。 */
+@custom-variant narrow (@media (width <= 1000px));
+@custom-variant document (@media (width <= 900px));
+@custom-variant compact (@media (width <= 800px));
+@custom-variant board (@media (width <= 700px));
+@custom-variant phone (@media (width <= 480px));

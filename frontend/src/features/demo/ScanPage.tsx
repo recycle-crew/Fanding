@@ -1,13 +1,15 @@
-import { MovementForm } from "./MovementForm";
-import { FilterForm } from "../../components/ui/FilterForm";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { MovementForm } from "@/features/demo/MovementForm";
+import { FilterForm } from "@/components/ui/FilterForm";
 import { useEffect, useRef } from "react";
-import { useDemo } from "./store";
-import { DataTable } from "../../components/ui/DataTable";
-import { MovementsTable, MovementVoucher } from "./render";
-import { useCamera } from "./useCamera";
-import type { Workspace } from "./types";
+import { executeDemoCommand } from "@/store/demo";
+import { DataTable } from "@/components/ui/DataTable";
+import { MovementsTable, MovementVoucher } from "@/features/demo/render";
+import { useCamera } from "@/features/demo/useCamera";
+import type { Workspace } from "@/types/demo";
 export function ScanPage() {
-  const { state: s, dispatch } = useDemo();
+  const s = useAppSelector((root) => root.demo);
+  const dispatch = useAppDispatch();
   const { activeModule: module, stocktakeWorkspace: workspace } = s;
   const history = module === "stocktake-history";
   const stocktake = module === "stocktake" || history;
@@ -36,19 +38,23 @@ export function ScanPage() {
   const barcode = useRef<HTMLInputElement>(null);
   const camera = useCamera(
     (code) =>
-      dispatch({
-        type: "lookup",
-        barcode: code,
-      }),
+      dispatch(
+        executeDemoCommand({
+          type: "lookup",
+          barcode: code,
+        }),
+      ),
     `${module}:${s.loggedIn}:${Boolean(s.editor)}`,
   );
 
   const action = (action: string, id?: string) =>
-    dispatch({
-      type: "action",
-      action,
-      id,
-    });
+    dispatch(
+      executeDemoCommand({
+        type: "action",
+        action,
+        id,
+      }),
+    );
   useEffect(() => {
     if (
       !stocktake &&
@@ -168,17 +174,19 @@ export function ScanPage() {
               id="stocktake-batch"
               value={batch?.id ?? ""}
               onChange={(e) =>
-                dispatch({
-                  type: "update",
-                  update: (d) => {
-                    (history
-                      ? d.selectedHistoricalBatchIds
-                      : d.selectedStocktakeBatchIds)[workspace] =
-                      e.target.value || null;
-                    d.selectedProductId = null;
-                    d.scanBarcode = "";
-                  },
-                })
+                dispatch(
+                  executeDemoCommand({
+                    type: "update",
+                    update: (d) => {
+                      (history
+                        ? d.selectedHistoricalBatchIds
+                        : d.selectedStocktakeBatchIds)[workspace] =
+                        e.target.value || null;
+                      d.selectedProductId = null;
+                      d.scanBarcode = "";
+                    },
+                  }),
+                )
               }
             >
               <option value="">請選擇批次</option>
@@ -231,26 +239,23 @@ export function ScanPage() {
         {!stocktake && <MovementVoucher />}
         {stocktake && (
           <>
-            <label
-              style={{
-                maxWidth: 220,
-                marginBottom: history ? undefined : 20,
-              }}
-            >
+            <label className={`tw:max-w-[220px] ${history ? "" : "tw:mb-5"}`}>
               {history ? "查閱工作區" : "盤點工作區"}
               <select
                 id="stocktake-workspace"
                 value={workspace}
                 onChange={(e) => {
                   const value = e.target.value as Workspace;
-                  dispatch({
-                    type: "update",
-                    update: (d) => {
-                      d.stocktakeWorkspace = value;
-                      d.selectedProductId = null;
-                      d.scanBarcode = "";
-                    },
-                  });
+                  dispatch(
+                    executeDemoCommand({
+                      type: "update",
+                      update: (d) => {
+                        d.stocktakeWorkspace = value;
+                        d.selectedProductId = null;
+                        d.scanBarcode = "";
+                      },
+                    }),
+                  );
                 }}
               >
                 <option>OTC</option>
@@ -277,12 +282,14 @@ export function ScanPage() {
                   value={s.scanBarcode}
                   onChange={(e) => {
                     const value = e.target.value;
-                    dispatch({
-                      type: "update",
-                      update: (d) => {
-                        d.scanBarcode = value;
-                      },
-                    });
+                    dispatch(
+                      executeDemoCommand({
+                        type: "update",
+                        update: (d) => {
+                          d.scanBarcode = value;
+                        },
+                      }),
+                    );
                   }}
                   placeholder="掃描或輸入條碼後按 Enter"
                   required
@@ -362,11 +369,13 @@ export function ScanPage() {
                 type="button"
                 data-action="add-unknown-barcode"
                 onClick={() =>
-                  dispatch({
-                    type: "open-editor",
-                    kind: "new-receipt",
-                    barcode: s.scanBarcode,
-                  })
+                  dispatch(
+                    executeDemoCommand({
+                      type: "open-editor",
+                      kind: "new-receipt",
+                      barcode: s.scanBarcode,
+                    }),
+                  )
                 }
               >
                 新增品項並加入傳票
@@ -448,21 +457,23 @@ export function ScanPage() {
                       }
                       onChange={(e) => {
                         const checked = e.target.checked;
-                        dispatch({
-                          type: "update",
-                          update: (d) => {
-                            const c = d.stocktakes.find(
-                              (c) => c.id === count.id,
-                            );
-                            if (
-                              c.completed ||
-                              d.activeModule !== "stocktake" ||
-                              batch.endedAt
-                            )
-                              return;
-                            appendConfirmation(d, c.id, checked);
-                          },
-                        });
+                        dispatch(
+                          executeDemoCommand({
+                            type: "update",
+                            update: (d) => {
+                              const c = d.stocktakes.find(
+                                (c) => c.id === count.id,
+                              );
+                              if (
+                                c.completed ||
+                                d.activeModule !== "stocktake" ||
+                                batch.endedAt
+                              )
+                                return;
+                              appendConfirmation(d, c.id, checked);
+                            },
+                          }),
+                        );
                       }}
                     />
                     <span>{count.confirmed ? "已確認" : "未確認"}</span>
@@ -484,11 +495,13 @@ export function ScanPage() {
                         data-action="correct-count"
                         data-id={count.id}
                         onClick={() =>
-                          dispatch({
-                            type: "open-editor",
-                            kind: "stocktake-correction",
-                            id: count.id,
-                          })
+                          dispatch(
+                            executeDemoCommand({
+                              type: "open-editor",
+                              kind: "stocktake-correction",
+                              id: count.id,
+                            }),
+                          )
                         }
                       >
                         歷史更正
@@ -502,11 +515,13 @@ export function ScanPage() {
                         data-action="edit-count"
                         data-id={count.id}
                         onClick={() =>
-                          dispatch({
-                            type: "open-editor",
-                            kind: "stocktake",
-                            id: count.id,
-                          })
+                          dispatch(
+                            executeDemoCommand({
+                              type: "open-editor",
+                              kind: "stocktake",
+                              id: count.id,
+                            }),
+                          )
                         }
                       >
                         {count.actual === null ? "填寫" : "修改草稿"}
@@ -630,13 +645,15 @@ export function ScanPage() {
                   aria-pressed={s.issueMovementView === view}
                   aria-controls="issue-movements-table"
                   onClick={() =>
-                    dispatch({
-                      type: "update",
-                      update: (d) => {
-                        d.issueMovementView = view;
-                        d.pageRevision++;
-                      },
-                    })
+                    dispatch(
+                      executeDemoCommand({
+                        type: "update",
+                        update: (d) => {
+                          d.issueMovementView = view;
+                          d.pageRevision++;
+                        },
+                      }),
+                    )
                   }
                 >
                   {label}
@@ -763,8 +780,8 @@ export function ScanPage() {
     </>
   );
 }
-import { appendBatchOperation } from "./domain";
-import type { DemoState } from "./types";
+import { appendBatchOperation } from "@/features/demo/domain";
+import type { DemoState } from "@/types/demo";
 function appendConfirmation(s: DemoState, id: number, confirmed: boolean) {
   const count = s.stocktakes.find((c) => c.id === id);
   const batch = s.stocktakeBatches.find((b) => b.id === count.batchId);

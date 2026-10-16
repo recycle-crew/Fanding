@@ -1,7 +1,9 @@
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { useEffect, useRef } from "react";
-import { editorFields, useDemo } from "./store";
+import { editorFields, executeDemoCommand } from "@/store/demo";
 export function EditorPage() {
-  const { state: s, dispatch } = useDemo();
+  const s = useAppSelector((root) => root.demo);
+  const dispatch = useAppDispatch();
   const editor = s.editor;
   const root = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -46,15 +48,17 @@ export function EditorPage() {
         : `${id !== null ? "編輯" : "新增"}${kind === "vendors" ? "廠商" : kind === "his" ? "HIS 藥品" : kind === "requisitions" ? "領用資料" : "OTC 品項"}`;
   // 提示僅說明目前限制；料號啟用與修改權限的正式規則仍待使用者確認。
   const readonly = (activation = false) =>
-    dispatch({
-      type: "update",
-      update: (d) => {
-        d.readonlyReason = activation
-          ? "啟用狀態目前不開放修改。"
-          : "此欄位已有值，目前不可編輯；只能補填空白欄位。";
-      },
-    });
-  const close = () => dispatch({ type: "close-editor" });
+    dispatch(
+      executeDemoCommand({
+        type: "update",
+        update: (d) => {
+          d.readonlyReason = activation
+            ? "啟用狀態目前不開放修改。"
+            : "此欄位已有值，目前不可編輯；只能補填空白欄位。";
+        },
+      }),
+    );
+  const close = () => dispatch(executeDemoCommand({ type: "close-editor" }));
   return (
     <main ref={root} id="editor" className="editor-page" tabIndex={-1}>
       <button type="button" data-close className="back-to-list" onClick={close}>
@@ -90,7 +94,7 @@ export function EditorPage() {
         className="panel editor-panel"
         onSubmit={(event) => {
           event.preventDefault();
-          dispatch({ type: "save-editor" });
+          dispatch(executeDemoCommand({ type: "save-editor" }));
         }}
       >
         <p id="editor-field-hint" className="field-hint">
@@ -106,7 +110,10 @@ export function EditorPage() {
           填寫人員：<strong id="editor-filled-by">{s.currentAccount}</strong>
           （登入帳號，自動記錄）
         </p>
-        <div id="editor-fields" className="form-grid">
+        <div
+          id="editor-fields"
+          className="form-grid tw:grid tw:grid-cols-2 tw:gap-[18px] tw:phone:grid-cols-1"
+        >
           {count && (
             <div className="selection full">
               <strong>
@@ -138,12 +145,14 @@ export function EditorPage() {
                 event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
               ) => {
                 const value = event.target.value;
-                dispatch({
-                  type: "update",
-                  update: (d) => {
-                    if (d.editor) d.editor.values[field.name] = value;
-                  },
-                });
+                dispatch(
+                  executeDemoCommand({
+                    type: "update",
+                    update: (d) => {
+                      if (d.editor) d.editor.values[field.name] = value;
+                    },
+                  }),
+                );
               },
             };
             return (

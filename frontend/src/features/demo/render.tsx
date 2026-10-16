@@ -1,15 +1,19 @@
-import { FilterForm } from "../../components/ui/FilterForm";
+import { useAppSelector } from "@/store/hooks";
+import { FilterForm } from "@/components/ui/FilterForm";
 import React from "react";
-import { DataTable } from "../../components/ui/DataTable";
-import { compileInventoryFilter, matchesInventoryFilter } from "./filters";
+import { DataTable } from "@/components/ui/DataTable";
+import {
+  compileInventoryFilter,
+  matchesInventoryFilter,
+} from "@/helpers/inventoryFilter";
 import type {
   DemoState,
   InventoryFilter,
   Product,
   Vendor,
   Requisition,
-} from "./types";
-import { useDemo } from "./store";
+} from "@/types/demo";
+
 type DisplayRecord = {
   id: string | number;
 } & Partial<Omit<Product, "id"> & Omit<Vendor, "id"> & Omit<Requisition, "id">>;
@@ -82,7 +86,7 @@ function renderInventoryIdentityFilters(
   );
 }
 export function MovementsTable() {
-  const { state } = useDemo();
+  const state = useAppSelector((root) => root.demo);
   const {
     hisMedicines,
     otcProducts,
@@ -177,7 +181,7 @@ export function MovementsTable() {
   );
 }
 export function OverviewMovements() {
-  const { state } = useDemo();
+  const state = useAppSelector((root) => root.demo);
   const { hisMedicines, otcProducts, movements, overviewMovementFilter } =
     state;
   if (overviewMovementFilter.date === null) {
@@ -299,7 +303,7 @@ export function ListPage({
   vendorOptions?: boolean;
   highlightedVendor?: string | null;
 }) {
-  const { state } = useDemo();
+  const state = useAppSelector((root) => root.demo);
   const {
     vendors,
     hisMedicines,
@@ -751,7 +755,7 @@ export function ListPage({
 }
 // 歷史成本只採已送出的入庫快照；以整數分累計金額，最後才四捨五入。
 export function HistoricalCostsPage() {
-  const { state } = useDemo();
+  const state = useAppSelector((root) => root.demo);
   const {
     otcProducts,
     canEditExistingData,
@@ -951,7 +955,7 @@ export function HistoricalCostsPage() {
   );
 }
 export function MovementVoucher() {
-  const { state } = useDemo();
+  const state = useAppSelector((root) => root.demo);
   const {
     otcProducts,
     activeModule,

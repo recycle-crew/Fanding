@@ -1,44 +1,31 @@
-import { produce } from "immer";
+import { produceWithPatches } from "immer";
 import { flushSync } from "react-dom";
-import type { Dispatch } from "react";
-import type { DemoState } from "./types";
-import type { Command } from "./store";
-import * as domain from "./domain";
-let currentState: DemoState;
-let currentDispatch: Dispatch<Command>;
+import type { DemoState } from "@/types/demo";
+import type { AppStore } from "@/store";
+import { statePatched } from "@/store/demo";
+import * as domain from "@/features/demo/domain";
 // This module is included only in Vite test mode, never in a production build.
-export function installTestBridge(
-  state: DemoState,
-  dispatch: Dispatch<Command>,
-) {
+export function installTestBridge(store: AppStore) {
   if (import.meta.env.MODE !== "test") return;
-  currentState = state;
-  currentDispatch = dispatch;
   Object.assign(window, {
     __demoTest: {
       async run<T>(
-        operation: (state: DemoState, domain: typeof import("./domain")) => T,
+        operation: (
+          state: DemoState,
+          domain: typeof import("@/features/demo/domain"),
+        ) => T,
       ): Promise<T> {
         // Native dialog close events and React commits may finish after a click resolves.
         await new Promise<void>((resolve) =>
           requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
         );
-        const snapshot = currentState;
+        const snapshot = store.getState().demo;
         let result: T;
-        const next = produce(snapshot, (draft) => {
+        const [, patches] = produceWithPatches(snapshot, (draft) => {
           result = operation(draft, domain);
         });
-        if (next !== snapshot) {
-          currentState = next;
-          flushSync(() =>
-            currentDispatch({
-              type: "update",
-              update: (draft) => {
-                Object.assign(draft, next);
-              },
-            }),
-          );
-        }
+        if (patches.length)
+          flushSync(() => store.dispatch(statePatched(patches)));
         return result;
       },
     },

@@ -1,9 +1,13 @@
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { useEffect, useRef } from "react";
-import { execute, useDemo } from "./store";
-import { planningPages } from "../planning/scenes";
-import { recordInventoryMovement, startStocktakeBatch } from "./domain";
-import type { DemoState, ModuleKey } from "./types";
-import type { SceneRequest, SceneResponse } from "../planning/scenes";
+import { execute, executeDemoCommand } from "@/store/demo";
+import { planningPages } from "@/features/planning/scenes";
+import {
+  recordInventoryMovement,
+  startStocktakeBatch,
+} from "@/features/demo/domain";
+import type { DemoState, ModuleKey } from "@/types/demo";
+import type { SceneRequest, SceneResponse } from "@/features/planning/scenes";
 const scenes = new Set(
   planningPages.flatMap((page) => page.frames.map((frame) => frame.scene)),
 );
@@ -147,7 +151,8 @@ export function presentScene(s: DemoState, scene: string, preview: boolean) {
     s.notice = "目前顯示當次操作資料；切換畫面不會自動儲存或調整庫存。";
 }
 export function usePresentation() {
-  const { state, dispatch } = useDemo();
+  const state = useAppSelector((root) => root.demo);
+  const dispatch = useAppDispatch();
   const current = useRef(state);
   current.current = state;
   useEffect(() => {
@@ -156,10 +161,12 @@ export function usePresentation() {
     const preview = params.get("preview") === "1",
       initial = params.get("scene");
     if (initial)
-      dispatch({
-        type: "update",
-        update: (s) => presentScene(s, initial, preview),
-      });
+      dispatch(
+        executeDemoCommand({
+          type: "update",
+          update: (s) => presentScene(s, initial, preview),
+        }),
+      );
     if (preview) return;
     const respond = (message: SceneResponse) =>
       window.parent.postMessage(message, "*");
@@ -168,18 +175,20 @@ export function usePresentation() {
       const request = event.data;
       if (!request || typeof request !== "object") return;
       if (request.type === "fangding-dismiss-form") {
-        dispatch({
-          type: "update",
-          update: (s) => {
-            s.readonlyReason = "";
-            s.editor = null;
-            s.confirmation = null;
-            if (s.activeModule === "receipt" || s.activeModule === "issue") {
-              s.selectedProductId = null;
-              s.scanBarcode = "";
-            }
-          },
-        });
+        dispatch(
+          executeDemoCommand({
+            type: "update",
+            update: (s) => {
+              s.readonlyReason = "";
+              s.editor = null;
+              s.confirmation = null;
+              if (s.activeModule === "receipt" || s.activeModule === "issue") {
+                s.selectedProductId = null;
+                s.scanBarcode = "";
+              }
+            },
+          }),
+        );
         return;
       }
       if (
@@ -199,10 +208,12 @@ export function usePresentation() {
         });
         return;
       }
-      dispatch({
-        type: "update",
-        update: (s) => presentScene(s, request.scene, false),
-      });
+      dispatch(
+        executeDemoCommand({
+          type: "update",
+          update: (s) => presentScene(s, request.scene, false),
+        }),
+      );
       respond({
         type: "fangding-scene-result",
         requestId: request.requestId,

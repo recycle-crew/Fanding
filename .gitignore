@@ -12,6 +12,10 @@
 /playwright-report/
 /dist/
 /frontend/node_modules/
+/frontend/dist/
+/frontend/test-results/
+/frontend/playwright-report/
+/frontend/ui-review/
 /react-*.log
 /test-results-react.json
 /ui-review/

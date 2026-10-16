@@ -1,0 +1,291 @@
+@reference "../tailwind.css";
+@layer components {
+  :root {
+    --ink: #17364a;
+    --muted: #617c8e;
+    --blue: #0875ad;
+    --line: #dcecf5;
+  }
+  * {
+    @apply tw:box-border;
+  }
+  body {
+    @apply tw:m-0 tw:text-[var(--ink)] tw:bg-[#f4f9fd] tw:font-sans tw:leading-[1.65];
+  }
+  button {
+    font: inherit;
+    @apply tw:text-[var(--ink)] tw:bg-white tw:[border:1px_solid_#cddfeb] tw:rounded-[7px] tw:p-[8px_14px] tw:cursor-pointer;
+  }
+  button:hover {
+    @apply tw:bg-[#e0f2fe];
+  }
+  button:disabled {
+    @apply tw:opacity-[0.45] tw:cursor-default;
+  }
+  .primary {
+    @apply tw:bg-[var(--blue)] tw:text-white tw:border-[var(--blue)];
+  }
+  .primary:hover {
+    @apply tw:bg-[#056391];
+  }
+  a {
+    @apply tw:text-[var(--blue)] tw:underline-offset-[4px];
+  }
+  :focus-visible {
+    outline: 3px solid #38bdf8;
+    @apply tw:outline-offset-[3px];
+  }
+  h1,
+  h2,
+  h3,
+  p {
+    @apply tw:mt-0;
+  }
+  h1 {
+    @apply tw:text-[28px] tw:mb-[6px];
+  }
+  h2 {
+    @apply tw:text-[21px] tw:m-0;
+  }
+  h3 {
+    @apply tw:text-[14px] tw:mb-[7px];
+  }
+  .eyebrow {
+    @apply tw:text-[11px] tw:font-[700] tw:tracking-[1.5px] tw:text-[var(--blue)] tw:mb-[10px];
+  }
+  .board-header {
+    @apply tw:flex tw:justify-between tw:items-center tw:p-[18px_26px] tw:[border-bottom:1px_solid_var(--line)] tw:bg-white tw:gap-[20px];
+  }
+  .brand {
+    @apply tw:text-[22px] tw:font-[750] tw:text-[var(--ink)] tw:no-underline;
+  }
+  .brand span {
+    @apply tw:text-[13px] tw:font-[500] tw:ml-[10px];
+  }
+  .board-header nav {
+    @apply tw:flex tw:gap-[22px] tw:text-[13px];
+  }
+  .board-layout {
+    @apply tw:grid tw:grid-cols-[215px_minmax(0,_1fr)];
+  }
+  .page-sidebar {
+    @apply tw:bg-white tw:[border-right:1px_solid_var(--line)] tw:p-[26px_16px] tw:min-h-[calc(100vh_-_75px)];
+  }
+  .page-sidebar > .eyebrow {
+    @apply tw:ml-[10px];
+  }
+  #page-nav {
+    @apply tw:grid tw:gap-[7px];
+  }
+  #page-nav button {
+    @apply tw:text-left tw:border-transparent tw:p-[11px_12px] tw:text-[14px];
+  }
+  #page-nav button.active {
+    @apply tw:bg-[#e0f2fe] tw:text-[#0369a1] tw:border-[#bfe4f8] tw:font-[700];
+  }
+  #page-nav small {
+    @apply tw:float-right tw:text-[var(--muted)];
+  }
+  .sidebar-note {
+    @apply tw:text-[12px] tw:text-[var(--muted)] tw:m-[30px_10px];
+  }
+  .sidebar-note strong {
+    @apply tw:text-[var(--ink)];
+  }
+  .sidebar-note p {
+    @apply tw:m-[10px_0];
+  }
+  .board-main {
+    @apply tw:min-w-0 tw:p-[28px];
+  }
+  .board-intro {
+    @apply tw:flex tw:justify-between tw:items-center tw:gap-[20px] tw:mb-[22px];
+  }
+  .board-intro p:not(.eyebrow) {
+    @apply tw:text-[var(--muted)] tw:text-[14px] tw:mb-0;
+  }
+  .canvas-toolbar {
+    @apply tw:flex tw:justify-between tw:gap-[12px] tw:items-center tw:bg-white tw:[border:1px_solid_var(--line)] tw:rounded-[10px_10px_0_0] tw:p-[12px_16px] tw:text-[12px];
+  }
+  .canvas-toolbar > div {
+    @apply tw:flex tw:gap-[7px] tw:items-center;
+  }
+  #zoom-label {
+    @apply tw:min-w-[44px] tw:text-center;
+  }
+  #canvas-viewport {
+    @apply tw:h-[calc(100vh_-_315px)] tw:min-h-[430px] tw:overflow-auto tw:[border:1px_solid_var(--line)] tw:bg-[#edf4f9];
+    /* 分開套用邊框覆寫，避免 utility 排序讓畫布多出 1px 上邊框。 */
+    @apply tw:[border-top:0];
+    background-image: radial-gradient(#bdcedc 1px, transparent 1px);
+    background-size: 18px 18px;
+    @apply tw:cursor-grab tw:rounded-[0_0_10px_10px];
+  }
+  #canvas-viewport.dragging {
+    @apply tw:cursor-grabbing tw:select-none;
+  }
+  #canvas-size {
+    @apply tw:relative;
+  }
+  #frame-canvas {
+    @apply tw:absolute tw:left-0 tw:top-0;
+    transform-origin: 0 0;
+    @apply tw:flex tw:items-start tw:gap-[76px] tw:p-[48px];
+  }
+  .screen-frame {
+    @apply tw:w-[820px] tw:shrink-[0] tw:cursor-default tw:relative;
+  }
+  .screen-frame:not(:last-child)::after {
+    content: "→";
+    @apply tw:absolute tw:left-[838px] tw:top-[250px] tw:text-[#5b9ec3] tw:text-[36px];
+  }
+  .frame-heading {
+    @apply tw:flex tw:items-center tw:justify-between tw:gap-[10px] tw:mb-[12px];
+  }
+  .frame-heading h2 {
+    @apply tw:text-[18px];
+  }
+  .frame-heading span {
+    @apply tw:text-[12px] tw:text-[var(--muted)];
+  }
+  .frame-preview {
+    @apply tw:w-[820px] tw:h-[560px] tw:overflow-hidden tw:[border:1px_solid_#bed5e4] tw:rounded-[9px];
+    box-shadow: 0 6px 18px #17364a0a;
+    @apply tw:bg-white;
+  }
+  .frame-preview iframe {
+    @apply tw:[border:0] tw:w-[1180px] tw:h-[806px];
+    transform: scale(0.694915);
+    transform-origin: 0 0;
+    @apply tw:pointer-events-none;
+  }
+  .frame-notes {
+    @apply tw:bg-white tw:[border:1px_solid_var(--line)] tw:rounded-[8px] tw:mt-[14px] tw:p-[16px] tw:text-[13px];
+  }
+  .frame-notes p {
+    @apply tw:m-[6px_0] tw:text-[var(--muted)];
+  }
+  .frame-notes strong {
+    @apply tw:text-[var(--ink)];
+  }
+  .canvas-help,
+  #board-status {
+    @apply tw:text-[12px] tw:text-[var(--muted)] tw:m-[12px_0];
+  }
+  dialog {
+    @apply tw:p-0 tw:w-[calc(100%_-_48px)] tw:max-w-[1540px] tw:h-[calc(100%_-_48px)] tw:max-h-full tw:[border:1px_solid_var(--line)] tw:rounded-[14px] tw:text-[var(--ink)] tw:overflow-hidden;
+  }
+  dialog::backdrop {
+    @apply tw:bg-[#102b4180];
+  }
+  .player-header {
+    @apply tw:p-[16px_24px] tw:[border-bottom:1px_solid_var(--line)] tw:flex tw:justify-between tw:gap-[16px] tw:items-center tw:h-[90px];
+  }
+  .player-header .eyebrow {
+    @apply tw:mb-[3px];
+  }
+  .player-body {
+    @apply tw:grid tw:grid-cols-[minmax(0,_1fr)_270px] tw:h-[calc(100%_-_160px)];
+  }
+  .demo-stage {
+    @apply tw:min-w-0 tw:h-full;
+  }
+  #interactive-demo {
+    @apply tw:w-full tw:h-full tw:[border:0] tw:bg-[#f2faff];
+  }
+  .step-notes {
+    @apply tw:p-[22px] tw:bg-[#f8fcff] tw:[border-left:1px_solid_var(--line)] tw:overflow-auto tw:text-[13px];
+  }
+  .step-counter {
+    @apply tw:block tw:text-[var(--blue)] tw:font-[700] tw:mb-[18px];
+  }
+  .step-notes > p {
+    @apply tw:text-[var(--muted)] tw:mb-[24px];
+  }
+  .question {
+    @apply tw:bg-[#e6f5fd] tw:p-[14px] tw:rounded-[8px];
+  }
+  .question p {
+    @apply tw:mb-0;
+  }
+  .player-hint {
+    @apply tw:text-[11px] tw:mt-[20px];
+  }
+  #player-status {
+    @apply tw:text-[#a05c12];
+  }
+  .player-footer {
+    @apply tw:flex tw:justify-between tw:gap-[12px] tw:items-center tw:h-[70px] tw:p-[14px_24px] tw:[border-top:1px_solid_var(--line)];
+  }
+  @media (max-width: 1000px) {
+    .board-layout {
+      @apply tw:grid-cols-[180px_minmax(0,_1fr)];
+    }
+    .board-main {
+      @apply tw:p-[20px];
+    }
+    .player-body {
+      @apply tw:grid-cols-[minmax(0,_1fr)_230px];
+    }
+  }
+  @media (max-width: 700px) {
+    .board-header {
+      @apply tw:p-[14px_16px] tw:flex-wrap tw:gap-[8px];
+    }
+    .brand span {
+      @apply tw:block tw:ml-0;
+    }
+    .board-layout {
+      @apply tw:grid-cols-[minmax(0,_1fr)];
+    }
+    .page-sidebar {
+      @apply tw:min-h-0 tw:p-[10px_16px] tw:[border-right:0] tw:[border-bottom:1px_solid_var(--line)];
+    }
+    .page-sidebar > .eyebrow,
+    .sidebar-note {
+      @apply tw:hidden;
+    }
+    #page-nav {
+      @apply tw:flex tw:overflow-auto;
+    }
+    #page-nav button {
+      @apply tw:whitespace-nowrap;
+    }
+    #page-nav small {
+      @apply tw:ml-[10px];
+    }
+    .board-intro {
+      @apply tw:items-start tw:flex-col;
+    }
+    .canvas-toolbar {
+      @apply tw:flex-wrap;
+    }
+    #canvas-viewport {
+      @apply tw:min-h-[370px] tw:h-[52vh];
+    }
+    dialog {
+      @apply tw:w-[calc(100%_-_16px)] tw:h-[calc(100%_-_16px)] tw:rounded-[8px];
+    }
+    .player-header {
+      @apply tw:p-[12px] tw:h-[90px];
+    }
+    .player-header h2 {
+      @apply tw:text-[16px];
+    }
+    .player-body {
+      @apply tw:flex tw:flex-col tw:overflow-auto;
+    }
+    .demo-stage {
+      @apply tw:h-[65vh] tw:min-h-[440px] tw:shrink-[0];
+    }
+    .step-notes {
+      @apply tw:[border-left:0] tw:[border-top:1px_solid_var(--line)] tw:overflow-visible tw:p-[18px];
+    }
+    .player-footer {
+      @apply tw:p-[12px] tw:gap-[6px];
+    }
+    .player-footer button {
+      @apply tw:text-[12px] tw:p-[8px_10px];
+    }
+  }
+}

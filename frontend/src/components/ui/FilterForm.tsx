@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import type { ChangeEvent, ReactNode } from "react";
-import type { InventoryFilter } from "../../features/demo/types";
+import type { InventoryFilter } from "@/types/demo";
 type ControlProps = {
   children?: ReactNode;
   name?: string;

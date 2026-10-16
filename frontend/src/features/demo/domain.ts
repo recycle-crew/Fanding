@@ -1,4 +1,10 @@
-import type { DemoState, Batch, Workspace, Voucher, Movement } from "./types";
+import type {
+  DemoState,
+  Batch,
+  Workspace,
+  Voucher,
+  Movement,
+} from "@/types/demo";
 // 批次操作紀錄保存當次快照，移除盤點列也不刪除歷程。
 export function appendBatchOperation(
   s: DemoState,

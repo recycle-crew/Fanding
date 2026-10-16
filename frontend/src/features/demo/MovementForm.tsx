@@ -1,23 +1,27 @@
-import { useDemo } from "./store";
-import type { Product } from "./types";
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { executeDemoCommand } from "@/store/demo";
+import type { Product } from "@/types/demo";
 export function MovementForm({ product }: { product: Product }) {
-  const { state: s, dispatch } = useDemo();
+  const s = useAppSelector((root) => root.demo);
+  const dispatch = useAppDispatch();
   const draft = s.movementDraft;
   const control = (field: keyof typeof draft) => ({
     value: draft[field],
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
       const value = event.target.value;
-      dispatch({
-        type: "update",
-        update: (d) => {
-          d.movementDraft[field] = value;
-        },
-      });
+      dispatch(
+        executeDemoCommand({
+          type: "update",
+          update: (d) => {
+            d.movementDraft[field] = value;
+          },
+        }),
+      );
     },
   });
   return (
     <form id="movement-form" className="inline-form">
-      <div className="form-grid">
+      <div className="form-grid tw:grid tw:grid-cols-2 tw:gap-[18px] tw:phone:grid-cols-1">
         <label>
           數量（{product.unit}）
           <input
@@ -66,7 +70,11 @@ export function MovementForm({ product }: { product: Product }) {
       <button
         type="button"
         data-action="cancel-scan"
-        onClick={() => dispatch({ type: "action", action: "cancel-scan" })}
+        onClick={() =>
+          dispatch(
+            executeDemoCommand({ type: "action", action: "cancel-scan" }),
+          )
+        }
       >
         取消
       </button>

@@ -1,3 +1,4 @@
+import { useLocation } from "react-router";
 import React, {
   createContext,
   useContext,
@@ -5,8 +6,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import type { CSSProperties, ReactNode } from "react";
-import { downloadTable } from "./excel";
+import type { ReactNode } from "react";
+import { downloadTable } from "@/helpers/excel";
 type PageState = { page: number; pageSize: number };
 export const PaginationContext = createContext<{
   revision: number;
@@ -76,7 +77,7 @@ export function TableFrame({
   columns,
   caption,
   region = "資料表，可左右捲動",
-  style,
+  className = "",
 }: {
   tableKey: string;
   headers: ReactNode;
@@ -84,7 +85,7 @@ export function TableFrame({
   columns: number;
   caption?: ReactNode;
   region?: string;
-  style?: CSSProperties;
+  className?: string;
 }) {
   const { states, revision } = useContext(PaginationContext);
   const [pagination, setPagination] = useState<PageState>(
@@ -106,11 +107,12 @@ export function TableFrame({
     states.set(tableKey, pagination);
   }, [pagination, states, tableKey]);
   // 文件的章節連結可能指向表格內的列，先顯示該列所在頁再捲動。
+  const routeLocation = useLocation();
   useEffect(() => {
     const reveal = () => {
       let id: string;
       try {
-        id = decodeURIComponent(location.hash.slice(1));
+        id = decodeURIComponent(routeLocation.hash.slice(1));
       } catch {
         return;
       }
@@ -129,16 +131,15 @@ export function TableFrame({
     reveal();
     window.addEventListener("hashchange", reveal);
     return () => window.removeEventListener("hashchange", reveal);
-  }, [pagination.pageSize]);
+  }, [pagination.pageSize, routeLocation.hash]);
   return (
     <>
       <div
-        className="table-wrap"
+        className={`table-wrap tw:overflow-x-auto tw:print:overflow-visible ${className}`}
         data-pagination-key={tableKey}
         tabIndex={0}
         role="region"
         aria-label={region}
-        style={style}
       >
         <table ref={table}>
           {caption && <caption>{caption}</caption>}
@@ -164,7 +165,7 @@ export function TableFrame({
           </tbody>
         </table>
       </div>
-      <div className="table-pagination">
+      <div className="table-pagination tw:flex tw:flex-wrap tw:items-center tw:gap-x-5 tw:gap-y-3 tw:print:hidden">
         <span className="pagination-summary" role="status" aria-live="polite">
           {rows.length
             ? `第 ${offset + 1}–${Math.min(offset + pagination.pageSize, rows.length)} 筆，共 ${rows.length} 筆`
