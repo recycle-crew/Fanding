@@ -666,7 +666,7 @@ export function ScanPage() {
                 ["all", "總覽"],
               ].map(([view, label]) => (
                 <Button
-                  variant="outline"
+                  variant={s.issueMovementView === view ? "default" : "outline"}
                   key={view}
                   type="button"
                   data-movement-view={view}

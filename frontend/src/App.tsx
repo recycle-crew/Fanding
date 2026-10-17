@@ -25,7 +25,7 @@ class PageErrorBoundary extends Component<
         <main className="shell route-status">
           <h1>畫面載入失敗</h1>
           <p>請重新載入後重試；展示資料將重置。</p>
-          <Button variant="outline" onClick={() => window.location.reload()}>
+          <Button variant="default" onClick={() => window.location.reload()}>
             重新載入
           </Button>
         </main>

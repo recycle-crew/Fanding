@@ -30,9 +30,9 @@ export function ArchitecturePage() {
               "前端以 React＋TypeScript 呈現操作，後端以 Python＋FastAPI 處理業務與資料存取。沿用 IA_Map 的 Controller、Service、Repository、DTO 與 Entity 分層，各層再依業務功能拆檔。"
             }
           </p>
-          <Button asChild><a href={"#section-3"}>
-            {"查看程式目錄 ↓"}
-          </a></Button>
+          <Button asChild>
+            <a href={"#section-3"}>{"查看程式目錄 ↓"}</a>
+          </Button>
         </div>
         {"\n"}
         <Card asChild>
@@ -242,7 +242,9 @@ export function ArchitecturePage() {
               </li>
               <li>
                 <code>{"components/ui/"}</code>
-                {" 放跨模組共用元件；OTC 專用表單留在 OTC 模組。"}
+                {
+                  " 放 shadcn/ui 元件原始碼與跨模組的表格、篩選及視窗；OTC 專用表單留在 OTC 模組。"
+                }
               </li>
               <li>
                 <code>{"api/server/"}</code>

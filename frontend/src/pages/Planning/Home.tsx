@@ -33,9 +33,9 @@ export function PlanningPage() {
             }
           </p>
           {"\n          "}
-          <Button asChild><a href={"#features"}>
-            {"查看目前功能需求 ↗"}
-          </a></Button>
+          <Button asChild>
+            <a href={"#features"}>{"查看目前功能需求 ↗"}</a>
+          </Button>
           {"\n        "}
         </div>
         {"\n        "}

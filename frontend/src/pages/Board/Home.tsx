@@ -100,10 +100,10 @@ export function BoardPage() {
           <nav id="page-nav" aria-label="畫面分類">
             {planningPages.map((p) => (
               <Button
-                variant="outline"
+                variant={p.id === pageId ? "secondary" : "ghost"}
                 key={p.id}
                 data-page={p.id}
-                className={p.id === pageId ? "active" : ""}
+                className={`h-auto justify-between whitespace-normal ${p.id === pageId ? "active" : ""}`}
                 aria-current={p.id === pageId ? "page" : undefined}
                 onClick={() => {
                   setPageId(p.id);
@@ -290,7 +290,7 @@ export function BoardPage() {
         onClose={close}
         dialogContent={
           <>
-            <header className="player-header">
+            <header className="player-header shrink-0">
               <div>
                 <p className="eyebrow" id="player-mode">
                   {guided ? `${page.title} / 流程示範` : "Frame / 互動操作"}
@@ -306,7 +306,7 @@ export function BoardPage() {
                 ✕ 關閉
               </Button>
             </header>
-            <div className="player-body">
+            <div className="player-body h-auto min-h-0 flex-1">
               <section className="demo-stage">
                 <iframe
                   ref={frame}
@@ -335,10 +335,11 @@ export function BoardPage() {
                 </p>
               </aside>
             </div>
-            <footer className="player-footer">
+            <footer className="player-footer h-auto min-h-[70px] shrink-0 max-sm:grid max-sm:grid-cols-3 max-sm:gap-2 max-sm:px-2">
               <Button
                 variant="outline"
                 id="previous-step"
+                className="max-sm:h-auto max-sm:min-w-0 max-sm:whitespace-normal max-sm:px-2"
                 disabled={step === 0}
                 onClick={() => {
                   if (!pending.current) request(step - 1);
@@ -346,13 +347,18 @@ export function BoardPage() {
               >
                 ← 上一步
               </Button>
-              <Button variant="outline" id="return-board" onClick={close}>
+              <Button
+                variant="outline"
+                id="return-board"
+                onClick={close}
+                className="max-sm:h-auto max-sm:min-w-0 max-sm:whitespace-normal max-sm:px-2"
+              >
                 返回全部 Frame
               </Button>
               <Button
                 variant="default"
                 id="next-step"
-                className="primary"
+                className="primary max-sm:h-auto max-sm:min-w-0 max-sm:whitespace-normal max-sm:px-2"
                 onClick={() => {
                   if (pending.current) return;
                   if (step < page.frames.length - 1) request(step + 1);

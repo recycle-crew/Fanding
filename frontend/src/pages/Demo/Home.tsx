@@ -607,14 +607,15 @@ export function DemoPage() {
               模擬申請重設
             </Button>
           </form>
-          <p
+          <Alert
             id="recovery-result"
+            className="mb-4 bg-secondary p-4 text-sm leading-[1.8]"
             role="status"
             tabIndex={-1}
             hidden={!s.recoverySent}
           >
             展示申請流程已完成。正式服務會在資料符合院內規則時提供重設指引；本次未查詢帳號、寄送郵件或變更密碼。
-          </p>
+          </Alert>
           <Button
             variant="outline"
             id="back-to-login"
@@ -899,9 +900,15 @@ export function DemoPage() {
         </main>
         <EditorPage />
       </div>
-      <div id="notice" role="status" aria-live="polite" hidden={!s.notice}>
+      <Alert
+        id="notice"
+        role="status"
+        aria-live="polite"
+        hidden={!s.notice}
+        className="pointer-events-none fixed right-6 bottom-6 z-[5] w-auto max-w-[calc(100%_-_48px)] rounded-[10px] border-0 bg-[#17364a] px-[22px] py-[14px] text-base leading-[1.6] text-white shadow-[0_8px_30px_#17364a33]"
+      >
         {s.notice}
-      </div>
+      </Alert>
       <BaseModal
         id="confirmation"
         title="確認操作"

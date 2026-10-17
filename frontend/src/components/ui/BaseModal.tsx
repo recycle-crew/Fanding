@@ -29,7 +29,7 @@ export function BaseModal(props: {
   } = props;
   const dialogClassName =
     variant === "player"
-      ? "w-[calc(100%_-_16px)] max-w-[1540px] sm:max-w-[1540px] h-[calc(100%_-_16px)] max-h-full overflow-hidden border border-[var(--line)] rounded-[8px] p-0 text-[var(--ink)] shadow-[0_16px_48px_#24384722] backdrop:bg-[#102b4180] md:w-[calc(100%_-_48px)] md:h-[calc(100%_-_48px)] md:rounded-[14px]"
+      ? "[&[open]]:flex flex-col w-[calc(100%_-_16px)] max-w-[1540px] sm:max-w-[1540px] h-[calc(100%_-_16px)] max-h-full overflow-hidden border border-[var(--line)] rounded-[8px] p-0 text-[var(--ink)] shadow-[0_16px_48px_#24384722] backdrop:bg-[#102b4180] md:w-[calc(100%_-_48px)] md:h-[calc(100%_-_48px)] md:rounded-[14px]"
       : "w-[min(620px,_calc(100%_-_32px))] sm:max-w-[620px] max-h-[90vh] overflow-auto border border-[var(--line)] rounded-[12px] p-7 text-[var(--ink)] shadow-[0_16px_48px_#24384722] backdrop:bg-[#14374b70]";
   useEffect(() => {
     const element = dialog;

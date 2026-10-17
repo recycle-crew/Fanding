@@ -379,7 +379,10 @@ export function ListPage({
   const rows = filtered.map((entry) => {
     const status = (
       <>
-        <Badge variant="secondary" className={"tag " + String(entry.status === "停用" ? "off" : "")}>
+        <Badge
+          variant="secondary"
+          className={"tag " + String(entry.status === "停用" ? "off" : "")}
+        >
           {String(entry.status ?? "")}
         </Badge>
       </>
@@ -509,16 +512,14 @@ export function ListPage({
       .map<React.ReactNode>((value) => String(value ?? ""))
       .concat(
         <>
-          <span
-            className={
-              entry.status === "啟用" &&
-              entry.stock < (activeModule === "his" ? 20 : entry.minStock)
-                ? "tag low"
-                : ""
-            }
-          >
-            {entry.stock}
-          </span>
+          {entry.status === "啟用" &&
+          entry.stock < (activeModule === "his" ? 20 : entry.minStock) ? (
+            <Badge variant="secondary" className="tag low">
+              {entry.stock}
+            </Badge>
+          ) : (
+            entry.stock
+          )}
         </>,
         ...(activeModule === "products"
           ? [

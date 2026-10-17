@@ -236,7 +236,7 @@ export function BaseSidebar(props: BaseSidebarProps) {
               <Button
                 variant="outline"
                 data-module={module.key}
-                className={`flex w-full min-w-0 items-center gap-[10px] rounded-[7px] border-transparent bg-transparent p-3 text-left font-semibold${s.activeModule === module.key ? " active border-[#d3e0e9] bg-[#eaf1f6] text-[#245e7d] shadow-[inset_3px_0_var(--primary)]" : ""}`}
+                className={`flex h-auto w-full min-w-0 items-center justify-start gap-[10px] whitespace-normal rounded-[7px] border-transparent bg-transparent p-3 text-left font-semibold${s.activeModule === module.key ? " active border-[#d3e0e9] bg-[#eaf1f6] text-[#245e7d] shadow-[inset_3px_0_var(--primary)]" : ""}`}
                 aria-current={
                   s.activeModule === module.key ? "page" : undefined
                 }
