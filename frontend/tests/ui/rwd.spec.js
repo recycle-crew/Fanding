@@ -34,10 +34,114 @@ test("RWD IA_Map 前端組織與 Redux 文件", async ({ page }) => {
   await expect(otc).toHaveScreenshot("architecture-otc-organization.png");
 });
 
+test("RWD Layout 外框與 Home 登入流程及切頁保護", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/demo/vendors");
+  await expect(page.locator("#login")).toBeVisible();
+  await expect(page.locator("#sidebar")).toBeHidden();
+  await expect(page.locator(".topbar")).toBeHidden();
+  await page.locator("#login-form [name=account]").fill("layout.user");
+  await page.locator("#login-form [name=password]").fill("layout-password");
+  await page.locator("#demo-permission").selectOption("privileged");
+  await checkResponsiveLayout(page);
+  await testInfo.attach("layout-home-login", {
+    body: await page.screenshot({
+      path: testInfo.outputPath("layout-home-login.png"),
+    }),
+    contentType: "image/png",
+  });
+  await page.locator("#forgot-password").click();
+  await expect(page.locator("#recovery-form [name=account]")).toBeFocused();
+  await page.locator("#recovery-form [name=email]").fill("layout@example.test");
+  await page.locator("#recovery-form button[type=submit]").click();
+  await expect(page.locator("#recovery-result")).toBeVisible();
+  await checkResponsiveLayout(page);
+  await testInfo.attach("layout-home-recovery", {
+    body: await page.screenshot({
+      path: testInfo.outputPath("layout-home-recovery.png"),
+    }),
+    contentType: "image/png",
+  });
+  await page.locator("#back-to-login").click();
+  await page.locator("#login-form button[type=submit]").click();
+  await expect(page.locator("#content h2")).toHaveText("廠商資料維護");
+  await expect(page.locator("#login")).toBeHidden();
+  await expect(page.locator("#account-label")).toContainText("layout.user");
+  await expect(page.locator("#account-label")).toContainText("高權限");
+  await page.locator(".topbar").scrollIntoViewIfNeeded();
+  await checkResponsiveLayout(page);
+  await testInfo.attach("layout-home-workspace", {
+    body: await page.screenshot({
+      path: testInfo.outputPath("layout-home-workspace.png"),
+    }),
+    contentType: "image/png",
+  });
+
+  // 同一路由再次導覽也應收合手機選單，且不重設 Home 的登入表單。
+  if (page.viewportSize().width < 768) {
+    await page.locator("#menu-toggle").click();
+    await page.locator('#module-nav [data-module="vendors"]').click();
+    await expect(page.locator("#menu-toggle")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+  }
+  await page.locator("[data-action=add]").click();
+  if (page.viewportSize().width < 768)
+    await page.locator("#menu-toggle").click();
+  await page.locator('#module-nav [data-module="products"]').click();
+  await expect(page).toHaveURL(/\/demo\/vendors$/);
+  await expect(page.locator("#editor")).toBeVisible();
+  await expect(page.locator("#notice")).toContainText("請先儲存");
+  await checkResponsiveLayout(page);
+  await testInfo.attach("layout-home-blocked-navigation", {
+    body: await page.screenshot({
+      path: testInfo.outputPath("layout-home-blocked-navigation.png"),
+    }),
+    contentType: "image/png",
+  });
+  if (page.viewportSize().width < 768)
+    await page.locator("#menu-toggle").click();
+  await page.locator("#editor [data-close]").first().click();
+  if (page.viewportSize().width < 768)
+    await page.locator("#menu-toggle").click();
+  await page.locator('#module-nav [data-module="products"]').click();
+  await expect(page.locator("#content h2")).toHaveText("品項資料維護");
+  await page.goBack();
+  await expect(page.locator("#content h2")).toHaveText("廠商資料維護");
+  await page.goForward();
+  await expect(page.locator("#content h2")).toHaveText("品項資料維護");
+  if (page.viewportSize().width < 768)
+    await page.locator("#menu-toggle").click();
+  await page.locator("#logout").click();
+  await expect(page.locator("#login")).toBeVisible();
+  await expect(page.locator("#sidebar")).toBeHidden();
+  await expect(page.locator(".topbar")).toBeHidden();
+  await expect(page.locator("#login-form [name=account]")).toHaveValue(
+    "layout.user",
+  );
+  await expect(page.locator("#login-form [name=password]")).toHaveValue(
+    "layout-password",
+  );
+  await expect(page.locator("#demo-permission")).toHaveValue("privileged");
+  await checkResponsiveLayout(page);
+  await testInfo.attach("layout-home-logout", {
+    body: await page.screenshot({
+      path: testInfo.outputPath("layout-home-logout.png"),
+    }),
+    contentType: "image/png",
+  });
+});
+
 test("RWD Demo Layout 承載子頁並保留工作區", async ({ page }) => {
   await page.goto("/demo/vendors");
   await page.locator("#login-form button[type=submit]").click();
   await expect(page.locator("#content h2")).toHaveText("廠商資料維護");
+  await expect(page.locator("#workspace > #sidebar")).toBeAttached();
+  await expect(
+    page.locator("#workspace > .main-shell > .topbar"),
+  ).toBeVisible();
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
   const sidebar = await page.locator("#sidebar").elementHandle();
   const header = await page.locator(".topbar").elementHandle();
@@ -46,7 +150,7 @@ test("RWD Demo Layout 承載子頁並保留工作區", async ({ page }) => {
     ["stocktake-history", "歷史盤點紀錄"],
     ["vendors", "廠商資料維護"],
   ]) {
-    if (page.viewportSize().width <= 800)
+    if (page.viewportSize().width < 768)
       await page.locator("#menu-toggle").click();
     await page.locator(`#module-nav [data-module="${module}"]`).click();
     await expect(page.locator("#content h2")).toHaveText(heading);
@@ -61,7 +165,7 @@ test("RWD Demo Layout 承載子頁並保留工作區", async ({ page }) => {
         (node) => node === document.querySelector(".topbar"),
       ),
     ).toBe(true);
-    if (page.viewportSize().width <= 800)
+    if (page.viewportSize().width < 768)
       await expect(page.locator("#menu-toggle")).toHaveAttribute(
         "aria-expanded",
         "false",
@@ -78,10 +182,10 @@ test("RWD Demo Layout 承載子頁並保留工作區", async ({ page }) => {
 
 test("RWD Tailwind 版面斷點兩側", async ({ page }, testInfo) => {
   const sizes = {
-    "rwd-small-phone": [480, 481],
-    "rwd-phone": [800, 801],
-    "rwd-tablet": [900, 901],
-    "rwd-desktop": [700, 701, 1000, 1001],
+    "rwd-small-phone": [639, 640],
+    "rwd-phone": [767, 768],
+    "rwd-tablet": [1023, 1024],
+    "rwd-desktop": [767, 768, 1023, 1024],
   }[testInfo.project.name];
   const documentPage = testInfo.project.name === "rwd-tablet";
   const boardPage = testInfo.project.name === "rwd-desktop";
@@ -109,19 +213,19 @@ test("RWD Tailwind 版面斷點兩側", async ({ page }, testInfo) => {
           (node) =>
             getComputedStyle(node).gridTemplateColumns.split(" ").length,
         );
-      expect(columns).toBe(width <= 900 ? 1 : 2);
+      expect(columns).toBe(width < 1024 ? 1 : 2);
     } else if (boardPage) {
       const columns = await page
         .locator(".board-layout")
         .evaluate((node) =>
           getComputedStyle(node).gridTemplateColumns.split(" "),
         );
-      expect(columns.length).toBe(width <= 700 ? 1 : 2);
-      if (width > 700)
-        expect(columns[0]).toBe(width <= 1000 ? "180px" : "215px");
+      expect(columns.length).toBe(width < 768 ? 1 : 2);
+      if (width >= 768)
+        expect(columns[0]).toBe(width < 1024 ? "180px" : "215px");
       await expect(page.locator("#page-nav")).toHaveCSS(
         "display",
-        width <= 700 ? "flex" : "grid",
+        width < 768 ? "flex" : "grid",
       );
     } else if (testInfo.project.name === "rwd-small-phone") {
       const columns = await page
@@ -130,14 +234,13 @@ test("RWD Tailwind 版面斷點兩側", async ({ page }, testInfo) => {
           (node) =>
             getComputedStyle(node).gridTemplateColumns.split(" ").length,
         );
-      expect(columns).toBe(width <= 480 ? 1 : 2);
+      expect(columns).toBe(width < 640 ? 1 : 2);
     } else {
-      if (width <= 800)
-        await expect(page.locator("#menu-toggle")).toBeVisible();
+      if (width < 768) await expect(page.locator("#menu-toggle")).toBeVisible();
       else await expect(page.locator("#sidebar")).toBeVisible();
       await expect(page.locator("#menu-toggle")).toHaveCSS(
         "display",
-        width <= 800 ? "block" : "none",
+        width < 768 ? "block" : "none",
       );
     }
     await checkResponsiveLayout(page);
@@ -149,7 +252,7 @@ test("RWD React 重複代碼錯誤及唯讀說明", async ({ page }) => {
   await page.goto("/demo");
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
   await page.locator("#login-form button[type=submit]").click();
-  if (page.viewportSize().width <= 800)
+  if (page.viewportSize().width < 768)
     await page.locator("#menu-toggle").click();
   await page.locator("[data-module=vendors]").click();
   await page.locator("[data-action=add]").click();
@@ -173,8 +276,12 @@ test.beforeEach(async ({ page }) => {
 
 test("RWD SPA 跨頁切換、錨點與找不到頁面", async ({ page }) => {
   await page.goto("/");
+  await expect(page.locator(".shell > header")).toBeVisible();
+  await expect(page.locator(".shell > footer")).toBeVisible();
   await page.locator('nav a[href="/architecture"]').click();
   await expect(page.locator(".document-layout")).toBeVisible();
+  await expect(page.locator(".shell > header")).toBeVisible();
+  await expect(page.locator(".shell > footer")).toBeVisible();
   await checkResponsiveLayout(page);
   await expect(page).toHaveScreenshot("spa-architecture-navigation.png");
   await page.locator('nav a[href="/demo"]').click();
@@ -249,7 +356,7 @@ async function enterDemoModule(page, module, privileged = false) {
     await page.locator("#demo-permission").selectOption("privileged");
   await page.locator("#login-form button[type=submit]").click();
   await expect(page.locator("#workspace")).toBeVisible();
-  if (page.viewportSize().width <= 800)
+  if (page.viewportSize().width < 768)
     await page.locator("#menu-toggle").click();
   await page.locator(`#module-nav [data-module="${module}"]`).click();
   await page.addStyleTag({
@@ -347,7 +454,7 @@ for (const module of [
     await expect(page.locator("#content")).toHaveScreenshot(
       `module-${module}.png`,
     );
-    if (page.viewportSize().width <= 800) {
+    if (page.viewportSize().width < 768) {
       await page.locator("#menu-toggle").click();
       await expect(page.locator("#sidebar")).toBeVisible();
       await expect(
@@ -487,7 +594,7 @@ for (const direction of ["receipt", "issue"]) {
 }
 test("RWD 暫時縮窄視窗後恢復側欄偏好寬度", async ({ page }) => {
   await enterDemoModule(page, "receipt");
-  if (page.viewportSize().width <= 800)
+  if (page.viewportSize().width < 768)
     await page.locator("#menu-toggle").click();
   await page.locator("#sidebar-drag").press("ArrowRight");
   await page.locator("#sidebar-resize").press("End");
@@ -537,7 +644,7 @@ test("RWD 暫時縮窄視窗後恢復側欄偏好寬度", async ({ page }) => {
 });
 test("RWD 帳號固定側欄底部且移動縮放後可登出", async ({ page }) => {
   await enterDemoModule(page, "his");
-  if (page.viewportSize().width <= 800)
+  if (page.viewportSize().width < 768)
     await page.locator("#menu-toggle").click();
   const footer = page.locator("#sidebar .sidebar-account");
   await expect(
@@ -585,7 +692,7 @@ test("RWD 長帳號與權限在側欄底部不溢出", async ({ page }) => {
     .fill("pharmacy.inventory.supervisor.long.account");
   await page.locator("#demo-permission").selectOption("privileged");
   await page.locator('#login-form button[type="submit"]').click();
-  if (page.viewportSize().width <= 800)
+  if (page.viewportSize().width < 768)
     await page.locator("#menu-toggle").click();
   await expect(page.locator("#account-label")).toContainText("高權限（展示）");
   await page.locator("#sidebar-resize").press("Home");
@@ -602,7 +709,7 @@ test("RWD 長帳號與權限在側欄底部不溢出", async ({ page }) => {
 });
 test("RWD 導覽點擊與聚焦不得改變文字或項目尺寸", async ({ page }) => {
   await enterDemoModule(page, "overview");
-  if (page.viewportSize().width <= 800)
+  if (page.viewportSize().width < 768)
     await page.locator("#menu-toggle").click();
   else {
     await page.locator("#sidebar-resize").press("Home");
@@ -667,7 +774,7 @@ test("RWD 導覽點擊與聚焦不得改變文字或項目尺寸", async ({ page
     )
       await button.click();
     else await button.press("Enter");
-    if (page.viewportSize().width <= 800)
+    if (page.viewportSize().width < 768)
       await page.locator("#menu-toggle").click();
     const selectedGeometry = await page
       .locator("#module-nav button")
@@ -755,7 +862,7 @@ test("RWD 歷史更正與唯讀提示視窗", async ({ page }) => {
     "history-correction.png",
   );
   await page.locator("#editor [data-close]").last().click();
-  if (page.viewportSize().width <= 800)
+  if (page.viewportSize().width < 768)
     await page.locator("#menu-toggle").click();
   await page.locator('#module-nav [data-module="products"]').click();
   await page.locator('[data-action="edit"]').first().click();

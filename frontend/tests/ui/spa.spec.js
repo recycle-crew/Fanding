@@ -72,7 +72,10 @@ test("SPA 直接開啟與重新整理盤點路徑及舊連結", async ({ page })
   await page.goto("/#development-readiness");
   await page.locator('a[href="/architecture#prep-fields"]').click();
   await expect(page.locator("#prep-fields")).toBeInViewport();
-  await expect(page.locator("#prep-fields")).toHaveAttribute("open", "");
+  await expect(page.locator("#prep-fields")).toHaveAttribute(
+    "data-state",
+    "open",
+  );
   await expect(page.locator("#prep-fields")).toHaveScreenshot(
     "spa-document-anchor.png",
   );

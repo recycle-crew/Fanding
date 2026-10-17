@@ -1,6 +1,8 @@
 ﻿import { defineConfig } from "@playwright/test";
 
 const buildOnly = process.env.PLAYWRIGHT_BUILD === "1";
+const port = Number(process.env.PLAYWRIGHT_PORT || 4173);
+const baseURL = `http://127.0.0.1:${port}`;
 export default defineConfig({
   testDir: "./tests/ui",
   fullyParallel: true,
@@ -21,15 +23,17 @@ export default defineConfig({
     toHaveScreenshot: { animations: "disabled", maxDiffPixelRatio: 0.002 },
   },
   use: {
-    baseURL: "http://127.0.0.1:4173",
+    baseURL,
     locale: "zh-TW",
     timezoneId: "Asia/Taipei",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
   webServer: {
-    command: buildOnly ? "npm run preview" : "npm run dev:test",
-    url: "http://127.0.0.1:4173/demo",
+    command: buildOnly
+      ? `npm run preview -- --port ${port}`
+      : `npm run dev:test -- --port ${port}`,
+    url: `${baseURL}/demo`,
     reuseExistingServer: false,
   },
   projects: buildOnly
