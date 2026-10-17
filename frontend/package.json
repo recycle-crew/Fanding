@@ -10,7 +10,7 @@
     "build": "npm run typecheck && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json",
-    "dev:test": "vite --mode test --port 4173 --strictPort",
+    "dev:test": "vite --mode test --host 127.0.0.1 --port 4173 --strictPort",
     "test:ui:build": "node scripts/test-build.cjs",
     "test:ui:capture": "node scripts/capture-ui.cjs",
     "test:ui:build:report": "playwright show-report playwright-report/build"
