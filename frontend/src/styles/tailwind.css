@@ -1,8 +1,9 @@
 @layer theme, base, components, utilities;
-@import "tailwindcss/theme.css" layer(theme) prefix(tw);
-@import "tailwindcss/utilities.css" layer(utilities) prefix(tw);
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "tw-animate-css";
 
-/* 保留既有原生表單、details 與文件的預設樣式，不載入 Preflight reset。 */
+/* 文件排版與原生表單驗證保留瀏覽器預設；shadcn 元件以自己的 utilities 控制外觀。 */
 @source "../";
 
 @theme {
@@ -13,12 +14,42 @@
   --color-paper: #f5f7fa;
   --color-line: #dce3e9;
   --color-primary: #24688b;
+  --color-background: #ffffff;
+  --color-foreground: #243847;
+  --color-card: #ffffff;
+  --color-card-foreground: #243847;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #243847;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #edf3f7;
+  --color-secondary-foreground: #315d76;
+  --color-muted-foreground: #526775;
+  --color-accent: #eaf0f5;
+  --color-accent-foreground: #243847;
+  --color-destructive: #b42318;
+  --color-border: #dce3e9;
+  --color-input: #bac9d4;
+  --color-ring: #377b9e;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
 }
 
-/* 與既有操作斷點一致；tw:compact:* 表示 800px 以下。 */
-/* max-width 由大到小，較窄斷點在兩者同時成立時優先。 */
-@custom-variant narrow (@media (width <= 1000px));
-@custom-variant document (@media (width <= 900px));
-@custom-variant compact (@media (width <= 800px));
-@custom-variant board (@media (width <= 700px));
-@custom-variant phone (@media (width <= 480px));
+@layer base {
+  /* Tailwind 的 border utility 需要 solid；此規則只限 shadcn 元件。 */
+  [data-slot] {
+    box-sizing: border-box;
+    border-color: var(--color-border);
+    border-style: solid;
+    border-width: 0;
+  }
+  [data-slot="button"],
+  [data-slot="input"],
+  [data-slot="native-select"],
+  [data-slot="textarea"] {
+    font-family: var(--font-sans);
+  }
+}
+
+/* 使用 Tailwind 預設 sm、md、lg、xl 與 2xl 響應式斷點。 */
