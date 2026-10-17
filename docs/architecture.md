@@ -141,10 +141,10 @@ frontend/src/
 - `App.tsx` 承接全站路由保護與載入狀態。每個 `pages/{Module}/` 沿用 IA_Map 的 Layout／Home 慣例，父路由掛載 `Layout.tsx`，由 `<Outlet />` 呈現 Home 或其他子頁；沒有額外外殼的路由模組仍保留 Layout 作為子路由入口。
 - 各頁面的 Layout 只呼叫 BaseLayout 並指定版型；BaseLayout 組合共用 Header、Sidebar、Footer，以 Outlet 承載 Home，不傳遞業務 context。Home／其他子頁擁有具體內容及操作流程；Demo 的登入、密碼重設、橫幅、通知、對話框、分頁及展示初始化均由 Home 管理。側欄自行處理導覽與登出，未完成表單由 App 的路由 blocker 保護；功能元件及業務規則留在對應 `features/`。
 - 單一頁面的載入、提交與狀態由該頁面擁有；只有形成清楚的共用行為或獨立元件責任時才拆出。
-- `components/ui/` 放跨模組共用元件；OTC 專用表單留在 OTC 模組。
+- `components/ui/` 放 shadcn/ui 原始碼與跨模組共用的 BaseDataTable／BaseFilterForm／BaseModal；設定在 `frontend/components.json`，客製規則見 [shadcn/ui 慣例](shadcn-ui.md)。OTC 專用表單留在 OTC 模組。
 - `api/server/` 在正式串接時處理 HTTP 請求，不包含入庫規則或頁面狀態。
 - 前端型別按業務模組歸屬；不建立涵蓋所有領域的通用型別雜物檔。
-- 全站樣式由 Tailwind CSS 4 與官方 Vite plugin 編譯。`styles/tailwind.css` 定義 theme 與 RWD 變體；Layout、頁面與共用元件可直接使用 `tw:` utilities，重複語意樣式以 `@reference`／`@apply` 放在 components layer。保留原生表單預設與特殊 CSS 效果，版面調整的執行時數值仍用 style。
+- 全站樣式由 Tailwind CSS 4 與官方 Vite plugin 編譯。`styles/tailwind.css` 定義 shadcn theme 與 RWD token；Layout、頁面與共用元件可直接使用無前綴 utilities，重複語意樣式以 `@reference`／`@apply` 放在 components layer。保留原生表單驗證與特殊 CSS 效果，版面調整的執行時數值仍用 style。
 - 全頁支援 320／390／768／1440px；表格在自己的容器水平捲動，手機導覽可開關，表單與視窗依斷點調整。斷點兩側與實際瀏覽器截圖依 `docs/ui-testing.md` 驗證。
 
 ### 後端分層（沿用 IA_Map）

@@ -1,5 +1,20 @@
 # 畫面測試案例清單
 
+## shadcn/ui 全站遷移（2026-10-17）
+
+| 需求 | 預期畫面與來源 | 驗證狀態／限制 |
+| --- | --- | --- |
+| 全站 UI 原始碼 | App、五個頁面模組、共用版面與 features 的控制項使用 shadcn Button／Input／Label／NativeSelect；所有表格經 Table primitives；主面板／狀態／作業提示使用 Card／Badge／Alert | 原始碼盤點與 typecheck；視覺結果依 ui-testing.md |
+| 表單／查詢／權限 | 登入必填、忘記密碼、一般人員補填／高權限編輯、CRUD、重複值、日期與數量驗證、各頁篩選保留；react-flows、barcode、batch-filters、historical-cost | 正式身分及後端資料仍待整合 |
+| 表格／分頁／Excel | 每頁筆數／頁碼變更、首末頁焦點、所有分頁實際 XLSX、載入失敗及重試；既有功能 spec | 真實後端完整資料仍待驗證 |
+| 確認／唯讀 Dialog | 取消不執行、確認只執行一次、Esc、Tab 限制於視窗、關閉後回復焦點；shadcn.spec.js 及既有 CRUD／傳票／盤點 spec | Windows Chromium 鍵盤與手機模擬；實際輔具未驗收 |
+| 規劃板 Dialog | 開啟七種分類、切換步驟、關閉再開保留實際新增廠商；shadcn.spec.js、rwd.spec.js | iframe 仍為當次記憶體展示，重新整理不持久化 |
+| 文件 Accordion | 可用 Enter／Space 展開收合，跨路由／深連結錨點自動展開；spa.spec.js、rwd.spec.js | 未列出的特殊錨點組合仍待驗證 |
+| 四尺寸 RWD | 320／390／768／1440px 的全部頁面、模組、表單、Dialog、表格獨立捲動、手機導覽及斷點兩側；rwd.spec.js | 執行結果與截圖檢視在 ui-testing.md；其他尺寸與實機依下表保留 |
+| 主動作與選取狀態 | 重試按鈕及出入庫選取分類文字可讀，選取分類使用 default variant；SPA 錯誤測試與新增 RWD shadcn case | 截圖先擷取檢視，不能只以 DOM／style 值作為完成證據 |
+
+元件來源、專案客製與各檔責任見 [shadcn/ui 慣例](shadcn-ui.md)。下方既有案例保留作為本次遷移的功能檢核來源；歷史執行結果不當成本次結果。
+
 ## IA_Map 組織與 Redux 遷移
 
 | 需求 | 預期結果與測試來源 | 待驗證 |

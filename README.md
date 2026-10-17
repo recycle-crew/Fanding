@@ -53,11 +53,13 @@ frontend/src/
 └─ types/                    # demo／inventory／suppliers／otc／stocktaking 型別
 ```
 
-路由模組沿用 IA_Map 的 Layout／Home 慣例：父路由載入 `Layout.tsx`，透過 `<Outlet />` 呈現 Home 或其他子頁。Layout 負責模組外殼；Home 負責頁面操作流程，功能元件與業務規則由 `features` 擁有。Demo 的登入、側欄、頂部導覽與共用對話框由 Layout 持有，模組切換沿用同一個工作區外殼；Error Layout 僅承載錯誤子頁。狀態與型別分別歸入 `store`、`types`。正式 API 串接時沿用 IA_Map 的 `api/server` 分層，目前尚未建立 API 或正式資料連線。
+路由模組沿用 IA_Map 的 Layout／Home 慣例：父路由載入 `Layout.tsx`，透過 `<Outlet />` 呈現 Home 或其他子頁。Layout 負責模組外殼；Home 負責頁面操作流程，功能元件與業務規則由 `features` 擁有。Demo 的登入與共用對話框由 Home 持有，側欄及頂部導覽由 BaseLayout 組合，模組切換沿用同一個工作區外殼；Error Layout 僅承載錯誤子頁。狀態與型別分別歸入 `store`、`types`。正式 API 串接時沿用 IA_Map 的 `api/server` 分層，目前尚未建立 API 或正式資料連線。
 
-全站使用 Tailwind CSS 4.3.3 與官方 `@tailwindcss/vite` plugin。`styles/tailwind.css` 統一 theme、字型及 RWD 變體，`main.tsx` 載入編譯後樣式；utility 使用 `tw:` 前綴，避免既有語意 class 撞名。Layout 與元件直接使用 utilities，跨頁語意樣式在 `styles/layout`、`styles/themes` 以 `@reference`／`@apply` 共用，屬於 components layer；utilities layer 可覆寫它們。原生表單與文件預設樣式沿用，不載入 Preflight reset。CSS counter、複合陰影、焦點外框等保留原生 CSS；側欄位置與畫布縮放等執行時數值保留 style。
+全站 UI 使用 shadcn/ui，元件原始碼集中在 `frontend/src/components/ui/`，設定見 `frontend/components.json`。按鈕、表單、表格、卡片、標籤、確認視窗與文件 Accordion 共用同一套元件；BaseDataTable／BaseFilterForm／BaseModal 保留分頁、查詢和視窗生命週期等應用規則。元件選擇、專案調整與新增方式見 [shadcn/ui 慣例](docs/shadcn-ui.md)。
 
-RWD 變體為 `tw:phone:`（≤480px）、`tw:board:`（≤700px）、`tw:compact:`（≤800px）、`tw:document:`（≤900px）、`tw:narrow:`（≤1000px）。例如 `tw:grid-cols-2 tw:phone:grid-cols-1`，手機表單改為單欄。原有 1100px 篩選表單／卡片斷點仍在對應頁面樣式。瀏覽器測試涵蓋 320／390／768／1440px，另驗證 480、700、800、900、1000px 斷點兩側的表單、導覽與版面。
+全站樣式使用 Tailwind CSS 4 與官方 `@tailwindcss/vite` plugin，`styles/tailwind.css` 統一 shadcn theme、字型與 RWD token，使用無前綴 utilities；跨頁語意樣式在 `styles/layout`、`styles/themes` 以 `@reference`／`@apply` 共用。保留原生表單驗證與文件排版，不載入 Preflight；側欄位置與畫布縮放的執行時數值保留 style。
+
+RWD 採 mobile-first 預設斷點：sm 640px、md 768px、lg 1024px、xl 1280px、2xl 1536px。瀏覽器驗證涵蓋 320／390／768／1440px，另驗證實際使用的 sm／md／lg 斷點兩側。
 
 全域狀態使用 Redux Toolkit 與 React Redux：store/index.ts 組合 store，store/hooks.ts 提供型別化存取，store/demo.ts 管理現有展示資料及跨元件流程。登入表單、選單、相機與版面等局部狀態維持由元件持有。業務操作及更新 callback 在 thunk 執行，送出可序列化的 Immer patches；reducer 只套用資料更新，Redux 的序列化與不可變檢查維持啟用。不建立尚無正式需求的 global／auth slice。
 

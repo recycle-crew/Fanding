@@ -1,5 +1,27 @@
 # 畫面案例驗證
 
+## shadcn/ui 全站遷移（2026-10-17）
+
+本次沿用現有使用者流程，將全站共用 UI 遷移為 shadcn/ui：Button、Input、Label、NativeSelect、Table、Card、Badge、Alert、Checkbox、Accordion、Dialog。元件客製與應用責任見 [shadcn/ui 慣例](shadcn-ui.md)，需求逐項對照見 [案例清單](ui-case-matrix.md) 首節。
+
+先以 `npm run test:ui:capture` 執行正常、找不到、錯誤、取消、重試、權限與 320／390／768／1440px 案例，把實際 Chromium 畫面保留於 `frontend/ui-review/`。以分組聯絡表及關鍵原尺寸圖片檢查新元件、表格、Dialog、文件與導覽後，才接受對應基準，再以一般模式執行完整截圖比對。截圖容許值維持 0.002。
+
+檢視過程修正出入庫選取分類、載入失敗重試按鈕的文字／底色衝突；改用 Button variant 管理狀態。320px 的播放器底部按鈕需要換行，footer 改用三欄自適應高度，播放器內容採可收縮的 flex 區域，避免按鈕溢出或壓住 iframe。受影響案例重新擷取後再檢視。
+
+`shadcn.spec.js` 實際測試確認視窗的 Tab、Esc、取消及焦點回復，並在播放器內新增廠商，關閉重開後以查詢畫面驗證資料仍在。`rwd.spec.js` 新增四尺寸 Accordion 鍵盤、錨點、表單／選擇欄／資料表、Dialog 與選取分類畫面，原有完整模組與表單測試繼續執行。
+
+預設測試 port 為 4173；若該 port 已有使用者服務，使用 `PLAYWRIGHT_PORT` 指定獨立 port，不停掉既有服務。例如：
+
+```powershell
+$env:PLAYWRIGHT_PORT = "4185"
+npm run test:ui:capture
+npm run test:ui
+npm run build
+npm run test:ui:build
+```
+
+本輪瀏覽器為 Windows Chromium，手機／平板以 viewport 及 touch 模擬。實際 iOS／Android 相機、USB／藍牙掃碼槍、NAS LDAP、HIS、資料庫及正式主機部署不在此次 UI 遷移驗收內，保留在案例清單的待驗證範圍。
+
 ## Layout、Tailwind 與 RWD
 
 共用頁面骨架由 BaseLayout 組合 BaseHeader、可選的 BaseSidebar、BaseFooter。Planning／Architecture 共用文件頁版型；Demo 維持登入與工作區流程，並由 BaseLayout 承載側欄和頂部導覽。
