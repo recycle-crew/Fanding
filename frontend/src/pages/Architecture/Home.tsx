@@ -8,6 +8,7 @@ import {
   AccordionContent,
 } from "@/components/ui/accordion";
 import { Link } from "react-router";
+import { Button } from "@/components/ui/button";
 import React from "react";
 import { BaseTableFrame } from "@/components/ui/BaseDataTable";
 export function ArchitecturePage() {
@@ -29,9 +30,9 @@ export function ArchitecturePage() {
               "前端以 React＋TypeScript 呈現操作，後端以 Python＋FastAPI 處理業務與資料存取。沿用 IA_Map 的 Controller、Service、Repository、DTO 與 Entity 分層，各層再依業務功能拆檔。"
             }
           </p>
-          <a className={"button"} href={"#section-3"}>
+          <Button asChild><a href={"#section-3"}>
             {"查看程式目錄 ↓"}
-          </a>
+          </a></Button>
         </div>
         {"\n"}
         <Card asChild>

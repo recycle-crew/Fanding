@@ -8,6 +8,7 @@ import {
   AccordionContent,
 } from "@/components/ui/accordion";
 import { Link } from "react-router";
+import { Button } from "@/components/ui/button";
 import React from "react";
 import { BaseTableFrame } from "@/components/ui/BaseDataTable";
 export function PlanningPage() {
@@ -32,9 +33,9 @@ export function PlanningPage() {
             }
           </p>
           {"\n          "}
-          <a className={"button"} href={"#features"}>
+          <Button asChild><a href={"#features"}>
             {"查看目前功能需求 ↗"}
-          </a>
+          </a></Button>
           {"\n        "}
         </div>
         {"\n        "}
