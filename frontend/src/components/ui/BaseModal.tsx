@@ -15,6 +15,7 @@ export function BaseModal(props: {
   preview?: boolean;
   labelledBy?: string;
   describedBy?: string;
+  title: string;
 }) {
   const [dialog, setDialog] = useState<HTMLDialogElement | null>(null);
   const {
@@ -43,7 +44,7 @@ export function BaseModal(props: {
       {/* 原生 top layer 保留規劃板 iframe 的生命週期，焦點與表單關閉仍由瀏覽器處理。 */}
       <DialogContent
         asChild
-        forceMount
+        forceMount={variant === "player" ? true : undefined}
         showCloseButton={false}
         className={`inset-0 m-auto block translate-x-0 translate-y-0 gap-0 bg-background duration-0 data-[state=open]:animate-none data-[state=closed]:animate-none [&:not([open])]:hidden ${dialogClassName}`}
         onOpenAutoFocus={(event) => event.preventDefault()}
@@ -63,9 +64,7 @@ export function BaseModal(props: {
             if (open) onClose(event.currentTarget.returnValue);
           }}
         >
-          <DialogTitle className="sr-only">
-            {variant === "player" ? "互動流程示範" : "操作提示"}
-          </DialogTitle>
+          <DialogTitle className="sr-only">{props.title}</DialogTitle>
           <DialogDescription className="sr-only">
             {variant === "player"
               ? "可操作展示畫面並切換流程步驟。"

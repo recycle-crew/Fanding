@@ -284,6 +284,7 @@ export function BoardPage() {
       </div>
       <BaseModal
         id="player"
+        title={scene.title}
         variant="player"
         open={open}
         onClose={close}

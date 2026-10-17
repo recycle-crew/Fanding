@@ -904,6 +904,7 @@ export function DemoPage() {
       </div>
       <BaseModal
         id="confirmation"
+        title="確認操作"
         open={Boolean(s.confirmation)}
         preview={preview}
         onClose={(value) => {
@@ -939,6 +940,7 @@ export function DemoPage() {
       />
       <BaseModal
         id="readonly-notice"
+        title="目前不可編輯"
         open={Boolean(s.readonlyReason)}
         preview={preview}
         labelledBy="readonly-title"
