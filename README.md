@@ -13,6 +13,8 @@ npm run dev
 
 開啟終端顯示的網址，首頁為 `/`。全站為單一 HTML 入口的 React SPA，文件錨點及規劃板展示參數保留；舊 `.html` 連結由前端轉向對應路由。
 
+`npm run dev` 使用 `localhost`，預設埠為 5173；若該埠已被其他專案占用，Vite 會選下一個可用埠，請以終端實際顯示的完整網址為準。瀏覽器測試另固定使用 `127.0.0.1:4173`。
+
 ```powershell
 npm run typecheck
 npm run build
