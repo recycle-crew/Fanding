@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/native-select";
 import { Button } from "@/components/ui/button";
 import { useAppSelector } from "@/store/hooks";
+import { Badge } from "@/components/ui/badge";
 import { BaseFilterForm } from "@/components/ui/BaseFilterForm";
 import React from "react";
 import { BaseDataTable } from "@/components/ui/BaseDataTable";
@@ -378,9 +379,9 @@ export function ListPage({
   const rows = filtered.map((entry) => {
     const status = (
       <>
-        <span className={"tag " + String(entry.status === "停用" ? "off" : "")}>
+        <Badge variant="secondary" className={"tag " + String(entry.status === "停用" ? "off" : "")}>
           {String(entry.status ?? "")}
-        </span>
+        </Badge>
       </>
     );
     const actions = (
