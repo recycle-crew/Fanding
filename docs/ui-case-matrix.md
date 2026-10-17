@@ -8,10 +8,11 @@
 | Redux 狀態 | 登入、權限、主檔、傳票、盤點及歷史成本操作保留原行為；沿用各功能 spec | NAS／HIS／後端正式資料 |
 | Redux 完整性 | 全部案例監看不可序列化及 state mutation 訊息，出現即失敗；tests/test-api.cjs | 未列出的真實資料組合 |
 | 路由與頁面分層 | pages 與 router/routes 搬移後，深連結、上一頁、未完成表單保護、iframe、錯誤重試可用；spa.spec.js、react-flows.spec.js、rwd.spec.js | 正式主機 rewrite |
-| 模組 Layout／子頁 | 五個 pages 模組都有 Layout；Demo 切換子頁保留側欄／頂部導覽，手機選單切換後收合，編輯取消回到列表；rwd.spec.js「RWD Demo Layout 承載子頁並保留工作區」 | 正式身分與權限整合 |
+| 模組 Layout／子頁 | 五個 Layout 只選擇 BaseLayout 版型，Outlet 承載 Home；Demo 具體內容在 Home。切頁保留側欄／頂部導覽，手機選單切換後收合，編輯取消回到列表；rwd.spec.js「RWD Demo Layout 承載子頁並保留工作區」 | 正式身分與權限整合 |
+| Home 流程生命週期 | 四種尺寸登入／密碼重設／工作區／阻擋切頁／登出、上一頁／下一頁及登入欄位保留已於 shadcn 改寫前驗證；rwd.spec.js「RWD Layout 外框與 Home 登入流程及切頁保護」，五種狀態共 20 張實際畫面已檢視，見 ui-review/layout-home | 驗證期間另有 shadcn／Radix 改寫，BaseModal ref 為 null 導致後續失敗；最新工作樹整合後須重驗。NAS LDAP／真實帳密、其他裝置仍未驗收 |
 | 架構文件一致 | 畫面與 Markdown 目錄反映 Layout／Home、Redux 與 workspace；四種尺寸檢視目錄截圖及水平捲動；rwd.spec.js「RWD IA_Map 前端組織與 Redux 文件」 | 後端與正式 OTC API 尚為規劃 |
 | Tailwind 全站樣式 | 官方 Vite plugin 編譯主入口 utilities 與頁面 apply；既有全站與功能截圖維持容許值比對，build-smoke 驗證正式產物 | 正式主機部署 |
-| Tailwind RWD 斷點 | 320／390／768／1440px 全站案例，另以「RWD Tailwind 版面斷點兩側」核對 480／481、700／701、800／801、900／901、1000／1001px 的表單、導覽、文件及規劃板，檢查溢出並比較截圖 | 其他未列出的視窗尺寸、實機設備仍未驗收 |
+| Tailwind RWD 斷點 | 320／390／768／1440px 全站案例，另以「RWD Tailwind 版面斷點兩側」核對本次使用的 sm／md／lg 邊界 639／640、767／768、1023／1024px，檢查表單、導覽、文件及規劃板 | 本次瀏覽器案例未執行、截圖未更新；其他未列出的視窗尺寸、實機設備仍未驗收 |
 | 相機切頁清理 | React effect 非同步釋放後串流與 decoder 均停止；barcode-cases.spec.js 的 close／navigate／logout 共 12 次重跑通過，保留使用者可見截圖 | 真實手機鏡頭與掃碼槍 |
 | 列印及 reduced-motion | Tailwind 遷移保留既有規則 | 本輪未另作獨立畫面驗收 |
 | 畫面一致性 | 320／390／768／1440px 的頁面、導覽、表單、視窗及獨立表格捲動與原基準比對；rwd.spec.js | 實機相機與掃碼槍仍未驗收 |
@@ -36,6 +37,7 @@ SPA 新增與有差異的截圖先透過 capture 模式擷取並檢視，再接�
 
 | 範圍 | 使用者可見結果與測試來源 |
 | --- | --- |
+| 共用 BaseLayout | Planning／Architecture 共用 BaseHeader、BaseFooter；Demo 由 BaseLayout 組合 BaseSidebar 與頂部導覽；RWD 檢查 header、sidebar、footer 與子頁內容 |
 | 四個頁面與十個模組 | 保留頁面、導覽、表單、表格捲動及 320／390／768／1440px；`rwd.spec.js` |
 | 登入／忘記密碼 | 必填阻擋、展示申請結果、返回登入；`react-flows.spec.js` |
 | 廠商與權限 | 新增、重複代碼錯誤、一般人員唯讀／補填、高權限修改歷程、被引用不得刪除、取消及確認刪除；`react-flows.spec.js` |
@@ -101,7 +103,7 @@ SPA 新增與有差異的截圖先透過 capture 模式擷取並檢視，再接�
 
 傳票新增 `vouchers.spec.js` 八個案例 × 電腦／手機 = 16 次：多筆整批送出與確認取消、送出鎖定與防重複、同日出入庫共用序列與跨日、取消不回收、999 上限、庫存變化導致整批失敗／修正重試、重複料號累計／移除／取消，以及送出重新驗證啟用與數量、明細分頁及實際 XLSX 匯出。既有掃碼成功／未建檔／不足重試案例改為整批送出後才核對庫存。RWD 另涵蓋出／入庫傳票草稿、確認視窗與鎖定畫面。
 
-`rwd.spec.js` 檢查 index／architecture／board／demo 四個頁面、Demo 十個模組（四個大分類有圖示、功能細項僅文字）、各新增／編輯頁、忘記密碼、盤點編輯與歷史更正、確認／唯讀視窗、相機提示及七個流程分類的互動 iframe。固定尺寸 320、390、768、1440px，另在 320／390／480／700／768／800／1024／1440px 間調整寬度，確認未送出表單不遺失。
+`rwd.spec.js` 檢查 index／architecture／board／demo 四個頁面、Demo 十個模組（四個大分類有圖示、功能細項僅文字）、各新增／編輯頁、忘記密碼、盤點編輯與歷史更正、確認／唯讀視窗、相機提示及七個流程分類的互動 iframe。固定尺寸 320、390、768、1440px，另在本次使用的 sm／md／lg breakpoint 兩側測試 639／640、767／768、1023／1024px，確認未送出表單不遺失。本次依使用者要求只更新案例、未執行瀏覽器測試，也未更新截圖。
 
 判定包含整頁不橫向溢出、表單／按鈕不超出螢幕、寬表格在容器中可捲到最後一欄、手機導覽可操作、表單儲存按鈕可捲到，以及各畫面截圖比對。RWD 驗證不取代其餘模組的業務功能驗收。
 

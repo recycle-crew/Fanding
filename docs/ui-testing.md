@@ -2,9 +2,17 @@
 
 ## Layout、Tailwind 與 RWD
 
-五個 pages 模組均由 Layout 的 Outlet 承載子頁。Demo 的登入、導覽、分頁上下文與共用對話框移入 Layout，頁面與編輯內容留在 Home。測試先確認子頁切換仍保留同一個側欄／頂部導覽，再檢查使用者看得到的標題、手機選單收合、編輯取消與實際畫面截圖。
+共用頁面骨架由 BaseLayout 組合 BaseHeader、可選的 BaseSidebar、BaseFooter。Planning／Architecture 共用文件頁版型；Demo 維持登入與工作區流程，並由 BaseLayout 承載側欄和頂部導覽。
 
-Tailwind CSS 4.3.3 由官方 Vite plugin 編譯，`tw:` utilities 與 `@apply` 共用語意樣式涵蓋規劃、架構、規劃板及 Demo。維持既有截圖容許值 0.002；新增或因文件內容變動而改變的截圖必須先 capture、檢視後才接受。RWD 包含 320／390／768／1440px 的全站流程，另在 480／481、700／701、800／801、900／901、1000／1001px 檢查表單欄數、手機導覽、架構文件及規劃板，並擷取畫面。原生表格捲動、列印、鍵盤操作與 reduced-motion 樣式仍保留。
+五個 pages 模組的 Layout 只呼叫 BaseLayout，依固定 variant 選擇文件、規劃板、工作區或無導覽外框；BaseLayout 組合共用元件並由 Outlet 承載子頁，不傳遞業務 context。Demo 的登入、密碼重設、展示橫幅、通知、分頁 Provider、展示初始化、路由同步與對話框內容由 Home 擁有；側欄負責自己的導覽與登出，App 保護未完成表單。BaseLayout 只管理框架顯示、側欄尺寸與手機選單。
+
+「RWD Layout 外框與 Home 登入流程及切頁保護」涵蓋四種尺寸的登入／重設／工作區／切頁阻擋／登出，驗證同一路由收合選單、上一頁／下一頁及登入欄位跨模組保留，並附上實際畫面。「RWD Demo Layout 承載子頁並保留工作區」保留既有側欄／頁首節點與畫面基準比對。附件截圖需另行檢視，不能將操作通過視為舊基準比對通過。
+
+2026-10-17 本次責任調整：`npm run build`（含 TypeScript）通過；`npx playwright test rwd.spec.js spa.spec.js react-flows.spec.js --ignore-snapshots` 共 232 次通過（7.5 分鐘），此輪僅代表操作與響應式斷言通過。四尺寸登入、重設、工作區、阻擋切頁及登出另擷取 20 張畫面並檢視，保存在 `frontend/ui-review/layout-home/`。舊基準比對與正式 dist 結果另列，不以此數量宣稱全站截圖回歸通過。相機／掃碼槍仍為模擬，NAS LDAP、HIS 與後端正式整合未驗收。
+
+後續截圖擷取發現側欄同時使用 sticky／fixed 的定位衝突，已改成互斥 class；通知改為點擊穿透，手機案例先收合選單再回到表單。追加驗證期間工作樹又導入 shadcn／Radix（BaseModal、Tailwind、套件與其他 UI 元件），新 BaseModal 出現 `Cannot read properties of null (reading 'open')`，這輪擷取未全部通過；已停止測試，未更新截圖基準。上述 232 次結果屬於此批 UI 改寫前，不能視為目前工作樹的完整驗收。最新樣式整合後的基準比對、浮動側欄重驗及正式 dist 瀏覽器檢查仍待完成。
+
+Tailwind CSS 4.3.3 由官方 Vite plugin 編譯，Tailwind utilities 與 `@apply` 共用語意樣式涵蓋規劃、架構、規劃板及 Demo。響應式使用 mobile-first 預設斷點，未加前綴的 class 用於小尺寸，再由 `sm`（640px）、`md`（768px）、`lg`（1024px）覆蓋；`xl`（1280px）與 `2xl`（1536px）沿用 Tailwind 預設值。RWD 案例涵蓋 320／390／768／1440px，並核對本次使用的 sm／md／lg 邊界兩側：639／640、767／768、1023／1024px。瀏覽器驗證與截圖依各次任務實際執行狀態記錄。原生表格捲動、列印、鍵盤操作與 reduced-motion 樣式仍保留。
 
 2026-10-16 驗證結果：Windows Chromium 156.0.8078.4，TypeScript、正式 build、Prettier 與 diff 檢查通過。第二輪完整執行 348 次，其中 346 次通過、2 次相機切頁釋放檢查過早讀取結果而失敗；這兩項改為以有時限的 expect.poll 等待 React effect 實際停止串流與 decoder，入／出庫 close／navigate／logout 的電腦與手機共 12 次重跑全部通過（19.5 秒）。合併完成 348 個不同案例的驗證，不宣稱一次完整 348 次全綠。其中 49 個 RWD 案例 × 4 種尺寸共 196 次在第二輪全部通過。正式 frontend/dist 另外 8 次通過（10.8 秒），包含單一 HTML、Markdown、深連結、iframe、XLSX 與本機掃碼 SDK。
 

@@ -64,7 +64,7 @@ Fanding/
 │     │  ├─ Planning/          # Layout.tsx、Home.tsx
 │     │  ├─ Architecture/      # Layout.tsx、Home.tsx
 │     │  ├─ Board/             # Layout.tsx、Home.tsx
-│     │  ├─ Demo/              # Layout.tsx 共用工作區、Home.tsx 頁面流程
+│     │  ├─ Demo/              # Layout.tsx 版型選擇、Home.tsx 頁面流程
 │     │  └─ Error/             # Layout.tsx、NotFound.tsx
 │     ├─ features/             # demo 功能與交易、planning 場景
 │     ├─ components/
@@ -139,7 +139,7 @@ frontend/src/
 ```
 
 - `App.tsx` 承接全站路由保護與載入狀態。每個 `pages/{Module}/` 沿用 IA_Map 的 Layout／Home 慣例，父路由掛載 `Layout.tsx`，由 `<Outlet />` 呈現 Home 或其他子頁；沒有額外外殼的路由模組仍保留 Layout 作為子路由入口。
-- Layout 擁有共用導覽與版面，Home／其他子頁擁有頁面操作流程。Demo 的 Layout 持有登入、側欄、頂部導覽與共用對話框，切換 Demo 模組沿用同一外殼；功能元件及業務規則留在對應 `features/`。
+- 各頁面的 Layout 只呼叫 BaseLayout 並指定版型；BaseLayout 組合共用 Header、Sidebar、Footer，以 Outlet 承載 Home，不傳遞業務 context。Home／其他子頁擁有具體內容及操作流程；Demo 的登入、密碼重設、橫幅、通知、對話框、分頁及展示初始化均由 Home 管理。側欄自行處理導覽與登出，未完成表單由 App 的路由 blocker 保護；功能元件及業務規則留在對應 `features/`。
 - 單一頁面的載入、提交與狀態由該頁面擁有；只有形成清楚的共用行為或獨立元件責任時才拆出。
 - `components/ui/` 放跨模組共用元件；OTC 專用表單留在 OTC 模組。
 - `api/server/` 在正式串接時處理 HTTP 請求，不包含入庫規則或頁面狀態。
