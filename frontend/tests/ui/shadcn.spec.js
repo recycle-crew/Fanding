@@ -1,4 +1,23 @@
-const { test, expect } = require("../test-api.cjs");
+const { test: base, expect } = require("../test-api.cjs");
+const test = base.extend({
+  componentErrors: [
+    async ({ page }, use) => {
+      const errors = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      page.on("console", (message) => {
+        if (
+          /requires a.*DialogTitle|Missing.*Description|cannot be a descendant/i.test(
+            message.text(),
+          )
+        )
+          errors.push(message.text());
+      });
+      await use();
+      expect(errors, "shadcn 元件不得發生執行錯誤或缺少無障礙標題").toEqual([]);
+    },
+    { auto: true },
+  ],
+});
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
@@ -9,7 +28,7 @@ test("shadcn 確認視窗的鍵盤取消、焦點限制與回復", async ({ page
   await page.locator("#demo-permission").selectOption("privileged");
   await page.locator("#login-form button[type=submit]").click();
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
-  const trigger = page.locator('[data-action=delete][data-id=V003]');
+  const trigger = page.locator("[data-action=delete][data-id=V005]");
   await trigger.click();
   const dialog = page.locator("#confirmation");
   await expect(dialog).toBeVisible();
@@ -17,7 +36,11 @@ test("shadcn 確認視窗的鍵盤取消、焦點限制與回復", async ({ page
   await expect(dialog.locator("[data-slot=dialog-title]")).toHaveCount(1);
   for (let index = 0; index < 4; index++) {
     await page.keyboard.press("Tab");
-    expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true);
+    expect(
+      await dialog.evaluate((element) =>
+        element.contains(document.activeElement),
+      ),
+    ).toBe(true);
   }
   await expect(dialog).toHaveScreenshot("shadcn-confirmation-keyboard.png");
   await page.keyboard.press("Escape");
@@ -42,12 +65,18 @@ test("shadcn 規劃板關閉重開仍保留 iframe 中新增的廠商", async ({
   await frame.locator('#editor-form button[type="submit"]').click();
   await expect(frame.locator("#editor")).toBeHidden();
   await frame.locator("#search").fill("元件遷移測試廠商");
-  await expect(frame.locator("#table-area")).toContainText("元件遷移測試廠商");
+  await expect(frame.locator(".list-panel table")).toContainText(
+    "元件遷移測試廠商",
+  );
   await page.locator("#close-player").click();
   await expect(page.locator("#player")).toBeHidden();
   await page.locator("#start-tour").click();
   await expect(page.locator("#player-status")).toHaveText("");
   await frame.locator("#search").fill("元件遷移測試廠商");
-  await expect(frame.locator("#table-area")).toContainText("元件遷移測試廠商");
-  await expect(page.locator("#player")).toHaveScreenshot("shadcn-player-retained.png");
+  await expect(frame.locator(".list-panel table")).toContainText(
+    "元件遷移測試廠商",
+  );
+  await expect(page.locator("#player")).toHaveScreenshot(
+    "shadcn-player-retained.png",
+  );
 });

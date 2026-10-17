@@ -26,18 +26,43 @@ test("RWD shadcn 表單、Accordion 與確認視窗鍵盤操作", async ({ page 
   await checkResponsiveLayout(page);
   await expect(question).toHaveScreenshot("shadcn-accordion.png");
   await enterDemoModule(page, "vendors", true);
-  await expect(page.locator('#search')).toHaveAttribute("data-slot", "input");
-  await expect(page.locator('#vendor-status-filter')).toHaveAttribute("data-slot", "native-select");
-  await expect(page.locator('#table-area table')).toHaveAttribute("data-slot", "table");
-  const trigger = page.locator('[data-action="delete"][data-id="V003"]');
+  await expect(page.locator("#search")).toHaveAttribute("data-slot", "input");
+  await expect(page.locator("#vendor-status-filter")).toHaveAttribute(
+    "data-slot",
+    "native-select",
+  );
+  await expect(page.locator(".list-panel table")).toHaveAttribute(
+    "data-slot",
+    "table",
+  );
+  const trigger = page.locator('[data-action="delete"][data-id="V005"]');
   await trigger.click();
   await expect(page.locator("#confirmation")).toBeVisible();
-  await expect(page.locator("#confirmation")).toHaveAttribute("data-slot", "dialog-content");
+  await expect(page.locator("#confirmation")).toHaveAttribute(
+    "data-slot",
+    "dialog-content",
+  );
   await checkResponsiveLayout(page);
-  await expect(page.locator("#confirmation")).toHaveScreenshot("shadcn-dialog.png");
+  await expect(page.locator("#confirmation")).toHaveScreenshot(
+    "shadcn-dialog.png",
+  );
   await page.keyboard.press("Escape");
   await expect(page.locator("#confirmation")).toBeHidden();
   await expect(trigger).toBeFocused();
+  if (page.viewportSize().width < 768)
+    await page.locator("#menu-toggle").click();
+  await page.locator('[data-module="issue"]').click();
+  const selected = page.locator('[data-movement-view][aria-pressed="true"]');
+  await expect(selected).toHaveAttribute("data-variant", "default");
+  expect(
+    await selected.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return style.color !== style.backgroundColor;
+    }),
+  ).toBe(true);
+  await expect(page.locator(".movement-view-tabs")).toHaveScreenshot(
+    "shadcn-selected-filter.png",
+  );
 });
 
 test("RWD IA_Map 前端組織與 Redux 文件", async ({ page }) => {
@@ -904,8 +929,11 @@ test("RWD 流程示範互動視窗", async ({ page }) => {
   await page.locator("#start-tour").click();
   await expect(page.locator("#player")).toBeVisible();
   const frame = page.frameLocator("#interactive-demo");
+  // 播放器先等待 iframe 的 scene 回覆，再驗證登入畫面，避免把模組下載當成畫面就緒。
+  await expect(page.locator("#player-status")).toHaveText("", {
+    timeout: 15000,
+  });
   await expect(frame.locator("#login-form")).toBeVisible();
-  await expect(page.locator("#player-status")).toHaveText("");
   await checkResponsiveLayout(page);
   await expect(page.locator("#player")).toHaveScreenshot("board-player.png");
   const player = page.locator("#player");
