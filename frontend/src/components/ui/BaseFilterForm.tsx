@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import type { ChangeEvent, ReactNode } from "react";
 import type { InventoryFilter } from "@/types/demo";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 type ControlProps = {
   children?: ReactNode;
   name?: string;
@@ -9,25 +11,23 @@ type ControlProps = {
   onChange?: (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
 };
 // 各表保留自己的未送出條件；查詢批次時先解除單日限制，需要日期交集時可再填日期。
-export function FilterForm({
-  id,
-  className,
-  initial,
-  children,
-}: {
+export function BaseFilterForm(props: {
   id: string;
   className: string;
   initial: InventoryFilter;
-  children: ReactNode;
+  filterFields: ReactNode;
 }) {
-  const [draft, setDraft] = useState(initial);
-  useEffect(() => setDraft(initial), [initial]);
-  function controls(children: ReactNode): ReactNode {
-    return React.Children.map(children, (child) => {
+  const [draft, setDraft] = useState(props.initial);
+  useEffect(() => setDraft(props.initial), [props.initial]);
+  function controls(nodes: ReactNode): ReactNode {
+    return React.Children.map(nodes, (child) => {
       if (!React.isValidElement<ControlProps>(child)) return child;
-      const props = child.props;
-      if ((child.type === "input" || child.type === "select") && props.name) {
-        const name = props.name as keyof InventoryFilter;
+      const controlProps = child.props;
+      if (
+        (child.type === Input || child.type === NativeSelect) &&
+        controlProps.name
+      ) {
+        const name = controlProps.name as keyof InventoryFilter;
         return React.cloneElement(child, {
           defaultValue: undefined,
           value: draft[name] ?? "",
@@ -36,24 +36,26 @@ export function FilterForm({
             setDraft((previous) => ({
               ...previous,
               [name]: value,
-              ...(id === "overview-movement-filter" &&
+              ...(props.id === "overview-movement-filter" &&
               name === "voucherId" &&
               value.trim()
                 ? { date: "" }
                 : {}),
             }));
           },
-          children: props.children,
+          children: controlProps.children,
         });
       }
-      return props.children
-        ? React.cloneElement(child, { children: controls(props.children) })
+      return controlProps.children
+        ? React.cloneElement(child, {
+            children: controls(controlProps.children),
+          })
         : child;
     });
   }
   return (
-    <form id={id} className={className}>
-      {controls(children)}
+    <form id={props.id} className={props.className}>
+      {controls(props.filterFields)}
     </form>
   );
 }

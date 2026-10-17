@@ -1,5 +1,5 @@
-import { Outlet } from "react-router";
+import { BaseLayout } from "@/components/layout/BaseLayout";
 
 export function ErrorLayout() {
-  return <Outlet />;
+  return <BaseLayout variant="bare" />;
 }

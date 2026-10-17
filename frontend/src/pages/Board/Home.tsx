@@ -1,7 +1,8 @@
+import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import { planningPages } from "@/features/planning/scenes";
 import type { SceneRequest, SceneResponse } from "@/features/planning/scenes";
-import { Modal } from "@/components/ui/Modal";
+import { BaseModal } from "@/components/ui/BaseModal";
 export function BoardPage() {
   const [pageId, setPageId] = useState("login");
   const page = planningPages.find((page) => page.id === pageId);
@@ -93,12 +94,13 @@ export function BoardPage() {
   };
   return (
     <>
-      <div className="board-layout tw:grid tw:grid-cols-[215px_minmax(0,1fr)] tw:narrow:grid-cols-[180px_minmax(0,1fr)] tw:board:grid-cols-[minmax(0,1fr)]">
+      <div className="board-layout grid grid-cols-1 md:grid-cols-[180px_minmax(0,1fr)] lg:grid-cols-[215px_minmax(0,1fr)]">
         <aside className="page-sidebar">
           <p className="eyebrow">PAGES / 分類</p>
           <nav id="page-nav" aria-label="畫面分類">
             {planningPages.map((p) => (
-              <button
+              <Button
+                variant="outline"
                 key={p.id}
                 data-page={p.id}
                 className={p.id === pageId ? "active" : ""}
@@ -111,7 +113,7 @@ export function BoardPage() {
               >
                 {p.title}
                 <small>{p.frames.length}</small>
-              </button>
+              </Button>
             ))}
           </nav>
           <div className="sidebar-note">
@@ -127,20 +129,22 @@ export function BoardPage() {
               <h1 id="page-title">{page.title}</h1>
               <p id="page-description">{page.description}</p>
             </div>
-            <button
+            <Button
+              variant="default"
               id="start-tour"
               className="primary"
               onClick={() => launch(0, true)}
             >
               ▶ 示範此流程
-            </button>
+            </Button>
           </section>
           <div className="canvas-toolbar">
             <span id="frame-count">
               {page.frames.length} 個 Frame · 縮圖為初始畫面參考
             </span>
             <div>
-              <button
+              <Button
+                variant="outline"
                 id="zoom-out"
                 aria-label="縮小畫布"
                 disabled={zoom <= 0.1}
@@ -151,9 +155,10 @@ export function BoardPage() {
                 }
               >
                 −
-              </button>
+              </Button>
               <output id="zoom-label">{Math.round(zoom * 100)}%</output>
-              <button
+              <Button
+                variant="outline"
                 id="zoom-in"
                 aria-label="放大畫布"
                 disabled={zoom >= 1.2}
@@ -164,8 +169,9 @@ export function BoardPage() {
                 }
               >
                 ＋
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
                 id="zoom-fit"
                 onClick={() => {
                   setZoom(
@@ -184,7 +190,7 @@ export function BoardPage() {
                 }}
               >
                 適合畫面
-              </button>
+              </Button>
             </div>
           </div>
           <div
@@ -236,12 +242,13 @@ export function BoardPage() {
                         <span>FRAME {String(index + 1).padStart(2, "0")}</span>
                         <h2>{f.title}</h2>
                       </div>
-                      <button
+                      <Button
+                        variant="outline"
                         data-open={index}
                         onClick={() => launch(index, false)}
                       >
                         操作此畫面 ↗
-                      </button>
+                      </Button>
                     </div>
                     <div className="frame-preview" inert>
                       <iframe
@@ -275,78 +282,93 @@ export function BoardPage() {
           </p>
         </main>
       </div>
-      <Modal id="player" open={open} onClose={close}>
-        <header className="player-header">
-          <div>
-            <p className="eyebrow" id="player-mode">
-              {guided ? `${page.title} / 流程示範` : "Frame / 互動操作"}
-            </p>
-            <h2 id="step-title">{scene.title}</h2>
-          </div>
-          <button id="close-player" aria-label="關閉示範" onClick={close}>
-            ✕ 關閉
-          </button>
-        </header>
-        <div className="player-body">
-          <section className="demo-stage">
-            <iframe
-              ref={frame}
-              id="interactive-demo"
-              src="/demo?embed=1"
-              title="可操作的庫存管理系統 Demo"
-            />
-          </section>
-          <aside className="step-notes">
-            <span id="step-counter" className="step-counter">
-              {step + 1} / {page.frames.length}
-            </span>
-            <h3>這一步怎麼操作</h3>
-            <p id="step-instruction">{scene.instruction}</p>
-            <h3>預期結果</h3>
-            <p id="step-outcome">{scene.outcome}</p>
-            <div className="question">
-              <h3>與客戶確認</h3>
-              <p id="step-question">{scene.question}</p>
+      <BaseModal
+        id="player"
+        variant="player"
+        open={open}
+        onClose={close}
+        dialogContent={
+          <>
+            <header className="player-header">
+              <div>
+                <p className="eyebrow" id="player-mode">
+                  {guided ? `${page.title} / 流程示範` : "Frame / 互動操作"}
+                </p>
+                <h2 id="step-title">{scene.title}</h2>
+              </div>
+              <Button
+                variant="outline"
+                id="close-player"
+                aria-label="關閉示範"
+                onClick={close}
+              >
+                ✕ 關閉
+              </Button>
+            </header>
+            <div className="player-body">
+              <section className="demo-stage">
+                <iframe
+                  ref={frame}
+                  id="interactive-demo"
+                  src="/demo?embed=1"
+                  title="可操作的庫存管理系統 Demo"
+                />
+              </section>
+              <aside className="step-notes">
+                <span id="step-counter" className="step-counter">
+                  {step + 1} / {page.frames.length}
+                </span>
+                <h3>這一步怎麼操作</h3>
+                <p id="step-instruction">{scene.instruction}</p>
+                <h3>預期結果</h3>
+                <p id="step-outcome">{scene.outcome}</p>
+                <div className="question">
+                  <h3>與客戶確認</h3>
+                  <p id="step-question">{scene.question}</p>
+                </div>
+                <p className="player-hint">
+                  可直接填資料、按按鈕。上／下一步只切換畫面，不自動送出操作。關閉示範會取消未儲存表單，已完成操作會保留。
+                </p>
+                <p id="player-status" role="status" aria-live="polite">
+                  {status}
+                </p>
+              </aside>
             </div>
-            <p className="player-hint">
-              可直接填資料、按按鈕。上／下一步只切換畫面，不自動送出操作。關閉示範會取消未儲存表單，已完成操作會保留。
-            </p>
-            <p id="player-status" role="status" aria-live="polite">
-              {status}
-            </p>
-          </aside>
-        </div>
-        <footer className="player-footer">
-          <button
-            id="previous-step"
-            disabled={step === 0}
-            onClick={() => {
-              if (!pending.current) request(step - 1);
-            }}
-          >
-            ← 上一步
-          </button>
-          <button id="return-board" onClick={close}>
-            返回全部 Frame
-          </button>
-          <button
-            id="next-step"
-            className="primary"
-            onClick={() => {
-              if (pending.current) return;
-              if (step < page.frames.length - 1) request(step + 1);
-              else {
-                close();
-                setBoardStatus(
-                  "流程展示完成。可選擇其他分類，互動假資料會在當次規劃板繼續保留。",
-                );
-              }
-            }}
-          >
-            {step === page.frames.length - 1 ? "完成流程 ✓" : "下一步 →"}
-          </button>
-        </footer>
-      </Modal>
+            <footer className="player-footer">
+              <Button
+                variant="outline"
+                id="previous-step"
+                disabled={step === 0}
+                onClick={() => {
+                  if (!pending.current) request(step - 1);
+                }}
+              >
+                ← 上一步
+              </Button>
+              <Button variant="outline" id="return-board" onClick={close}>
+                返回全部 Frame
+              </Button>
+              <Button
+                variant="default"
+                id="next-step"
+                className="primary"
+                onClick={() => {
+                  if (pending.current) return;
+                  if (step < page.frames.length - 1) request(step + 1);
+                  else {
+                    close();
+                    setBoardStatus(
+                      "流程展示完成。可選擇其他分類，互動假資料會在當次規劃板繼續保留。",
+                    );
+                  }
+                }}
+              >
+                {step === page.frames.length - 1 ? "完成流程 ✓" : "下一步 →"}
+              </Button>
+            </footer>
+          </>
+        }
+      />
     </>
   );
 }

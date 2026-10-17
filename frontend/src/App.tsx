@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { Component, Suspense, useEffect, useLayoutEffect } from "react";
 import type { ReactNode } from "react";
@@ -24,7 +25,9 @@ class PageErrorBoundary extends Component<
         <main className="shell route-status">
           <h1>畫面載入失敗</h1>
           <p>請重新載入後重試；展示資料將重置。</p>
-          <button onClick={() => window.location.reload()}>重新載入</button>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            重新載入
+          </Button>
         </main>
       );
     return this.props.children;
@@ -94,7 +97,14 @@ export function App() {
     const reveal = () => {
       const target = document.getElementById(id);
       for (let ancestor = target; ancestor; ancestor = ancestor.parentElement) {
-        if (ancestor instanceof HTMLDetailsElement) ancestor.open = true;
+        if (
+          ancestor.dataset.slot === "accordion-item" &&
+          ancestor.dataset.state === "closed"
+        ) {
+          ancestor
+            .querySelector<HTMLButtonElement>('[data-slot="accordion-trigger"]')
+            ?.click();
+        }
       }
       if (!target?.checkVisibility()) return;
       target.scrollIntoView({ block: "start" });
@@ -105,7 +115,7 @@ export function App() {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["hidden"],
+      attributeFilter: ["hidden", "data-state"],
     });
     reveal();
     return () => observer.disconnect();

@@ -1,7 +1,15 @@
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
+import { Button } from "@/components/ui/button";
 import { useAppSelector } from "@/store/hooks";
-import { FilterForm } from "@/components/ui/FilterForm";
+import { BaseFilterForm } from "@/components/ui/BaseFilterForm";
 import React from "react";
-import { DataTable } from "@/components/ui/DataTable";
+import { BaseDataTable } from "@/components/ui/BaseDataTable";
 import {
   compileInventoryFilter,
   matchesInventoryFilter,
@@ -28,9 +36,9 @@ function renderInventoryIdentityFilters(
     <>
       {voucherIds ? (
         <>
-          <label>
+          <Label>
             {"批次／傳票編號"}
-            <input
+            <Input
               name={"voucherId"}
               list={String(listId) + "-batches"}
               placeholder={"所有批次，可輸入日期或傳票編號"}
@@ -38,7 +46,7 @@ function renderInventoryIdentityFilters(
               autoComplete={"off"}
               inputMode={"numeric"}
             />
-          </label>
+          </Label>
           <datalist id={String(listId) + "-batches"}>
             {React.Children.toArray(
               [...new Set(voucherIds.filter(Boolean))]
@@ -55,24 +63,24 @@ function renderInventoryIdentityFilters(
       ) : (
         ""
       )}
-      <label>
+      <Label>
         {"料號"}
-        <input
+        <Input
           name={"materialNumber"}
           placeholder={"所有料號"}
           defaultValue={String(filters.materialNumber ?? "")}
         />
-      </label>
-      <label>
+      </Label>
+      <Label>
         {String(personLabel ?? "")}
-        <input
+        <Input
           name={"person"}
           list={listId}
           placeholder={"所有人員"}
           autoComplete={"off"}
           defaultValue={String(filters.person ?? "")}
         />
-      </label>
+      </Label>
       <datalist id={listId}>
         {React.Children.toArray(
           [...new Set(people.filter(Boolean))].map((person, rowIndex) => (
@@ -141,7 +149,7 @@ export function MovementsTable() {
     .slice()
     .reverse();
   return (
-    <DataTable
+    <BaseDataTable
       headers={[
         "時間",
         "傳票編號",
@@ -211,88 +219,98 @@ export function OverviewMovements() {
   ];
   return (
     <>
-      <div className={"panel"}>
+      <Card className={"panel"}>
         <h3>{"庫存總覽"}</h3>
-        <FilterForm
+        <BaseFilterForm
           id={"overview-movement-filter"}
           className={"overview-movement-filter"}
           initial={overviewMovementFilter}
-        >
-          {renderInventoryIdentityFilters(
-            overviewMovementFilter,
-            movements.map((movement) => movement.filledBy ?? "未記錄"),
-            "overview-filter-people",
-            "人員",
-            movements.map((movement) => movement.voucherId),
-          )}
-          <label>
-            {"日期"}
-            <input
-              type={"date"}
-              name={"date"}
-              defaultValue={String(overviewMovementFilter.date ?? "")}
-            />
-          </label>
-          <label>
-            {"品項"}
-            <select name={"product"}>
-              <option value={""}>{"所有"}</option>
-              {products.map((product, rowIndex) => {
-                const key = `${product.workspace}:${product.id}`;
-                return (
-                  <React.Fragment key={rowIndex}>
-                    <option value={String(key ?? "")}>
-                      {String(
-                        `${product.workspace} · ${product.id} ${product.name}`,
-                      )}
-                    </option>
-                  </React.Fragment>
-                );
-              })}
-            </select>
-          </label>
-          <label>
-            {"動作"}
-            <select name={"action"}>
-              <option value={""}>{"所有"}</option>
-              {React.Children.toArray(
-                actions.map((action, rowIndex) => (
-                  <React.Fragment key={rowIndex}>
-                    <option value={String(action ?? "")}>
-                      {String(action ?? "")}
-                    </option>
-                  </React.Fragment>
-                )),
+
+          filterFields={
+            <>
+              {renderInventoryIdentityFilters(
+                overviewMovementFilter,
+                movements.map((movement) => movement.filledBy ?? "未記錄"),
+                "overview-filter-people",
+                "人員",
+                movements.map((movement) => movement.voucherId),
               )}
-            </select>
-          </label>
-          <label>
-            {"工作區"}
-            <select name={"workspace"}>
-              <option value={""}>{"所有"}</option>
-              {React.Children.toArray(
-                ["HIS", "OTC"].map((workspace, rowIndex) => (
-                  <React.Fragment key={rowIndex}>
-                    <option value={workspace}>{workspace}</option>
-                  </React.Fragment>
-                )),
-              )}
-            </select>
-          </label>
-          <button type={"submit"} className={"primary"}>
-            {"搜尋"}
-          </button>
-          <button type={"button"} data-action={"reset-overview-filter"}>
-            {"重設為當日所有"}
-          </button>
-        </FilterForm>
+              <Label>
+                {"日期"}
+                <Input
+                  type={"date"}
+                  name={"date"}
+                  defaultValue={String(overviewMovementFilter.date ?? "")}
+                />
+              </Label>
+              <Label>
+                {"品項"}
+                <NativeSelect name={"product"}>
+                  <NativeSelectOption value={""}>{"所有"}</NativeSelectOption>
+                  {products.map((product, rowIndex) => {
+                    const key = `${product.workspace}:${product.id}`;
+                    return (
+                      <React.Fragment key={rowIndex}>
+                        <NativeSelectOption value={String(key ?? "")}>
+                          {String(
+                            `${product.workspace} · ${product.id} ${product.name}`,
+                          )}
+                        </NativeSelectOption>
+                      </React.Fragment>
+                    );
+                  })}
+                </NativeSelect>
+              </Label>
+              <Label>
+                {"動作"}
+                <NativeSelect name={"action"}>
+                  <NativeSelectOption value={""}>{"所有"}</NativeSelectOption>
+                  {React.Children.toArray(
+                    actions.map((action, rowIndex) => (
+                      <React.Fragment key={rowIndex}>
+                        <NativeSelectOption value={String(action ?? "")}>
+                          {String(action ?? "")}
+                        </NativeSelectOption>
+                      </React.Fragment>
+                    )),
+                  )}
+                </NativeSelect>
+              </Label>
+              <Label>
+                {"工作區"}
+                <NativeSelect name={"workspace"}>
+                  <NativeSelectOption value={""}>{"所有"}</NativeSelectOption>
+                  {React.Children.toArray(
+                    ["HIS", "OTC"].map((workspace, rowIndex) => (
+                      <React.Fragment key={rowIndex}>
+                        <NativeSelectOption value={workspace}>
+                          {workspace}
+                        </NativeSelectOption>
+                      </React.Fragment>
+                    )),
+                  )}
+                </NativeSelect>
+              </Label>
+              <Button variant="default" type={"submit"} className={"primary"}>
+                {"搜尋"}
+              </Button>
+              <Button
+                variant="outline"
+                type={"button"}
+                data-action={"reset-overview-filter"}
+              >
+                {"重設為當日所有"}
+              </Button>
+            </>
+          }
+        />
         <p className={"small"}>
           {
             "預設查詢當日所有品項、動作及工作區。進銷存以批次查詢為主；輸入批次會清除日期限制，可再指定日期縮小範圍。"
           }
         </p>
         <div id={"overview-movements-table"}>{<MovementsTable />}</div>
-      </div>
+      </Card>
     </>
   );
 }
@@ -368,16 +386,24 @@ export function ListPage({
     const actions = (
       <>
         <div className={"actions"}>
-          <button data-action={"edit"} data-id={String(entry.id ?? "")}>
+          <Button
+            variant="outline"
+            data-action={"edit"}
+            data-id={String(entry.id ?? "")}
+          >
             {"編輯"}
-          </button>
+          </Button>
           {activeModule === "his" ? (
             ""
           ) : (
             <>
-              <button data-action={"delete"} data-id={String(entry.id ?? "")}>
+              <Button
+                variant="outline"
+                data-action={"delete"}
+                data-id={String(entry.id ?? "")}
+              >
                 {"刪除"}
-              </button>
+              </Button>
             </>
           )}
         </div>
@@ -580,7 +606,7 @@ export function ListPage({
             ];
   return (
     <>
-      <div className={"panel list-panel"}>
+      <Card className={"panel list-panel"}>
         <div className={"toolbar"}>
           <div
             className={
@@ -588,7 +614,7 @@ export function ListPage({
               String(activeModule === "vendors" ? "vendor-search" : "")
             }
           >
-            <input
+            <Input
               id={"search"}
               type={"search"}
               aria-label={"搜尋資料"}
@@ -620,7 +646,8 @@ export function ListPage({
                     React.Children.toArray(
                       filtered.slice(0, 5).map((vendor, rowIndex) => (
                         <React.Fragment key={rowIndex}>
-                          <button
+                          <Button
+                            variant="outline"
                             type={"button"}
                             role={"option"}
                             aria-selected={vendor.id === highlightedVendor}
@@ -640,7 +667,7 @@ export function ListPage({
                             ) : (
                               ""
                             )}
-                          </button>
+                          </Button>
                         </React.Fragment>
                       )),
                     )
@@ -657,23 +684,27 @@ export function ListPage({
           </div>
           {activeModule === "vendors" ? (
             <>
-              <label className={"vendor-filter"}>
+              <Label className={"vendor-filter"}>
                 {"廠商狀態"}
-                <select
+                <NativeSelect
                   id={"vendor-status-filter"}
                   value={vendorStatusFilter}
                   onChange={() => {}}
                 >
-                  <option value={""}>{"全部狀態"}</option>
+                  <NativeSelectOption value={""}>
+                    {"全部狀態"}
+                  </NativeSelectOption>
                   {React.Children.toArray(
                     ["啟用", "停用"].map((status, rowIndex) => (
                       <React.Fragment key={rowIndex}>
-                        <option value={status}>{status}</option>
+                        <NativeSelectOption value={status}>
+                          {status}
+                        </NativeSelectOption>
                       </React.Fragment>
                     )),
                   )}
-                </select>
-              </label>
+                </NativeSelect>
+              </Label>
             </>
           ) : (
             ""
@@ -685,42 +716,54 @@ export function ListPage({
         </div>
         {activeModule === "requisitions" ? (
           <>
-            <FilterForm
+            <BaseFilterForm
               id={"requisition-filter"}
               className={"overview-movement-filter"}
               initial={requisitionFilter}
-            >
-              {renderInventoryIdentityFilters(
-                requisitionFilter,
-                requisitions.map((entry) => entry.person),
-                "requisition-filter-people",
-                "領用人",
-              )}
-              <label>
-                {"開始時間"}
-                <input
-                  name={"start"}
-                  type={"datetime-local"}
-                  step={"60"}
-                  defaultValue={String(requisitionFilter.start ?? "")}
-                />
-              </label>
-              <label>
-                {"結束時間"}
-                <input
-                  name={"end"}
-                  type={"datetime-local"}
-                  step={"60"}
-                  defaultValue={String(requisitionFilter.end ?? "")}
-                />
-              </label>
-              <button type={"submit"} className={"primary"}>
-                {"搜尋"}
-              </button>
-              <button type={"button"} data-action={"clear-requisition-filter"}>
-                {"清除條件"}
-              </button>
-            </FilterForm>
+
+              filterFields={
+                <>
+                  {renderInventoryIdentityFilters(
+                    requisitionFilter,
+                    requisitions.map((entry) => entry.person),
+                    "requisition-filter-people",
+                    "領用人",
+                  )}
+                  <Label>
+                    {"開始時間"}
+                    <Input
+                      name={"start"}
+                      type={"datetime-local"}
+                      step={"60"}
+                      defaultValue={String(requisitionFilter.start ?? "")}
+                    />
+                  </Label>
+                  <Label>
+                    {"結束時間"}
+                    <Input
+                      name={"end"}
+                      type={"datetime-local"}
+                      step={"60"}
+                      defaultValue={String(requisitionFilter.end ?? "")}
+                    />
+                  </Label>
+                  <Button
+                    variant="default"
+                    type={"submit"}
+                    className={"primary"}
+                  >
+                    {"搜尋"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    type={"button"}
+                    data-action={"clear-requisition-filter"}
+                  >
+                    {"清除條件"}
+                  </Button>
+                </>
+              }
+            />
             <p
               id={"requisition-filter-error"}
               className={"error"}
@@ -740,7 +783,7 @@ export function ListPage({
         </p>
         <div id={"list-table"}>
           {
-            <DataTable
+            <BaseDataTable
               headers={headers}
               rows={rows}
               editableColumns={editableColumns}
@@ -749,7 +792,7 @@ export function ListPage({
             />
           }
         </div>
-      </div>
+      </Card>
     </>
   );
 }
@@ -839,42 +882,50 @@ export function HistoricalCostsPage() {
   });
   return (
     <>
-      <div className={"panel"}>
-        <FilterForm
+      <Card className={"panel"}>
+        <BaseFilterForm
           id={"historical-cost-filter"}
           className={"overview-movement-filter"}
           initial={historicalCostFilter}
-        >
-          {renderInventoryIdentityFilters(
-            historicalCostFilter,
-            postedReceipts.map((voucher) => voucher.submittedBy),
-            "historical-cost-people",
-            "送出人員",
-            postedReceipts.map((voucher) => voucher.id),
-          )}
-          <label>
-            {"開始時間"}
-            <input
-              type={"datetime-local"}
-              name={"start"}
-              defaultValue={String(historicalCostFilter.start ?? "")}
-            />
-          </label>
-          <label>
-            {"結束時間"}
-            <input
-              type={"datetime-local"}
-              name={"end"}
-              defaultValue={String(historicalCostFilter.end ?? "")}
-            />
-          </label>
-          <button type={"submit"} className={"primary"}>
-            {"搜尋"}
-          </button>
-          <button type={"button"} data-action={"clear-historical-cost-filter"}>
-            {"清除條件"}
-          </button>
-        </FilterForm>
+
+          filterFields={
+            <>
+              {renderInventoryIdentityFilters(
+                historicalCostFilter,
+                postedReceipts.map((voucher) => voucher.submittedBy),
+                "historical-cost-people",
+                "送出人員",
+                postedReceipts.map((voucher) => voucher.id),
+              )}
+              <Label>
+                {"開始時間"}
+                <Input
+                  type={"datetime-local"}
+                  name={"start"}
+                  defaultValue={String(historicalCostFilter.start ?? "")}
+                />
+              </Label>
+              <Label>
+                {"結束時間"}
+                <Input
+                  type={"datetime-local"}
+                  name={"end"}
+                  defaultValue={String(historicalCostFilter.end ?? "")}
+                />
+              </Label>
+              <Button variant="default" type={"submit"} className={"primary"}>
+                {"搜尋"}
+              </Button>
+              <Button
+                variant="outline"
+                type={"button"}
+                data-action={"clear-historical-cost-filter"}
+              >
+                {"清除條件"}
+              </Button>
+            </>
+          }
+        />
         <p id={"historical-cost-error"} className={"error"} role={"alert"}>
           {state.errors.filter}
         </p>
@@ -885,7 +936,7 @@ export function HistoricalCostsPage() {
         </p>
         <h3>{"各料號歷史平均成本價"}</h3>
         {
-          <DataTable
+          <BaseDataTable
             headers={[
               "料號",
               "品項",
@@ -901,14 +952,14 @@ export function HistoricalCostsPage() {
             privileged={canEditExistingData}
           />
         }
-      </div>
-      <div className={"panel"}>
+      </Card>
+      <Card className={"panel"}>
         <h3>{"入庫成本明細"}</h3>
         <p className={"field-hint"}>
           {"保存當次入庫單價，品項成本價之後變更也不回寫歷史傳票。"}
         </p>
         {
-          <DataTable
+          <BaseDataTable
             headers={[
               "送出時間",
               "傳票編號",
@@ -950,7 +1001,7 @@ export function HistoricalCostsPage() {
             privileged={canEditExistingData}
           />
         }
-      </div>
+      </Card>
     </>
   );
 }
@@ -975,22 +1026,23 @@ export function MovementVoucher() {
             {activeModule === "receipt" ? "入庫" : "出庫"}
             {"傳票"}
           </h3>
-          <button
+          <Button
+            variant="outline"
             type={"button"}
             data-action={"create-voucher"}
             disabled={voucher && !locked}
           >
             {"建立傳票"}
-          </button>
+          </Button>
         </div>
-        <label>
+        <Label>
           {"選擇傳票"}
-          <select
+          <NativeSelect
             id={"movement-voucher"}
             value={selectedMovementVoucherIds[activeModule] ?? ""}
             onChange={() => {}}
           >
-            <option value={""}>{"尚未建立"}</option>
+            <NativeSelectOption value={""}>{"尚未建立"}</NativeSelectOption>
             {React.Children.toArray(
               movementVouchers
                 .filter((entry) => entry.direction === activeModule)
@@ -998,7 +1050,7 @@ export function MovementVoucher() {
                 .reverse()
                 .map((entry, rowIndex) => (
                   <React.Fragment key={rowIndex}>
-                    <option value={entry.id}>
+                    <NativeSelectOption value={entry.id}>
                       {entry.id}
                       {" · "}
                       {entry.cancelledAt
@@ -1006,12 +1058,12 @@ export function MovementVoucher() {
                         : entry.submittedAt
                           ? "已送出"
                           : "草稿"}
-                    </option>
+                    </NativeSelectOption>
                   </React.Fragment>
                 )),
             )}
-          </select>
-        </label>
+          </NativeSelect>
+        </Label>
         <p className={"field-hint"}>
           {
             "一張傳票是一個批次，編號為日期＋三碼流水號；加入明細後整批送出才更新庫存。"
@@ -1051,7 +1103,7 @@ export function MovementVoucher() {
               )}
             </div>
             {
-              <DataTable
+              <BaseDataTable
                 headers={[
                   "料號",
                   "品項",
@@ -1081,9 +1133,13 @@ export function MovementVoucher() {
                     "鎖定"
                   ) : (
                     <>
-                      <button type={"button"} data-remove-voucher-line={index}>
+                      <Button
+                        variant="outline"
+                        type={"button"}
+                        data-remove-voucher-line={index}
+                      >
                         {"移除"}
-                      </button>
+                      </Button>
                     </>
                   ),
                 ])}
@@ -1097,17 +1153,22 @@ export function MovementVoucher() {
             ) : (
               <>
                 <div className={"time-filter-actions"}>
-                  <button
+                  <Button
+                    variant="default"
                     type={"button"}
                     className={"primary"}
                     data-action={"submit-voucher"}
                     disabled={!voucher.lines.length}
                   >
                     {"確認送出傳票"}
-                  </button>
-                  <button type={"button"} data-action={"cancel-voucher"}>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    type={"button"}
+                    data-action={"cancel-voucher"}
+                  >
                     {"取消傳票"}
-                  </button>
+                  </Button>
                 </div>
               </>
             )}

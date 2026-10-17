@@ -1,9 +1,19 @@
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
+import { Badge } from "@/components/ui/badge";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { MovementForm } from "@/features/demo/MovementForm";
-import { FilterForm } from "@/components/ui/FilterForm";
+import { BaseFilterForm } from "@/components/ui/BaseFilterForm";
 import { useEffect, useRef } from "react";
 import { executeDemoCommand } from "@/store/demo";
-import { DataTable } from "@/components/ui/DataTable";
+import { BaseDataTable } from "@/components/ui/BaseDataTable";
 import { MovementsTable, MovementVoucher } from "@/features/demo/render";
 import { useCamera } from "@/features/demo/useCamera";
 import type { Workspace } from "@/types/demo";
@@ -89,9 +99,9 @@ export function ScanPage() {
   }, [product?.id]);
   const identity = (list: string, people: string[], voucherIds?: string[]) => (
     <>
-      <label>
+      <Label>
         批次／傳票編號
-        <input
+        <Input
           name="voucherId"
           list={`${list}-batches`}
           placeholder="所有批次，可輸入日期或傳票編號"
@@ -104,7 +114,7 @@ export function ScanPage() {
           autoComplete="off"
           inputMode="numeric"
         />
-      </label>
+      </Label>
       <datalist id={`${list}-batches`}>
         {[...new Set(voucherIds ?? [])]
           .filter(Boolean)
@@ -114,9 +124,9 @@ export function ScanPage() {
             <option key={id} value={id} />
           ))}
       </datalist>
-      <label>
+      <Label>
         料號
-        <input
+        <Input
           name="materialNumber"
           placeholder="所有料號"
           defaultValue={
@@ -126,10 +136,10 @@ export function ScanPage() {
             ).materialNumber
           }
         />
-      </label>
-      <label>
+      </Label>
+      <Label>
         人員
-        <input
+        <Input
           name="person"
           list={list}
           placeholder="所有人員"
@@ -141,7 +151,7 @@ export function ScanPage() {
             ).person
           }
         />
-      </label>
+      </Label>
       <datalist id={list}>
         {[...new Set(people)].map((person) => (
           <option key={person} value={person} />
@@ -152,11 +162,12 @@ export function ScanPage() {
   return (
     <>
       {stocktake && (
-        <div className="panel">
+        <Card className="panel">
           <div className="toolbar">
             <h3>{history ? "已結束歷史批次" : "進行中的盤點週期"}</h3>
             {!history && (
-              <button
+              <Button
+                variant="outline"
                 type="button"
                 data-action="start-batch"
                 disabled={s.stocktakeBatches.some(
@@ -165,12 +176,12 @@ export function ScanPage() {
                 onClick={() => action("start-batch")}
               >
                 開始新批次
-              </button>
+              </Button>
             )}
           </div>
-          <label>
+          <Label>
             查看 {workspace} 批次
-            <select
+            <NativeSelect
               id="stocktake-batch"
               value={batch?.id ?? ""}
               onChange={(e) =>
@@ -189,14 +200,14 @@ export function ScanPage() {
                 )
               }
             >
-              <option value="">請選擇批次</option>
+              <NativeSelectOption value="">請選擇批次</NativeSelectOption>
               {batches.map((b) => (
-                <option key={b.id} value={b.id}>
+                <NativeSelectOption key={b.id} value={b.id}>
                   {b.name} · {b.id} · {b.endedAt ? "已結束" : "進行中"}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
-          </label>
+            </NativeSelect>
+          </Label>
           {batch ? (
             <div className="batch-summary">
               <p>
@@ -217,13 +228,14 @@ export function ScanPage() {
                 {batch.endedBy ? ` · ${batch.endedBy}` : ""}
               </p>
               {!batch.endedAt && (
-                <button
+                <Button
+                  variant="outline"
                   type="button"
                   data-action="end-batch"
                   onClick={() => action("end-batch")}
                 >
                   結束此批次
-                </button>
+                </Button>
               )}
             </div>
           ) : (
@@ -233,15 +245,15 @@ export function ScanPage() {
                 : "目前沒有進行中的盤點週期，請開始新批次，或從左側「歷史盤點紀錄」查閱已結束紀錄。"}
             </p>
           )}
-        </div>
+        </Card>
       )}
-      <div className="panel">
+      <Card className="panel">
         {!stocktake && <MovementVoucher />}
         {stocktake && (
           <>
-            <label className={`tw:max-w-[220px] ${history ? "" : "tw:mb-5"}`}>
+            <Label className={`max-w-[220px] ${history ? "" : "mb-5"}`}>
               {history ? "查閱工作區" : "盤點工作區"}
-              <select
+              <NativeSelect
                 id="stocktake-workspace"
                 value={workspace}
                 onChange={(e) => {
@@ -258,10 +270,10 @@ export function ScanPage() {
                   );
                 }}
               >
-                <option>OTC</option>
-                <option>HIS</option>
-              </select>
-            </label>
+                <NativeSelectOption>OTC</NativeSelectOption>
+                <NativeSelectOption>HIS</NativeSelectOption>
+              </NativeSelect>
+            </Label>
             {history && (
               <p className="field-hint">
                 歷史頁僅查詢已結束批次；高權限可追加歷史更正，不能開始或操作現有週期。
@@ -272,9 +284,9 @@ export function ScanPage() {
         {!history && (
           <>
             <form id="scan-form" className="scan-form">
-              <label>
+              <Label>
                 國際條碼
-                <input
+                <Input
                   ref={barcode}
                   id="barcode"
                   name="barcode"
@@ -297,23 +309,25 @@ export function ScanPage() {
                   inputMode="numeric"
                   spellCheck={false}
                 />
-              </label>
+              </Label>
               {!stocktake ? (
-                <button
+                <Button
+                  variant="outline"
                   type="button"
                   data-action="open-barcode-camera"
                   onClick={() => void camera.start()}
                 >
                   開啟相機掃碼
-                </button>
+                </Button>
               ) : (
-                <button
+                <Button
+                  variant="default"
                   type="submit"
                   className="primary"
                   disabled={!batch || Boolean(batch.endedAt)}
                 >
                   查找品項
-                </button>
+                </Button>
               )}
             </form>
             {!stocktake ? (
@@ -337,7 +351,8 @@ export function ScanPage() {
                   <p data-camera-status role="status" aria-live="polite">
                     {camera.status}
                   </p>
-                  <button
+                  <Button
+                    variant="outline"
                     type="button"
                     data-action="close-barcode-camera"
                     onClick={() => {
@@ -347,25 +362,27 @@ export function ScanPage() {
                     }}
                   >
                     關閉相機
-                  </button>
+                  </Button>
                 </div>
               </>
             ) : (
               <div className="samples">
-                <button
+                <Button
+                  variant="outline"
                   data-action="sample"
                   disabled={!batch || Boolean(batch.endedAt)}
                   onClick={() => action("sample")}
                 >
                   代入已存在條碼
-                </button>
+                </Button>
               </div>
             )}
             <p id="scan-error" className="error" role="alert">
               {s.errors.scan}
             </p>
             {s.errors.scan && module === "receipt" && (
-              <button
+              <Button
+                variant="outline"
                 type="button"
                 data-action="add-unknown-barcode"
                 onClick={() =>
@@ -379,13 +396,16 @@ export function ScanPage() {
                 }
               >
                 新增品項並加入傳票
-              </button>
+              </Button>
             )}
             {product && (
               <>
                 <div className="selection">
                   <strong>
-                    {product.name} <span className="tag">{product.id}</span>
+                    {product.name}{" "}
+                    <Badge variant="secondary" className="tag">
+                      {product.id}
+                    </Badge>
                   </strong>
                   <p>
                     {product.spec} · 帳面庫存 {product.stock} {product.unit} ·{" "}
@@ -406,15 +426,15 @@ export function ScanPage() {
             )}
           </>
         )}
-      </div>
+      </Card>
       {stocktake ? (
         <>
-          <div className="panel list-panel">
+          <Card className="panel list-panel">
             <h3>盤點明細</h3>
             <p className="field-hint">
               手動填寫實盤數量並核對盤差，每筆勾選確認後，整個批次一次確認送出；送出後一般人員不能修改；高權限人員可另行更正並留歷程。
             </p>
-            <DataTable
+            <BaseDataTable
               tableKey={`stocktake-${batch?.id ?? workspace}`}
               headers={[
                 "品項",
@@ -444,9 +464,8 @@ export function ScanPage() {
                       ? "—"
                       : `${difference > 0 ? "+" : ""}${difference}`}
                   </span>,
-                  <label className="count-confirmation">
-                    <input
-                      type="checkbox"
+                  <Label className="count-confirmation">
+                    <Checkbox
                       data-confirm-count={count.id}
                       aria-label={`確認${p?.name}盤點`}
                       checked={Boolean(count.confirmed)}
@@ -455,8 +474,8 @@ export function ScanPage() {
                         Boolean(batch?.endedAt) ||
                         !Number.isSafeInteger(count.actual)
                       }
-                      onChange={(e) => {
-                        const checked = e.target.checked;
+                      onCheckedChange={(selection) => {
+                        const checked = selection === true;
                         dispatch(
                           executeDemoCommand({
                             type: "update",
@@ -477,21 +496,24 @@ export function ScanPage() {
                       }}
                     />
                     <span>{count.confirmed ? "已確認" : "未確認"}</span>
-                  </label>,
+                  </Label>,
                   count.completed ? (
-                    <span className="tag">
+                    <Badge variant="secondary" className="tag">
                       {count.correctedActual !== undefined
                         ? "已更正"
                         : "已送出"}
                       ・鎖定
-                    </span>
+                    </Badge>
                   ) : (
-                    <span className="tag low">草稿</span>
+                    <Badge variant="secondary" className="tag low">
+                      草稿
+                    </Badge>
                   ),
                   count.filledBy ?? "未記錄",
                   count.completed ? (
                     s.canEditExistingData ? (
-                      <button
+                      <Button
+                        variant="outline"
                         data-action="correct-count"
                         data-id={count.id}
                         onClick={() =>
@@ -505,13 +527,16 @@ export function ScanPage() {
                         }
                       >
                         歷史更正
-                      </button>
+                      </Button>
                     ) : (
-                      <button disabled>已送出・鎖定</button>
+                      <Button variant="outline" disabled>
+                        已送出・鎖定
+                      </Button>
                     )
                   ) : (
                     <>
-                      <button
+                      <Button
+                        variant="outline"
                         data-action="edit-count"
                         data-id={count.id}
                         onClick={() =>
@@ -525,14 +550,15 @@ export function ScanPage() {
                         }
                       >
                         {count.actual === null ? "填寫" : "修改草稿"}
-                      </button>{" "}
-                      <button
+                      </Button>{" "}
+                      <Button
+                        variant="outline"
                         data-action="remove-count"
                         data-id={count.id}
                         onClick={() => action("remove-count", String(count.id))}
                       >
                         移除
-                      </button>
+                      </Button>
                     </>
                   ),
                 ];
@@ -540,7 +566,8 @@ export function ScanPage() {
             />
             {batch && !batch.endedAt && (
               <div className="dialog-actions">
-                <button
+                <Button
+                  variant="default"
                   type="button"
                   className="primary"
                   data-action="submit-batch"
@@ -553,16 +580,16 @@ export function ScanPage() {
                   onClick={() => action("submit-batch")}
                 >
                   確認送出本批次
-                </button>
+                </Button>
               </div>
             )}
-          </div>
-          <div className="panel">
+          </Card>
+          <Card className="panel">
             <h3>批次期間操作紀錄</h3>
             <p className="field-hint">
               保留新增、填寫、移除、調整，以及同工作區在批次進行期間的庫存異動。
             </p>
-            <DataTable
+            <BaseDataTable
               tableKey={`batch-operations-${batch?.id ?? workspace}`}
               headers={[
                 "時間",
@@ -589,14 +616,14 @@ export function ScanPage() {
                   o.filledBy,
                 ])}
             />
-          </div>
+          </Card>
           {history && (
-            <div className="panel">
+            <Card className="panel">
               <h3>歷史更正紀錄</h3>
               <p className="field-hint">
                 更正獨立記錄於原批次期間之外，原送出數量與起迄時間保留。
               </p>
-              <DataTable
+              <BaseDataTable
                 tableKey={`batch-corrections-${batch?.id ?? workspace}`}
                 headers={[
                   "更正時間",
@@ -621,11 +648,11 @@ export function ScanPage() {
                     c.filledBy,
                   ])}
               />
-            </div>
+            </Card>
           )}
         </>
       ) : (
-        <div className="panel">
+        <Card className="panel">
           <h3>最近 OTC 異動</h3>
           {module === "issue" && (
             <div
@@ -638,7 +665,8 @@ export function ScanPage() {
                 ["inbound", "入庫"],
                 ["all", "總覽"],
               ].map(([view, label]) => (
-                <button
+                <Button
+                  variant="outline"
                   key={view}
                   type="button"
                   data-movement-view={view}
@@ -657,11 +685,11 @@ export function ScanPage() {
                   }
                 >
                   {label}
-                </button>
+                </Button>
               ))}
             </div>
           )}
-          <FilterForm
+          <BaseFilterForm
             initial={
               module === "issue"
                 ? s.issueMovementTimeFilter
@@ -677,105 +705,111 @@ export function ScanPage() {
                 ? "movement-time-filter"
                 : "overview-movement-filter"
             }
-          >
-            {identity(
-              `${module}-filter-people`,
-              s.movements
-                .filter((m) => m.workspace === "OTC")
-                .map((m) => m.filledBy ?? "未記錄"),
-              s.movements.map((m) => m.voucherId),
-            )}
-            {module === "issue" && (
-              <div
-                className="time-filter-shortcuts full"
-                role="group"
-                aria-label="快速搜尋期間"
-              >
-                {[
-                  ["month-current", "本月"],
-                  ["month-previous", "上個月"],
-                  ["month-next", "下個月"],
-                  ["week-current", "本週"],
-                  ["week-next", "下週"],
-                  ["week-previous", "上週"],
-                ].map(([period, label]) => (
-                  <button
-                    key={period}
-                    type="button"
-                    data-movement-period={period}
+
+            filterFields={
+              <>
+                {identity(
+                  `${module}-filter-people`,
+                  s.movements
+                    .filter((m) => m.workspace === "OTC")
+                    .map((m) => m.filledBy ?? "未記錄"),
+                  s.movements.map((m) => m.voucherId),
+                )}
+                {module === "issue" && (
+                  <div
+                    className="time-filter-shortcuts full"
+                    role="group"
+                    aria-label="快速搜尋期間"
                   >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            )}
-            <label>
-              開始時間
-              <input
-                type="datetime-local"
-                name="start"
-                step="60"
-                defaultValue={
-                  (module === "issue"
-                    ? s.issueMovementTimeFilter
-                    : s.receiptMovementFilter
-                  ).start
-                }
-              />
-            </label>
-            <label>
-              結束時間
-              <input
-                type="datetime-local"
-                name="end"
-                step="60"
-                defaultValue={
-                  (module === "issue"
-                    ? s.issueMovementTimeFilter
-                    : s.receiptMovementFilter
-                  ).end
-                }
-              />
-            </label>
-            <div className="time-filter-actions">
-              <button className="primary" type="submit">
-                搜尋
-              </button>
-              <button
-                type="button"
-                data-action={
-                  module === "issue"
-                    ? "clear-movement-time"
-                    : "clear-receipt-filter"
-                }
-              >
-                清除條件
-              </button>
-            </div>
-            {module === "issue" && (
-              <p className="small full">
-                優先依批次查詢同票全部明細；料號、人員及異動時間為交集條件，每週為週一至週日。
-              </p>
-            )}
-            <p
-              id={
-                module === "issue"
-                  ? "movement-time-error"
-                  : "receipt-filter-error"
-              }
-              className="error full"
-              role="alert"
-            >
-              {s.errors.filter}
-            </p>
-          </FilterForm>
+                    {[
+                      ["month-current", "本月"],
+                      ["month-previous", "上個月"],
+                      ["month-next", "下個月"],
+                      ["week-current", "本週"],
+                      ["week-next", "下週"],
+                      ["week-previous", "上週"],
+                    ].map(([period, label]) => (
+                      <Button
+                        variant="outline"
+                        key={period}
+                        type="button"
+                        data-movement-period={period}
+                      >
+                        {label}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+                <Label>
+                  開始時間
+                  <Input
+                    type="datetime-local"
+                    name="start"
+                    step="60"
+                    defaultValue={
+                      (module === "issue"
+                        ? s.issueMovementTimeFilter
+                        : s.receiptMovementFilter
+                      ).start
+                    }
+                  />
+                </Label>
+                <Label>
+                  結束時間
+                  <Input
+                    type="datetime-local"
+                    name="end"
+                    step="60"
+                    defaultValue={
+                      (module === "issue"
+                        ? s.issueMovementTimeFilter
+                        : s.receiptMovementFilter
+                      ).end
+                    }
+                  />
+                </Label>
+                <div className="time-filter-actions">
+                  <Button variant="default" className="primary" type="submit">
+                    搜尋
+                  </Button>
+                  <Button
+                    variant="outline"
+                    type="button"
+                    data-action={
+                      module === "issue"
+                        ? "clear-movement-time"
+                        : "clear-receipt-filter"
+                    }
+                  >
+                    清除條件
+                  </Button>
+                </div>
+                {module === "issue" && (
+                  <p className="small full">
+                    優先依批次查詢同票全部明細；料號、人員及異動時間為交集條件，每週為週一至週日。
+                  </p>
+                )}
+                <p
+                  id={
+                    module === "issue"
+                      ? "movement-time-error"
+                      : "receipt-filter-error"
+                  }
+                  className="error full"
+                  role="alert"
+                >
+                  {s.errors.filter}
+                </p>
+              </>
+            }
+          />
           {module === "receipt" && (
             <p className="field-hint">
               優先依批次查詢同票全部明細，可再加料號、人員及時間條件。
             </p>
           )}
           <div id={`${module}-movements-table`}>{<MovementsTable />}</div>
-        </div>
+        </Card>
       )}
     </>
   );

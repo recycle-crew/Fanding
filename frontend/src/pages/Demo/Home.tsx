@@ -1,5 +1,22 @@
-import { useOutletContext } from "react-router";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert } from "@/components/ui/alert";
+import { Link, useLocation, useNavigate } from "react-router";
+import { demoModulePaths } from "@/constants/demoRoutes";
+import { BaseModal } from "@/components/ui/BaseModal";
+import {
+  BaseDataTable,
+  BasePaginationContext,
+} from "@/components/ui/BaseDataTable";
+import { usePresentation } from "@/features/demo/presentation";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, MouseEvent } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { executeDemoCommand } from "@/store/demo";
@@ -10,7 +27,6 @@ import {
 } from "@/features/demo/render";
 import { ScanPage } from "@/features/demo/ScanPage";
 import { EditorPage } from "@/features/demo/EditorPage";
-import { DataTable } from "@/components/ui/DataTable";
 import { compileInventoryFilter } from "@/helpers/inventoryFilter";
 import { createMovementVoucher } from "@/features/demo/domain";
 import type {
@@ -19,7 +35,6 @@ import type {
   InventoryFilter,
   ModuleKey,
 } from "@/types/demo";
-import type { DemoLayoutContext } from "./Layout";
 const subtitles: Record<ModuleKey, string> = {
   "historical-cost": "依已送出的入庫傳票，查閱各料號歷史成本與當次單價。",
   overview: "從資料維護到庫存作業，掌握今天的工作。",
@@ -35,7 +50,8 @@ const subtitles: Record<ModuleKey, string> = {
 export function DemoPage() {
   const s = useAppSelector((root) => root.demo);
   const dispatch = useAppDispatch();
-  const { navigate } = useOutletContext<DemoLayoutContext>();
+  const routeLocation = useLocation();
+  const navigate = useNavigate();
   const [vendorOptions, setVendorOptions] = useState(false);
   const [highlightedVendor, setHighlightedVendor] = useState<string | null>(
     null,
@@ -43,8 +59,66 @@ export function DemoPage() {
   const content = useRef<HTMLElement>(null);
   const wasLoggedIn = useRef(false);
   const previousEditor = useRef<Editor | null>(null);
+  const [account, setAccount] = useState("demo.pharmacy");
+  const [password, setPassword] = useState("demo-only");
+  const [permission, setPermission] = useState("standard");
+  const [email, setEmail] = useState("");
+  const previousRecovery = useRef(false);
+  const pageStates = useMemo(() => new Map(), []);
   const embedded = new URLSearchParams(location.search).get("embed") === "1",
     preview = new URLSearchParams(location.search).get("preview") === "1";
+  usePresentation();
+  // 密碼由院內身分服務管理；展示申請不寄信、不查帳號、不修改密碼。
+  useEffect(() => {
+    if (!preview) {
+      if (s.recovery)
+        document
+          .querySelector<HTMLElement>(
+            s.recoverySent
+              ? "#recovery-result"
+              : "#recovery-form [name=account]",
+          )
+          ?.focus();
+      else if (previousRecovery.current)
+        document
+          .querySelector<HTMLInputElement>("#login-form [name=account]")
+          ?.focus();
+    }
+    previousRecovery.current = s.recovery;
+  }, [s.recovery, s.recoverySent, preview]);
+  useEffect(() => {
+    document.body.className = `demo-page${embedded ? " embedded" : ""}${preview ? " preview-mode" : ""}`;
+    document.body.inert = preview;
+    return () => {
+      document.body.inert = false;
+    };
+  }, []);
+  useEffect(() => {
+    if (!s.notice) return;
+    const timer = setTimeout(
+      () =>
+        dispatch(
+          executeDemoCommand({
+            type: "update",
+            update: (d) => {
+              d.notice = "";
+            },
+          }),
+        ),
+      5000,
+    );
+    return () => clearTimeout(timer);
+  }, [s.notice]);
+  // 盤點與各模組路由支援直接連結與瀏覽器上一頁／下一頁，未完成表單由 App 保護。
+  useEffect(() => {
+    const pathname = routeLocation.pathname.replace(/\/+$/, "");
+    const requested =
+      s.stocktakeRoutes[pathname] ??
+      (pathname === "/demo" ? "overview" : pathname.slice("/demo/".length));
+    const module = s.modules.find((module) => module.key === requested);
+    if (module && module.key !== s.activeModule)
+      dispatch(executeDemoCommand({ type: "navigate", module: module.key }));
+  }, [routeLocation.pathname]);
   useEffect(() => {
     setHighlightedVendor(null);
   }, [s.searchTerm]);
@@ -218,7 +292,11 @@ export function DemoPage() {
     if (!button) return;
     const action = button.dataset.action;
     if (button.dataset.module) {
-      navigate(button.dataset.module as ModuleKey);
+      const targetModule = s.modules.find(
+        (module) => module.key === button.dataset.module,
+      );
+      if (targetModule)
+        navigate(`${demoModulePaths[targetModule.key]}${routeLocation.search}`);
       return;
     }
     if (button.dataset.vendorOption) {
@@ -354,253 +432,547 @@ export function DemoPage() {
     }
   }
   return (
-    <>
-      <main
-        ref={content}
-        id="content"
-        tabIndex={-1}
-        hidden={Boolean(s.editor)}
-        onSubmit={onSubmit}
-        onClick={onClick}
-        onChange={(event) => {
-          const target = event.target;
-          if (!(
-            target instanceof HTMLInputElement ||
-            target instanceof HTMLSelectElement
-          ))
-            return;
-          const value = target.value;
-          if (target.id === "movement-voucher")
-            dispatch(
-              executeDemoCommand({
-                type: "update",
-                update: (d) => {
-                  d.selectedMovementVoucherIds[d.activeModule] = value || null;
-                  d.selectedProductId = null;
-                  d.scanBarcode = "";
-                },
-              }),
-            );
-          if (target.id === "vendor-status-filter")
-            dispatch(
-              executeDemoCommand({
-                type: "update",
-                update: (d) => {
-                  d.vendorStatusFilter = value;
-                  d.pageRevision++;
-                },
-              }),
-            );
-          if (target.id === "search")
-            dispatch(
-              executeDemoCommand({
-                type: "update",
-                update: (d) => {
-                  d.searchTerm = value;
-                  d.pageRevision++;
-                },
-              }),
-            );
-        }}
-        onKeyDown={(event) => {
-          const target = event.target as HTMLElement;
-          const search = target.closest(".vendor-search");
-          if (!search) return;
-          const options = Array.from(
-            search.querySelectorAll<HTMLButtonElement>("[data-vendor-option]"),
-          );
-          if (event.key === "Escape") {
-            event.preventDefault();
-            search.querySelector<HTMLInputElement>("#search")?.focus();
-            setVendorOptions(false);
-          }
-          if (
-            (event.key === "ArrowDown" || event.key === "ArrowUp") &&
-            options.length
-          ) {
-            event.preventDefault();
-            setVendorOptions(true);
-            const index = options.indexOf(target as HTMLButtonElement);
-            const next =
-              index < 0
-                ? event.key === "ArrowDown"
-                  ? 0
-                  : options.length - 1
-                : (index +
-                    (event.key === "ArrowDown" ? 1 : -1) +
-                    options.length) %
-                  options.length;
-            setHighlightedVendor(options[next].dataset.vendorOption ?? null);
-            options[next].focus();
-          }
-        }}
-        onFocus={(event) => {
-          if ((event.target as HTMLElement).id === "search")
-            setVendorOptions(true);
-        }}
-        onBlur={(event) => {
-          if (!(event.relatedTarget as HTMLElement)?.closest(".vendor-search"))
-            setVendorOptions(false);
-        }}
-      >
-        <div className="page-heading">
-          <div>
-            <p className="eyebrow">
-              庫存管理系統 / {s.activeModule === "his" ? "HIS" : "DEMO"}
-            </p>
-            <h2>{module.label}</h2>
-            <p>{subtitles[s.activeModule]}</p>
+    <BasePaginationContext.Provider
+      value={{ revision: s.pageRevision, states: pageStates }}
+    >
+      <div className="demo-banner">
+        展示模式・假資料 <span>重新整理即重置</span>
+      </div>
+      <section id="login" className="login-layout" hidden={s.loggedIn}>
+        <div className="login-story">
+          <div className="brand">庫存管理系統</div>
+          <p className="eyebrow">INVENTORY WORKSPACE</p>
+          <h1>
+            讓庫存作業
+            <br />
+            清楚、有序。
+          </h1>
+          <p>
+            HIS 藥品查詢與維護、OTC 入出庫與領用，
+            <br />
+            在同一個工作平台掌握。
+          </p>
+          <div className="login-tags">
+            <span>HIS 藥品</span>
+            <span>OTC 庫存</span>
+            <span>掃碼盤點</span>
           </div>
-          {["vendors", "products", "requisitions"].includes(s.activeModule) ? (
-            <button className="primary" data-action="add">
-              ＋ 新增資料
-            </button>
-          ) : (
-            <div className="page-heading-actions">
-              {s.activeModule === "overview" && (
-                <button
-                  type="button"
-                  className="low-stock-bell"
-                  data-action="show-low-stock"
-                  aria-controls="low-stock-panel"
-                  aria-label={`低庫存提醒，共 ${low.length} 個品項，點擊查看`}
-                  title="查看低庫存提醒"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="22"
-                    height="22"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-                    <path d="M10 21h4M12 2V1" />
-                  </svg>
-                  <span className="low-stock-count">{low.length}</span>
-                  <span>低庫存提醒</span>
-                </button>
-              )}
-              <span className="tag">展示模式・假資料</span>
-            </div>
-          )}
         </div>
-        {s.activeModule === "his" && (
-          <div className="callout">
-            日常扣庫由 HIS
-            執行。本頁僅模擬藥品檔維護與回寫；藥品編輯不修改庫存。
-          </div>
-        )}
-        {s.activeModule === "requisitions" && (
-          <div className="callout assumption">
-            展示假設，正式規則待確認：領用立即扣庫，修改依差額調整，刪除回復庫存；不重複產生耗用扣庫。
-          </div>
-        )}
-        {["stocktake", "stocktake-history"].includes(s.activeModule) && (
-          <div className="callout assumption">
-            展示假設，正式規則待確認：HIS 與 OTC
-            盤點確認後直接調整假庫存。此操作不會連線或修改 HIS 資料庫。
-          </div>
-        )}
-        <Fragment key={s.activeModule}>
-          {s.activeModule === "overview" ? (
-            <>
-              {<OverviewMovements />}
-              <div id="low-stock-panel" className="panel" tabIndex={-1}>
-                <h3>OTC 低庫存提醒</h3>
-                <DataTable
-                  tableKey="overview-low-stock"
-                  headers={["品項", "庫存", "最低庫存", "單位", "填寫人員"]}
-                  rows={low.map((product) => [
-                    product.name,
-                    String(product.stock),
-                    String(product.minStock),
-                    product.unit,
-                    product.filledBy ?? "未記錄",
-                  ])}
-                />
-                <button data-module="receipt" className="tw:mt-4">
-                  前往掃碼入庫 →
-                </button>
-              </div>
-            </>
-          ) : s.activeModule === "historical-cost" ? (
-            <HistoricalCostsPage />
-          ) : ["vendors", "his", "products", "requisitions"].includes(
+        <Card asChild>
+          <form
+            id="login-form"
+            className="login-card"
+            hidden={s.recovery}
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (!account.trim() || !password.trim()) return;
+              dispatch(
+                executeDemoCommand({
+                  type: "update",
+                  update: (d) => {
+                    d.currentAccount = account.trim();
+                    d.canEditExistingData = permission === "privileged";
+                    d.loggedIn = true;
+                    d.activeModule =
+                      d.stocktakeRoutes[routeLocation.pathname] ??
+                      d.activeModule;
+                    d.notice = "已登入展示工作區（未連線 NAS LDAP）";
+                  },
+                }),
+              );
+            }}
+          >
+            <p className="eyebrow">歡迎使用庫存管理系統</p>
+            <h2>登入工作區</h2>
+            <p className="muted">LDAP 帳號登入 · 群組權限管理（展示）</p>
+            <Label>
+              帳號
+              <Input
+                name="account"
+                value={account}
+                onChange={(e) => setAccount(e.target.value)}
+                autoComplete="off"
+                required
+              />
+            </Label>
+            <Label>
+              密碼
+              <Input
+                name="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="off"
+                required
+              />
+            </Label>
+            <Label>
+              展示權限
+              <NativeSelect
+                id="demo-permission"
+                value={permission}
+                onChange={(e) => setPermission(e.target.value)}
+              >
+                <NativeSelectOption value="standard">
+                  一般人員
+                </NativeSelectOption>
+                <NativeSelectOption value="privileged">
+                  高權限人員
+                </NativeSelectOption>
+              </NativeSelect>
+            </Label>
+            <p className="muted small">
+              此選單僅模擬權限；正式權限由 NAS LDAP 群組提供。
+            </p>
+            <Button variant="default" className="primary" type="submit">
+              使用展示帳號登入 →
+            </Button>
+            <p className="muted small">
+              此處僅驗證必填，不驗證真實帳密。請使用展示帳號。
+            </p>
+            <div className="login-links">
+              <Button
+                variant="outline"
+                id="forgot-password"
+                type="button"
+                className="text-button"
+                onClick={() =>
+                  dispatch(
+                    executeDemoCommand({
+                      type: "update",
+                      update: (d) => {
+                        d.recovery = true;
+                        d.recoverySent = false;
+                      },
+                    }),
+                  )
+                }
+              >
+                忘記密碼？
+              </Button>
+              <Link to="/">← 返回系統規劃</Link>
+            </div>
+          </form>
+        </Card>
+        <Card
+          id="password-recovery"
+          className="login-card"
+          hidden={!s.recovery}
+        >
+          <p className="eyebrow">LDAP 帳號服務</p>
+          <h2>忘記密碼</h2>
+          <p className="muted">填寫 LDAP 帳號與登記信箱，申請密碼重設。</p>
+          <form
+            id="recovery-form"
+            hidden={s.recoverySent}
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (account.trim())
+                dispatch(
+                  executeDemoCommand({
+                    type: "update",
+                    update: (d) => {
+                      d.recoverySent = true;
+                    },
+                  }),
+                );
+            }}
+          >
+            <Label>
+              LDAP 帳號
+              <Input
+                name="account"
+                value={account}
+                onChange={(e) => setAccount(e.target.value)}
+                autoComplete="username"
+                required
+              />
+            </Label>
+            <Label>
+              登記信箱
+              <Input
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="name@hospital.example"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </Label>
+            <p className="muted small">
+              此為介面展示，請使用假資料；尚未串接院內 LDAP 或寄信服務。
+            </p>
+            <Button variant="default" type="submit" className="primary">
+              模擬申請重設
+            </Button>
+          </form>
+          <p
+            id="recovery-result"
+            role="status"
+            tabIndex={-1}
+            hidden={!s.recoverySent}
+          >
+            展示申請流程已完成。正式服務會在資料符合院內規則時提供重設指引；本次未查詢帳號、寄送郵件或變更密碼。
+          </p>
+          <Button
+            variant="outline"
+            id="back-to-login"
+            type="button"
+            className="text-button"
+            onClick={() => {
+              setEmail("");
+              dispatch(
+                executeDemoCommand({
+                  type: "update",
+                  update: (d) => {
+                    d.recovery = false;
+                    d.recoverySent = false;
+                  },
+                }),
+              );
+            }}
+          >
+            ← 返回登入
+          </Button>
+        </Card>
+      </section>
+      <div className="workspace-content min-w-0" hidden={!s.loggedIn}>
+        <main
+          ref={content}
+          id="content"
+          tabIndex={-1}
+          hidden={Boolean(s.editor)}
+          onSubmit={onSubmit}
+          onClick={onClick}
+          onChange={(event) => {
+            const target = event.target;
+            if (!(
+              target instanceof HTMLInputElement ||
+              target instanceof HTMLSelectElement
+            ))
+              return;
+            const value = target.value;
+            if (target.id === "movement-voucher")
+              dispatch(
+                executeDemoCommand({
+                  type: "update",
+                  update: (d) => {
+                    d.selectedMovementVoucherIds[d.activeModule] =
+                      value || null;
+                    d.selectedProductId = null;
+                    d.scanBarcode = "";
+                  },
+                }),
+              );
+            if (target.id === "vendor-status-filter")
+              dispatch(
+                executeDemoCommand({
+                  type: "update",
+                  update: (d) => {
+                    d.vendorStatusFilter = value;
+                    d.pageRevision++;
+                  },
+                }),
+              );
+            if (target.id === "search")
+              dispatch(
+                executeDemoCommand({
+                  type: "update",
+                  update: (d) => {
+                    d.searchTerm = value;
+                    d.pageRevision++;
+                  },
+                }),
+              );
+          }}
+          onKeyDown={(event) => {
+            const target = event.target as HTMLElement;
+            const search = target.closest(".vendor-search");
+            if (!search) return;
+            const options = Array.from(
+              search.querySelectorAll<HTMLButtonElement>(
+                "[data-vendor-option]",
+              ),
+            );
+            if (event.key === "Escape") {
+              event.preventDefault();
+              search.querySelector<HTMLInputElement>("#search")?.focus();
+              setVendorOptions(false);
+            }
+            if (
+              (event.key === "ArrowDown" || event.key === "ArrowUp") &&
+              options.length
+            ) {
+              event.preventDefault();
+              setVendorOptions(true);
+              const index = options.indexOf(target as HTMLButtonElement);
+              const next =
+                index < 0
+                  ? event.key === "ArrowDown"
+                    ? 0
+                    : options.length - 1
+                  : (index +
+                      (event.key === "ArrowDown" ? 1 : -1) +
+                      options.length) %
+                    options.length;
+              setHighlightedVendor(options[next].dataset.vendorOption ?? null);
+              options[next].focus();
+            }
+          }}
+          onFocus={(event) => {
+            if ((event.target as HTMLElement).id === "search")
+              setVendorOptions(true);
+          }}
+          onBlur={(event) => {
+            if (
+              !(event.relatedTarget as HTMLElement)?.closest(".vendor-search")
+            )
+              setVendorOptions(false);
+          }}
+        >
+          <div className="page-heading">
+            <div>
+              <p className="eyebrow">
+                庫存管理系統 / {s.activeModule === "his" ? "HIS" : "DEMO"}
+              </p>
+              <h2>{module.label}</h2>
+              <p>{subtitles[s.activeModule]}</p>
+            </div>
+            {["vendors", "products", "requisitions"].includes(
               s.activeModule,
             ) ? (
-            <ListPage
-              vendorOptions={vendorOptions}
-              highlightedVendor={highlightedVendor}
-            />
-          ) : (
-            <ScanPage />
-          )}
-        </Fragment>
-        {["vendors", "his", "products", "requisitions"].includes(
-          s.activeModule,
-        ) && (
-          <div className="panel">
-            <h3>資料修改歷程</h3>
-            <DataTable
-              tableKey={`data-changes-${s.activeModule}`}
-              headers={[
-                "時間",
-                "識別",
-                "欄位",
-                "原值",
-                "新值",
-                "操作",
-                "修改人員",
-              ]}
-              rows={s.dataChangeRecords
-                .filter((c) => c.kind === s.activeModule)
-                .slice()
-                .reverse()
-                .map((c) => [
-                  new Date(c.time).toLocaleString("zh-TW"),
-                  String(c.recordId),
-                  (
-                    {
-                      code: "廠商代碼",
-                      name: "名稱",
-                      shortName: "簡稱",
-                      contact: "聯絡人",
-                      phone: "電話",
-                      email: "Email",
-                      barcode: "國際條碼",
-                      spec: "規格",
-                      unit: "單位",
-                      vendorId: "廠商",
-                      costPrice: "成本價",
-                      salePrice: "售價",
-                      minStock: "最低庫存",
-                      activationDate: "啟用日期",
-                      deactivationDate: "停用日期",
-                      person: "領用人",
-                      productId: "品項",
-                      quantity: "數量",
-                      note: "備註",
-                    } as Record<string, string>
-                  )[c.field] ?? c.field,
-                  c.before,
-                  c.after,
-                  c.permission,
-                  c.filledBy,
-                ])}
-            />
+              <Button variant="default" className="primary" data-action="add">
+                ＋ 新增資料
+              </Button>
+            ) : (
+              <div className="page-heading-actions">
+                {s.activeModule === "overview" && (
+                  <Button
+                    variant="outline"
+                    type="button"
+                    className="low-stock-bell"
+                    data-action="show-low-stock"
+                    aria-controls="low-stock-panel"
+                    aria-label={`低庫存提醒，共 ${low.length} 個品項，點擊查看`}
+                    title="查看低庫存提醒"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="22"
+                      height="22"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                      <path d="M10 21h4M12 2V1" />
+                    </svg>
+                    <span className="low-stock-count">{low.length}</span>
+                    <span>低庫存提醒</span>
+                  </Button>
+                )}
+                <Badge variant="secondary" className="tag">
+                  展示模式・假資料
+                </Badge>
+              </div>
+            )}
           </div>
-        )}
-        {s.errors.page && (
-          <p className="error" role="alert">
-            {s.errors.page}
-          </p>
-        )}
-      </main>
-      <EditorPage />
-    </>
+          {s.activeModule === "his" && (
+            <Alert role="note" className="callout">
+              日常扣庫由 HIS
+              執行。本頁僅模擬藥品檔維護與回寫；藥品編輯不修改庫存。
+            </Alert>
+          )}
+          {s.activeModule === "requisitions" && (
+            <Alert role="note" className="callout assumption">
+              展示假設，正式規則待確認：領用立即扣庫，修改依差額調整，刪除回復庫存；不重複產生耗用扣庫。
+            </Alert>
+          )}
+          {["stocktake", "stocktake-history"].includes(s.activeModule) && (
+            <Alert role="note" className="callout assumption">
+              展示假設，正式規則待確認：HIS 與 OTC
+              盤點確認後直接調整假庫存。此操作不會連線或修改 HIS 資料庫。
+            </Alert>
+          )}
+          <Fragment key={s.activeModule}>
+            {s.activeModule === "overview" ? (
+              <>
+                {<OverviewMovements />}
+                <Card id="low-stock-panel" className="panel" tabIndex={-1}>
+                  <h3>OTC 低庫存提醒</h3>
+                  <BaseDataTable
+                    tableKey="overview-low-stock"
+                    headers={["品項", "庫存", "最低庫存", "單位", "填寫人員"]}
+                    rows={low.map((product) => [
+                      product.name,
+                      String(product.stock),
+                      String(product.minStock),
+                      product.unit,
+                      product.filledBy ?? "未記錄",
+                    ])}
+                  />
+                  <Button
+                    variant="outline"
+                    data-module="receipt"
+                    className="mt-4"
+                  >
+                    前往掃碼入庫 →
+                  </Button>
+                </Card>
+              </>
+            ) : s.activeModule === "historical-cost" ? (
+              <HistoricalCostsPage />
+            ) : ["vendors", "his", "products", "requisitions"].includes(
+                s.activeModule,
+              ) ? (
+              <ListPage
+                vendorOptions={vendorOptions}
+                highlightedVendor={highlightedVendor}
+              />
+            ) : (
+              <ScanPage />
+            )}
+          </Fragment>
+          {["vendors", "his", "products", "requisitions"].includes(
+            s.activeModule,
+          ) && (
+            <Card className="panel">
+              <h3>資料修改歷程</h3>
+              <BaseDataTable
+                tableKey={`data-changes-${s.activeModule}`}
+                headers={[
+                  "時間",
+                  "識別",
+                  "欄位",
+                  "原值",
+                  "新值",
+                  "操作",
+                  "修改人員",
+                ]}
+                rows={s.dataChangeRecords
+                  .filter((c) => c.kind === s.activeModule)
+                  .slice()
+                  .reverse()
+                  .map((c) => [
+                    new Date(c.time).toLocaleString("zh-TW"),
+                    String(c.recordId),
+                    (
+                      {
+                        code: "廠商代碼",
+                        name: "名稱",
+                        shortName: "簡稱",
+                        contact: "聯絡人",
+                        phone: "電話",
+                        email: "Email",
+                        barcode: "國際條碼",
+                        spec: "規格",
+                        unit: "單位",
+                        vendorId: "廠商",
+                        costPrice: "成本價",
+                        salePrice: "售價",
+                        minStock: "最低庫存",
+                        activationDate: "啟用日期",
+                        deactivationDate: "停用日期",
+                        person: "領用人",
+                        productId: "品項",
+                        quantity: "數量",
+                        note: "備註",
+                      } as Record<string, string>
+                    )[c.field] ?? c.field,
+                    c.before,
+                    c.after,
+                    c.permission,
+                    c.filledBy,
+                  ])}
+              />
+            </Card>
+          )}
+          {s.errors.page && (
+            <p className="error" role="alert">
+              {s.errors.page}
+            </p>
+          )}
+        </main>
+        <EditorPage />
+      </div>
+      <div id="notice" role="status" aria-live="polite" hidden={!s.notice}>
+        {s.notice}
+      </div>
+      <BaseModal
+        id="confirmation"
+        open={Boolean(s.confirmation)}
+        preview={preview}
+        onClose={(value) => {
+          if (value === "confirm")
+            dispatch(executeDemoCommand({ type: "confirm" }));
+          else
+            dispatch(
+              executeDemoCommand({
+                type: "update",
+                update: (d) => {
+                  d.confirmation = null;
+                },
+              }),
+            );
+        }}
+
+        dialogContent={
+          <>
+            <form method="dialog">
+              <h2>確認操作</h2>
+              <p id="confirmation-text">{s.confirmation?.message}</p>
+              <div className="dialog-actions">
+                <Button variant="outline" value="cancel">
+                  取消
+                </Button>
+                <Button variant="default" value="confirm" className="primary">
+                  確認
+                </Button>
+              </div>
+            </form>
+          </>
+        }
+      />
+      <BaseModal
+        id="readonly-notice"
+        open={Boolean(s.readonlyReason)}
+        preview={preview}
+        labelledBy="readonly-title"
+        describedBy="readonly-reason readonly-policy"
+        onClose={() =>
+          dispatch(
+            executeDemoCommand({
+              type: "update",
+              update: (d) => {
+                d.readonlyReason = "";
+              },
+            }),
+          )
+        }
+
+        dialogContent={
+          <>
+            <form method="dialog">
+              <h2 id="readonly-title">目前不可編輯</h2>
+              <p id="readonly-reason">{s.readonlyReason}</p>
+              <p id="readonly-policy">
+                權限採 LDAP
+                群組對應系統角色的方向。需與使用者確認各群組可修改的欄位、料號啟用／停用權限，以及對入庫、出庫與領用的限制；目前
+                Demo 尚未串接 LDAP。
+              </p>
+              <div className="dialog-actions">
+                <Button variant="default" className="primary" value="close">
+                  了解
+                </Button>
+              </div>
+            </form>
+          </>
+        }
+      />
+    </BasePaginationContext.Provider>
   );
 }

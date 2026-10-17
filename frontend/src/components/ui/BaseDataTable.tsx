@@ -1,3 +1,18 @@
+import {
+  TableRow,
+  TableHead,
+  TableCell,
+  Table,
+  TableCaption,
+  TableHeader,
+  TableBody,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
 import { useLocation } from "react-router";
 import React, {
   createContext,
@@ -9,11 +24,11 @@ import React, {
 import type { ReactNode } from "react";
 import { downloadTable } from "@/helpers/excel";
 type PageState = { page: number; pageSize: number };
-export const PaginationContext = createContext<{
+export const BasePaginationContext = createContext<{
   revision: number;
   states: Map<string, PageState>;
 }>({ revision: 0, states: new Map() });
-export function DataTable({
+export function BaseDataTable({
   headers,
   rows,
   editableColumns = null,
@@ -27,12 +42,12 @@ export function DataTable({
   privileged?: boolean;
 }) {
   return (
-    <TableFrame
+    <BaseTableFrame
       tableKey={tableKey}
       headers={
-        <tr>
+        <TableRow>
           {headers.map((header) => (
-            <th
+            <TableHead
               key={header}
               scope="col"
               data-export-ignore={
@@ -42,7 +57,7 @@ export function DataTable({
               {header}
               {editableColumns && header !== "操作" && (
                 <span
-                  className={`field-access ${editableColumns.includes(header) ? "editable" : "readonly"}`}
+                  className={`mt-1 block text-[11px] leading-[1.4] font-medium ${editableColumns.includes(header) ? "text-[#24688b]" : "text-[#657480]"}`}
                 >
                   {editableColumns.includes(header)
                     ? header === "確認盤點"
@@ -55,22 +70,22 @@ export function DataTable({
                     : "唯讀"}
                 </span>
               )}
-            </th>
+            </TableHead>
           ))}
-        </tr>
+        </TableRow>
       }
       rows={rows.map((row, index) => (
-        <tr key={index}>
+        <TableRow key={index}>
           {row.map((cell, i) => (
-            <td key={i}>{cell}</td>
+            <TableCell key={i}>{cell}</TableCell>
           ))}
-        </tr>
+        </TableRow>
       ))}
       columns={headers.length}
     />
   );
 }
-export function TableFrame({
+export function BaseTableFrame({
   tableKey,
   headers,
   rows,
@@ -87,7 +102,7 @@ export function TableFrame({
   region?: string;
   className?: string;
 }) {
-  const { states, revision } = useContext(PaginationContext);
+  const { states, revision } = useContext(BasePaginationContext);
   const [pagination, setPagination] = useState<PageState>(
     () => states.get(tableKey) ?? { page: 1, pageSize: 5 },
   );
@@ -135,16 +150,16 @@ export function TableFrame({
   return (
     <>
       <div
-        className={`table-wrap tw:overflow-x-auto tw:print:overflow-visible ${className}`}
+        className={`table-wrap overflow-x-auto print:overflow-visible ${className}`}
         data-pagination-key={tableKey}
         tabIndex={0}
         role="region"
         aria-label={region}
       >
-        <table ref={table}>
-          {caption && <caption>{caption}</caption>}
-          <thead>{headers}</thead>
-          <tbody>
+        <Table ref={table}>
+          {caption && <TableCaption>{caption}</TableCaption>}
+          <TableHeader>{headers}</TableHeader>
+          <TableBody>
             {rows.length ? (
               rows.map((row, index) =>
                 React.isValidElement<{ hidden?: boolean }>(row)
@@ -156,23 +171,28 @@ export function TableFrame({
                   : row,
               )
             ) : (
-              <tr>
-                <td colSpan={columns} className="empty">
+              <TableRow>
+                <TableCell
+                  colSpan={columns}
+                  className="empty p-9 text-center text-[var(--muted)]"
+                >
                   目前沒有符合的資料
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
-      <div className="table-pagination tw:flex tw:flex-wrap tw:items-center tw:gap-x-5 tw:gap-y-3 tw:print:hidden">
-        <span className="pagination-summary" role="status" aria-live="polite">
+      <div className="table-pagination m-[14px_0_20px] flex flex-wrap items-center gap-x-5 gap-y-3 text-[12px] text-[var(--muted)] print:hidden">
+        <span className="mr-auto tabular-nums" role="status" aria-live="polite">
           {rows.length
             ? `第 ${offset + 1}–${Math.min(offset + pagination.pageSize, rows.length)} 筆，共 ${rows.length} 筆`
             : "共 0 筆"}
         </span>
-        <button
+        <Button
+          variant="outline"
           type="button"
+          className="border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
           data-export-excel
           disabled={exporting}
           title="匯出目前篩選條件下的全部資料，包含所有分頁"
@@ -193,10 +213,11 @@ export function TableFrame({
           }}
         >
           {exporting ? "匯出中…" : "匯出 Excel (.xlsx)"}
-        </button>
-        <label>
+        </Button>
+        <Label className="flex items-center gap-2 whitespace-nowrap text-[12px] font-medium">
           每頁筆數
-          <select
+          <NativeSelect
+            className="w-auto min-w-[60px] border border-[#bac9d4] bg-white p-[6px_9px] text-[var(--ink)]"
             data-page-size
             value={pagination.pageSize}
             onChange={(event) =>
@@ -204,13 +225,18 @@ export function TableFrame({
             }
           >
             {[5, 10, 20, 50].map((size) => (
-              <option key={size}>{size}</option>
+              <NativeSelectOption key={size}>{size}</NativeSelectOption>
             ))}
-          </select>
-        </label>
-        <nav className="pagination-navigation" aria-label="表格分頁">
-          <button
+          </NativeSelect>
+        </Label>
+        <nav
+          className="flex flex-wrap items-center justify-start gap-2"
+          aria-label="表格分頁"
+        >
+          <Button
+            variant="outline"
             type="button"
+            className="border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
             data-page-previous
             disabled={page === 1}
             onClick={() => {
@@ -220,10 +246,11 @@ export function TableFrame({
             }}
           >
             上一頁
-          </button>
-          <label>
+          </Button>
+          <Label className="flex items-center gap-2 whitespace-nowrap text-[12px] font-medium">
             頁碼
-            <select
+            <NativeSelect
+              className="w-auto min-w-[60px] border border-[#bac9d4] bg-white p-[6px_9px] text-[var(--ink)]"
               ref={pageSelector}
               data-page-number
               value={page}
@@ -236,13 +263,15 @@ export function TableFrame({
               }
             >
               {Array.from({ length: pageCount }, (_, i) => (
-                <option key={i}>{i + 1}</option>
+                <NativeSelectOption key={i}>{i + 1}</NativeSelectOption>
               ))}
-            </select>
+            </NativeSelect>
             <span className="pagination-total">／ {pageCount} 頁</span>
-          </label>
-          <button
+          </Label>
+          <Button
+            variant="outline"
             type="button"
+            className="border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
             data-page-next
             disabled={page === pageCount}
             onClick={() => {
@@ -252,9 +281,13 @@ export function TableFrame({
             }}
           >
             下一頁
-          </button>
+          </Button>
         </nav>
-        <span className="export-status" role="status" aria-live="polite">
+        <span
+          className="export-status basis-full text-[var(--muted)]"
+          role="status"
+          aria-live="polite"
+        >
           {status}
         </span>
       </div>

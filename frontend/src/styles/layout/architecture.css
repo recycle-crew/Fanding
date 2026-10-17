@@ -10,423 +10,402 @@
     --accent: #bae6fd;
   }
   * {
-    @apply tw:box-border;
+    @apply box-border;
   }
   html {
-    @apply tw:scroll-smooth tw:scroll-pt-[30px];
+    @apply scroll-smooth scroll-pt-[30px];
   }
   body {
-    @apply tw:m-0 tw:bg-[var(--paper)] tw:text-[var(--ink)] tw:font-sans tw:leading-[1.65];
+    @apply m-0 bg-[var(--paper)] text-[var(--ink)] font-sans leading-[1.65];
   }
   a {
-    @apply tw:text-inherit tw:underline-offset-[5px];
+    @apply text-inherit underline-offset-[5px];
   }
   a:focus-visible,
-  summary:focus-visible {
+  [data-slot="accordion-trigger"]:focus-visible {
     outline: 3px solid #0284c7;
-    @apply tw:outline-offset-[5px];
-  }
-  .shell {
-    @apply tw:max-w-[1180px] tw:p-[0_40px] tw:m-auto;
+    @apply outline-offset-[5px];
   }
   header {
-    @apply tw:flex tw:items-center tw:justify-between tw:gap-[24px] tw:p-[28px_0] tw:[border-bottom:1px_solid_var(--line)];
+    @apply flex items-center justify-between gap-[24px] p-[28px_0] [border-bottom:1px_solid_var(--line)];
   }
   .brand {
-    @apply tw:shrink-[0] tw:text-[22px] tw:font-[700] tw:tracking-[-0.7px] tw:no-underline;
+    @apply shrink-[0] text-[22px] font-[700] tracking-[-0.7px] no-underline;
   }
   .brand span {
-    @apply tw:ml-[10px] tw:text-[15px] tw:font-[400];
+    @apply ml-[10px] text-[15px] font-[400];
   }
   nav {
-    @apply tw:flex tw:gap-[18px] tw:text-[14px] tw:flex-wrap tw:justify-end;
+    @apply flex gap-[18px] text-[14px] flex-wrap justify-end;
   }
   nav a {
-    @apply tw:no-underline tw:whitespace-nowrap;
+    @apply no-underline whitespace-nowrap;
   }
   nav a:hover {
-    @apply tw:underline;
+    @apply underline;
   }
   .hero {
-    @apply tw:grid tw:grid-cols-[1.5fr_1fr] tw:gap-[70px] tw:p-[78px_0_70px] tw:items-center;
+    @apply grid grid-cols-[1.5fr_1fr] gap-[70px] p-[78px_0_70px] items-center;
   }
   .eyebrow {
-    @apply tw:text-[12px] tw:uppercase tw:tracking-[2px] tw:font-[700];
+    @apply text-[12px] uppercase tracking-[2px] font-[700];
   }
   h1 {
-    @apply tw:text-[clamp(44px,_6vw,_72px)] tw:leading-[1.08] tw:tracking-[-1px] tw:font-[500] tw:m-[22px_0];
+    @apply text-[clamp(44px,_6vw,_72px)] leading-[1.08] tracking-[-1px] font-[500] m-[22px_0];
   }
   .intro {
-    @apply tw:max-w-[560px] tw:text-[18px] tw:text-[var(--muted)];
+    @apply max-w-[560px] text-[18px] text-[var(--muted)];
   }
   .button {
-    @apply tw:inline-block tw:mt-[20px] tw:p-[12px_21px] tw:bg-[var(--primary)] tw:text-white tw:rounded-[5px] tw:no-underline tw:font-[600];
+    @apply inline-block mt-[20px] p-[12px_21px] bg-[var(--primary)] text-white rounded-[5px] no-underline font-[600];
   }
   .brief {
-    @apply tw:bg-[var(--primary)] tw:text-[#f0f9ff] tw:rounded-[10px] tw:p-[34px];
+    @apply bg-[var(--primary)] text-[#f0f9ff] rounded-[10px] p-[34px];
   }
   .brief .eyebrow {
-    @apply tw:text-[var(--accent)];
+    @apply text-[var(--accent)];
   }
   .brief h2 {
-    @apply tw:text-[27px] tw:font-[500] tw:leading-[1.35] tw:m-[20px_0_28px];
+    @apply text-[27px] font-[500] leading-[1.35] m-[20px_0_28px];
   }
   .brief dl {
-    @apply tw:m-0;
+    @apply m-0;
   }
   .brief dl div {
-    @apply tw:flex tw:justify-between tw:gap-[20px] tw:[border-top:1px_solid_#ffffff30] tw:p-[12px_0] tw:text-[14px];
+    @apply flex justify-between gap-[20px] [border-top:1px_solid_#ffffff30] p-[12px_0] text-[14px];
   }
   .brief dd {
-    @apply tw:m-0 tw:text-[#e0f2fe];
+    @apply m-0 text-[#e0f2fe];
   }
   section {
-    @apply tw:p-[46px_0] tw:[border-top:1px_solid_var(--line)];
+    @apply p-[46px_0] [border-top:1px_solid_var(--line)];
   }
   .section-heading {
-    @apply tw:grid tw:grid-cols-[100px_1fr] tw:items-baseline tw:gap-[20px] tw:mb-[26px];
+    @apply grid grid-cols-[100px_1fr] items-baseline gap-[20px] mb-[26px];
   }
   .number {
-    @apply tw:text-[13px] tw:text-[var(--muted)];
+    @apply text-[13px] text-[var(--muted)];
   }
   h2 {
-    @apply tw:text-[30px] tw:leading-[1.25] tw:font-[500] tw:tracking-[-0.6px] tw:m-0;
+    @apply text-[30px] leading-[1.25] font-[500] tracking-[-0.6px] m-0;
   }
   h3 {
-    @apply tw:text-[19px] tw:m-[0_0_12px] tw:font-[600];
+    @apply text-[19px] m-[0_0_12px] font-[600];
   }
   p {
-    @apply tw:m-[0_0_16px];
+    @apply m-[0_0_16px];
   }
   .feature-list {
-    @apply tw:grid tw:gap-[28px];
+    @apply grid gap-[28px];
   }
   .feature-list ul {
-    @apply tw:m-0 tw:pl-[22px];
+    @apply m-0 pl-[22px];
   }
   .feature-list li + li {
-    @apply tw:mt-[8px];
+    @apply mt-[8px];
   }
   .feature-list .prompt {
-    @apply tw:mt-[18px] tw:text-[var(--muted)];
+    @apply mt-[18px] text-[var(--muted)];
   }
   .workflow-heading {
-    @apply tw:m-[28px_0_16px];
+    @apply m-[28px_0_16px];
   }
   caption {
-    @apply tw:text-left tw:mb-[12px];
+    @apply text-left mb-[12px];
   }
   .table-wrap:focus-visible {
     outline: 3px solid #0284c7;
-    @apply tw:outline-offset-[5px];
+    @apply outline-offset-[5px];
   }
   .brief dt {
-    @apply tw:shrink-[0];
+    @apply shrink-[0];
   }
   .hero > *,
   .section-heading > * {
-    @apply tw:min-w-0;
-  }
-  .grid {
-    @apply tw:grid tw:grid-cols-[repeat(3,_1fr)] tw:gap-[24px];
+    @apply min-w-0;
   }
   .topic {
-    @apply tw:[border-left:2px_solid_#38bdf8] tw:pl-[22px];
+    @apply [border-left:2px_solid_#38bdf8] pl-[22px];
   }
   .topic p,
   .section-intro {
-    @apply tw:text-[var(--muted)];
+    @apply text-[var(--muted)];
   }
   .prompt {
-    @apply tw:text-[14px] tw:pt-[12px] tw:[border-top:1px_solid_var(--line)];
+    @apply text-[14px] pt-[12px] [border-top:1px_solid_var(--line)];
   }
   .section-intro {
-    @apply tw:max-w-[760px] tw:mb-[25px];
+    @apply max-w-[760px] mb-[25px];
   }
   .workflow {
-    @apply tw:grid tw:grid-cols-[repeat(4,_1fr)] tw:gap-[14px] tw:list-none tw:p-0 tw:m-0;
+    @apply grid grid-cols-[repeat(4,_1fr)] gap-[14px] list-none p-0 m-0;
     counter-reset: step;
   }
   .workflow li {
-    @apply tw:bg-[#e0f2fe] tw:p-[24px] tw:rounded-[6px];
+    @apply bg-[#e0f2fe] p-[24px] rounded-[6px];
     counter-increment: step;
   }
   .workflow li::before {
     content: "0" counter(step);
-    @apply tw:block tw:text-[#0369a1] tw:text-[13px] tw:mb-[20px];
+    @apply block text-[#0369a1] text-[13px] mb-[20px];
   }
   .workflow strong {
-    @apply tw:block tw:mb-[8px];
+    @apply block mb-[8px];
   }
   .workflow p {
-    @apply tw:text-[14px] tw:text-[var(--muted)] tw:m-0;
+    @apply text-[14px] text-[var(--muted)] m-0;
   }
   .table-wrap {
-    @apply tw:overflow-x-auto;
+    @apply overflow-x-auto;
   }
   table {
-    @apply tw:w-full tw:border-collapse tw:text-left tw:min-w-[560px];
+    @apply w-full border-collapse text-left min-w-[560px];
   }
   th {
-    @apply tw:text-[var(--muted)] tw:text-[12px] tw:uppercase tw:tracking-[1px];
+    @apply text-[var(--muted)] text-[12px] uppercase tracking-[1px];
   }
   th,
   td {
-    @apply tw:p-[17px_18px_17px_0] tw:[border-bottom:1px_solid_var(--line)] tw:align-top;
+    @apply p-[17px_18px_17px_0] [border-bottom:1px_solid_var(--line)] align-top;
   }
   .status {
-    @apply tw:whitespace-nowrap tw:bg-[#d7effc] tw:rounded-[20px] tw:p-[5px_10px] tw:text-[12px];
+    @apply whitespace-nowrap bg-[#d7effc] rounded-[20px] p-[5px_10px] text-[12px];
   }
-  details {
-    @apply tw:p-[19px_0] tw:[border-bottom:1px_solid_var(--line)];
+  [data-slot="accordion-item"] {
+    @apply p-[19px_0] [border-bottom:1px_solid_var(--line)];
   }
-  summary {
-    @apply tw:cursor-pointer tw:text-[18px] tw:font-[500];
+  [data-slot="accordion-trigger"] {
+    @apply cursor-pointer text-[18px] font-[500];
   }
-  details p {
-    @apply tw:text-[var(--muted)] tw:m-[14px_0_0_22px] tw:max-w-[800px];
+  [data-slot="accordion-item"] p {
+    @apply text-[var(--muted)] m-[14px_0_0_22px] max-w-[800px];
   }
   .next {
-    @apply tw:mt-[30px] tw:p-[30px] tw:bg-[#e0f2fe] tw:rounded-[8px];
+    @apply mt-[30px] p-[30px] bg-[#e0f2fe] rounded-[8px];
   }
   .next p {
-    @apply tw:max-w-[760px] tw:m-[12px_0_0];
+    @apply max-w-[760px] m-[12px_0_0];
   }
   footer {
-    @apply tw:p-[27px_0_40px] tw:text-[var(--muted)] tw:flex tw:justify-between tw:gap-[20px] tw:text-[13px] tw:[border-top:1px_solid_var(--line)];
+    @apply p-[27px_0_40px] text-[var(--muted)] flex justify-between gap-[20px] text-[13px] [border-top:1px_solid_var(--line)];
   }
-  @media (max-width: 800px) {
-    .shell {
-      @apply tw:p-[0_24px];
-    }
+  @media (width < 48rem) {
     .hero {
-      @apply tw:grid-cols-[1fr] tw:gap-[30px] tw:p-[48px_0];
-    }
-    .grid {
-      @apply tw:grid-cols-[1fr] tw:gap-[30px];
+      @apply grid-cols-[1fr] gap-[30px] p-[48px_0];
     }
     .workflow {
-      @apply tw:grid-cols-[1fr_1fr];
+      @apply grid-cols-[1fr_1fr];
     }
     .section-heading {
-      @apply tw:grid-cols-[45px_1fr] tw:gap-[12px];
+      @apply grid-cols-[45px_1fr] gap-[12px];
     }
     header {
-      @apply tw:items-start;
+      @apply items-start;
     }
     nav {
-      @apply tw:gap-[12px] tw:flex-wrap tw:justify-end;
+      @apply gap-[12px] flex-wrap justify-end;
     }
     h1 {
-      @apply tw:tracking-[-1px];
+      @apply tracking-[-1px];
     }
   }
-  @media (max-width: 480px) {
+  @media (width < 40rem) {
     header {
-      @apply tw:flex-col;
+      @apply flex-col;
     }
     nav {
-      @apply tw:justify-start;
+      @apply justify-start;
     }
     .workflow {
-      @apply tw:grid-cols-[1fr];
+      @apply grid-cols-[1fr];
     }
     footer {
-      @apply tw:flex-col;
+      @apply flex-col;
     }
   }
   @media (prefers-reduced-motion: reduce) {
     html {
-      @apply tw:scroll-auto;
+      @apply scroll-auto;
     }
   }
   @media print {
-    .shell {
-      @apply tw:max-w-none tw:p-0;
-    }
     .hero {
-      @apply tw:p-[25px_0];
+      @apply p-[25px_0];
     }
     nav,
     .button {
-      @apply tw:hidden;
+      @apply hidden;
     }
     section {
-      @apply tw:p-[25px_0];
+      @apply p-[25px_0];
     }
     .brief {
-      @apply tw:bg-white tw:text-[var(--ink)] tw:[border:1px_solid_var(--line)];
+      @apply bg-white text-[var(--ink)] [border:1px_solid_var(--line)];
     }
     .brief dd,
     .brief .eyebrow {
-      @apply tw:text-[var(--ink)];
+      @apply text-[var(--ink)];
     }
-    details {
-      @apply tw:break-inside-avoid;
+    [data-slot="accordion-item"] {
+      @apply break-inside-avoid;
     }
   }
 
   .skip {
-    @apply tw:absolute tw:left-[20px] tw:top-[-80px] tw:p-[12px] tw:bg-white tw:z-[5];
+    @apply absolute left-[20px] top-[-80px] p-[12px] bg-white z-[5];
   }
   .skip:focus {
-    @apply tw:top-[12px];
+    @apply top-[12px];
   }
   .hero {
-    @apply tw:grid-cols-[1.2fr_1fr] tw:gap-[44px] tw:p-[58px_0];
+    @apply grid-cols-[1.2fr_1fr] gap-[44px] p-[58px_0];
   }
   h1 {
-    @apply tw:text-[clamp(38px,_5vw,_62px)];
+    @apply text-[clamp(38px,_5vw,_62px)];
   }
   .intro {
-    @apply tw:text-[17px];
+    @apply text-[17px];
   }
   .badge {
-    @apply tw:inline-block tw:p-[5px_12px] tw:rounded-[20px] tw:bg-[#d7effc] tw:text-[13px] tw:mb-[16px];
+    @apply inline-block p-[5px_12px] rounded-[20px] bg-[#d7effc] text-[13px] mb-[16px];
   }
   .system-map {
-    @apply tw:bg-white tw:p-[28px] tw:[border:1px_solid_var(--line)] tw:rounded-[12px];
+    @apply bg-white p-[28px] [border:1px_solid_var(--line)] rounded-[12px];
     box-shadow: 0 12px 40px #0875ad0b;
   }
   .node {
-    @apply tw:p-[15px_18px] tw:rounded-[7px] tw:[border:1px_solid_var(--line)] tw:bg-[#f2faff];
+    @apply p-[15px_18px] rounded-[7px] [border:1px_solid_var(--line)] bg-[#f2faff];
   }
   .node strong,
   .node small {
-    @apply tw:block;
+    @apply block;
   }
   .node small {
-    @apply tw:text-[var(--muted)];
+    @apply text-[var(--muted)];
   }
   .node.server {
-    @apply tw:bg-[#0875ad] tw:text-white tw:border-[#0875ad];
+    @apply bg-[#0875ad] text-white border-[#0875ad];
   }
   .node.server small {
-    @apply tw:text-[#e0f2fe];
+    @apply text-[#e0f2fe];
   }
   .connector {
-    @apply tw:text-center tw:text-[var(--muted)] tw:text-[12px] tw:p-[8px];
+    @apply text-center text-[var(--muted)] text-[12px] p-[8px];
   }
   .destinations {
-    @apply tw:grid tw:grid-cols-[1fr_1fr] tw:gap-[12px];
+    @apply grid grid-cols-[1fr_1fr] gap-[12px];
   }
   .document-layout {
-    @apply tw:grid tw:grid-cols-[220px_minmax(0,_1fr)] tw:gap-[42px] tw:items-start tw:pb-[48px];
+    @apply items-start pb-[48px];
   }
-  .contents {
-    @apply tw:sticky tw:top-[24px] tw:p-[22px_0] tw:[border-top:1px_solid_var(--line)];
+  .architecture-toc {
+    @apply sticky top-[24px] p-[22px_0] [border-top:1px_solid_var(--line)];
   }
-  .contents nav {
-    @apply tw:flex tw:flex-col tw:gap-[6px] tw:text-[14px];
+  .architecture-toc nav {
+    @apply flex flex-col gap-[6px] text-[14px];
   }
-  .contents nav a {
-    @apply tw:whitespace-normal tw:p-[7px_10px] tw:rounded-[5px];
+  .architecture-toc nav a {
+    @apply whitespace-normal p-[7px_10px] rounded-[5px];
   }
-  .contents nav a:hover {
-    @apply tw:bg-[#e0f2fe];
+  .architecture-toc nav a:hover {
+    @apply bg-[#e0f2fe];
   }
-  .contents p {
-    @apply tw:text-[12px] tw:text-[var(--muted)] tw:p-[0_10px];
+  .architecture-toc p {
+    @apply text-[12px] text-[var(--muted)] p-[0_10px];
   }
   .document {
-    @apply tw:min-w-0;
+    @apply min-w-0;
   }
   .document > p {
-    @apply tw:text-[var(--muted)];
+    @apply text-[var(--muted)];
   }
   .document section {
-    @apply tw:p-[34px_0];
+    @apply p-[34px_0];
   }
   .document h2 {
-    @apply tw:text-[26px] tw:mb-[22px];
+    @apply text-[26px] mb-[22px];
   }
   .document h3 {
-    @apply tw:mt-[28px];
+    @apply mt-[28px];
   }
   .document li {
-    @apply tw:mb-[10px];
+    @apply mb-[10px];
   }
   .document ul,
   .document ol {
-    @apply tw:pl-[24px];
+    @apply pl-[24px];
   }
   pre {
-    @apply tw:max-w-full tw:overflow-auto tw:p-[24px] tw:bg-[#153449] tw:text-[#e0f2fe] tw:rounded-[8px] tw:text-[13px] tw:leading-[1.8] tw:tab-[2];
+    @apply max-w-full overflow-auto p-[24px] bg-[#153449] text-[#e0f2fe] rounded-[8px] text-[13px] leading-[1.8] tab-[2];
   }
   code {
-    @apply tw:font-mono;
+    @apply font-mono;
   }
   p code,
   li code,
   td code {
-    @apply tw:bg-[#e0f2fe] tw:text-[#075985] tw:p-[2px_4px] tw:rounded-[3px];
+    @apply bg-[#e0f2fe] text-[#075985] p-[2px_4px] rounded-[3px];
     overflow-wrap: anywhere;
   }
   pre:focus-visible {
     outline: 3px solid #0284c7;
-    @apply tw:outline-offset-[4px];
+    @apply outline-offset-[4px];
   }
   .table-wrap {
-    @apply tw:mb-[20px];
+    @apply mb-[20px];
   }
   th,
   td {
-    @apply tw:p-[14px_14px_14px_0] tw:text-[14px];
+    @apply p-[14px_14px_14px_0] text-[14px];
   }
   th {
-    @apply tw:text-[12px];
+    @apply text-[12px];
   }
-  @media (max-width: 900px) {
+  @media (width < 64rem) {
     .hero {
-      @apply tw:grid-cols-[1fr];
+      @apply grid-cols-[1fr];
     }
-    .document-layout {
-      @apply tw:grid-cols-[1fr] tw:gap-[16px];
+    .architecture-toc {
+      @apply static;
     }
-    .contents {
-      @apply tw:static;
+    .architecture-toc nav {
+      @apply flex-row justify-start flex-wrap;
     }
-    .contents nav {
-      @apply tw:flex-row tw:justify-start tw:flex-wrap;
-    }
-    .contents nav a {
-      @apply tw:[border:1px_solid_var(--line)];
+    .architecture-toc nav a {
+      @apply [border:1px_solid_var(--line)];
     }
   }
-  @media (max-width: 480px) {
-    .shell {
-      @apply tw:p-[0_18px];
-    }
+  @media (width < 40rem) {
     .system-map {
-      @apply tw:p-[18px];
+      @apply p-[18px];
     }
     .destinations {
-      @apply tw:grid-cols-[1fr];
+      @apply grid-cols-[1fr];
     }
     pre {
-      @apply tw:p-[18px] tw:text-[12px];
+      @apply p-[18px] text-[12px];
     }
   }
   @media print {
-    .contents,
+    .architecture-toc,
     .system-map,
     .skip {
-      @apply tw:hidden;
+      @apply hidden;
     }
     .hero,
     .document-layout {
-      @apply tw:block;
+      @apply block;
     }
     pre {
-      @apply tw:whitespace-pre-wrap;
+      @apply whitespace-pre-wrap;
       overflow-wrap: anywhere;
-      @apply tw:text-[#17364a] tw:bg-[#f2faff];
+      @apply text-[#17364a] bg-[#f2faff];
     }
   }
-  .document details {
-    @apply tw:scroll-mt-[30px];
+  .document [data-slot="accordion-item"] {
+    @apply scroll-mt-[30px];
   }
-  .document details ul {
-    @apply tw:mt-[16px];
+  .document [data-slot="accordion-item"] ul {
+    @apply mt-[16px];
   }
 }

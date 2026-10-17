@@ -1,3 +1,6 @@
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { executeDemoCommand } from "@/store/demo";
 import type { Product } from "@/types/demo";
@@ -21,10 +24,10 @@ export function MovementForm({ product }: { product: Product }) {
   });
   return (
     <form id="movement-form" className="inline-form">
-      <div className="form-grid tw:grid tw:grid-cols-2 tw:gap-[18px] tw:phone:grid-cols-1">
-        <label>
+      <div className="form-grid grid grid-cols-1 gap-[18px] sm:grid-cols-2">
+        <Label>
           數量（{product.unit}）
-          <input
+          <Input
             name="quantity"
             type="number"
             min="1"
@@ -33,11 +36,11 @@ export function MovementForm({ product }: { product: Product }) {
             required
             {...control("quantity")}
           />
-        </label>
+        </Label>
         {s.activeModule === "receipt" && (
-          <label>
+          <Label>
             本次入庫單價
-            <input
+            <Input
               name="unitCost"
               type="number"
               min="0"
@@ -53,21 +56,22 @@ export function MovementForm({ product }: { product: Product }) {
             <span className="field-hint">
               本次傳票獨立記錄，不修改品項成本價；留空時沿用品項成本價，仍無值則記為未填。
             </span>
-          </label>
+          </Label>
         )}
-        <label>
+        <Label>
           {s.activeModule === "issue" ? "用途" : "備註"}
-          <input
+          <Input
             name="note"
             required={s.activeModule === "issue"}
             {...control("note")}
           />
-        </label>
+        </Label>
       </div>
-      <button className="primary" type="submit">
+      <Button variant="default" className="primary" type="submit">
         加入傳票明細
-      </button>{" "}
-      <button
+      </Button>{" "}
+      <Button
+        variant="outline"
         type="button"
         data-action="cancel-scan"
         onClick={() =>
@@ -77,7 +81,7 @@ export function MovementForm({ product }: { product: Product }) {
         }
       >
         取消
-      </button>
+      </Button>
       <p id="movement-error" className="error" role="alert">
         {s.errors.movement}
       </p>
