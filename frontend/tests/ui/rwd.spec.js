@@ -13,6 +13,33 @@ const test = base.extend({
   ],
 });
 
+test("RWD shadcn 表單、Accordion 與確認視窗鍵盤操作", async ({ page }) => {
+  await page.goto("/#question-activation");
+  const question = page.locator("#question-activation");
+  await expect(question).toHaveAttribute("data-state", "open");
+  const disclosure = question.locator('[data-slot="accordion-trigger"]');
+  await disclosure.focus();
+  await page.keyboard.press("Enter");
+  await expect(question).toHaveAttribute("data-state", "closed");
+  await page.keyboard.press("Space");
+  await expect(question).toHaveAttribute("data-state", "open");
+  await checkResponsiveLayout(page);
+  await expect(question).toHaveScreenshot("shadcn-accordion.png");
+  await enterDemoModule(page, "vendors", true);
+  await expect(page.locator('#search')).toHaveAttribute("data-slot", "input");
+  await expect(page.locator('#vendor-status-filter')).toHaveAttribute("data-slot", "native-select");
+  await expect(page.locator('#table-area table')).toHaveAttribute("data-slot", "table");
+  const trigger = page.locator('[data-action="delete"][data-id="V003"]');
+  await trigger.click();
+  await expect(page.locator("#confirmation")).toBeVisible();
+  await expect(page.locator("#confirmation")).toHaveAttribute("data-slot", "dialog-content");
+  await checkResponsiveLayout(page);
+  await expect(page.locator("#confirmation")).toHaveScreenshot("shadcn-dialog.png");
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#confirmation")).toBeHidden();
+  await expect(trigger).toBeFocused();
+});
+
 test("RWD IA_Map 前端組織與 Redux 文件", async ({ page }) => {
   await page.goto("/architecture");
   await expect(page.locator("h1")).toBeVisible();
