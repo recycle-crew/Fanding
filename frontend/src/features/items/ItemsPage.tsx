@@ -88,7 +88,7 @@ export function ItemsPage() {
     }
   }
   useEffect(() => {
-    if (pathname === "/demo/items") {
+    if (pathname === "/items") {
       navigate(
         `${itemGroupPaths.HIS_MEDICINE}${location.search}${location.hash}`,
         {

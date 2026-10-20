@@ -4,7 +4,7 @@ import type { Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-  await page.goto("/demo/pos");
+  await page.goto("/pos");
   await expect(
     page.getByRole("heading", { name: "POS 銷售收銀", exact: true }),
   ).toBeVisible();
@@ -311,14 +311,14 @@ test("無障礙、取消保留購物車與桌面／手機畫面", async ({ page 
   ).toBeTruthy();
 });
 
-test("/demo/pos 直接進入與重新整理", { tag: "@critical" }, async ({ page }) => {
+test("/pos 直接進入與重新整理", { tag: "@critical" }, async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-  await page.goto("/demo/pos");
+  await page.goto("/pos");
   await expect(page.locator("#workspace")).toBeVisible();
   await expect(
     page.locator("#workspace").getByRole("heading").first(),
   ).not.toBeEmpty();
-  await expect(page).toHaveURL((url) => url.pathname === "/demo/pos");
+  await expect(page).toHaveURL((url) => url.pathname === "/pos");
   const entryURL = page.url();
   await page.reload();
   await expect(page).toHaveURL(entryURL);

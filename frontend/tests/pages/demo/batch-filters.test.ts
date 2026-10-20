@@ -25,7 +25,7 @@ const queryForms = {
 };
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
-  await page.goto("/demo");
+  await page.goto("/");
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
@@ -177,12 +177,12 @@ for (const module of ["overview"] as Array<keyof typeof queryForms>) {
 
 test("/demo 直接進入與重新整理", { tag: "@critical" }, async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-  await page.goto("/demo");
+  await page.goto("/");
   await expect(page.locator("#workspace")).toBeVisible();
   await expect(
     page.locator("#workspace").getByRole("heading").first(),
   ).not.toBeEmpty();
-  await expect(page).toHaveURL((url) => url.pathname === "/demo");
+  await expect(page).toHaveURL((url) => url.pathname === "/");
   const entryURL = page.url();
   await page.reload();
   await expect(page).toHaveURL(entryURL);

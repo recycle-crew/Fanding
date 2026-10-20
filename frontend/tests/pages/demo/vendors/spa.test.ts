@@ -16,7 +16,7 @@ test(
       )
         reduxErrors.push(message.text());
     });
-    await page.goto("/demo/vendors");
+    await page.goto("/vendors");
     await expect(page.locator("#workspace")).toBeVisible();
     await expect(page.locator("#content h2")).toHaveText("廠商資料維護");
     await page.locator("[data-action=add]").click();
@@ -32,16 +32,9 @@ test(
       if (request.isNavigationRequest() && request.frame() === page.mainFrame())
         documents.push(request.url());
     });
-    if (page.viewportSize().width <= 800)
-      await page.locator("#menu-toggle").click();
-    await page.locator('.planning-link[href="/"]').click();
-    await expect(page.locator("h1")).toBeVisible();
-    await page.locator('nav a[href="/architecture"]').click();
-    await expect(page).toHaveURL(/\/architecture$/);
-    await expect(page.locator(".document-layout")).toBeVisible();
-    await page.locator('nav a[href="/board"]').click();
+    await page.locator('.demo-banner a[href="/board"]').click();
     await expect(page.locator("#page-title")).not.toBeEmpty();
-    await page.locator('nav a[href="/demo"]').click();
+    await page.locator('nav a[href="/"]').click();
     await expect(page.locator("#workspace")).toBeVisible();
     if (page.viewportSize().width <= 800)
       await page.locator("#menu-toggle").click();
@@ -59,19 +52,19 @@ test(
 );
 
 test("SPA 直接開啟與重新整理盤點路徑及舊連結", async ({ page }) => {
-  await page.goto("/demo/stocktake/history");
+  await page.goto("/stocktake/history");
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
   await expect(page.locator("#workspace")).toBeVisible();
   await expect(page.locator("#content h2")).toHaveText("歷史盤點紀錄");
   await page.reload();
-  await expect(page).toHaveURL(/\/demo\/stocktake\/history$/);
+  await expect(page).toHaveURL(/\/stocktake\/history$/);
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
   await page.goto("/demo.html?embed=1#/stocktake/current");
-  await expect(page).toHaveURL(/\/demo\/stocktake\/current\?embed=1$/);
+  await expect(page).toHaveURL(/\/stocktake\/current\?embed=1$/);
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
@@ -81,25 +74,7 @@ test("SPA 直接開啟與重新整理盤點路徑及舊連結", async ({ page })
   await expect(page.locator("#content")).toHaveScreenshot(
     "spa-stocktake-direct.png",
   );
-  await page.goto("/architecture.html#preparation");
-  await expect(page).toHaveURL(/\/architecture#preparation$/);
-  await expect(page.locator("#preparation")).toBeInViewport();
-  await page.goto("/#development-readiness");
-  await page.locator('a[href="/architecture#prep-fields"]').click();
-  await expect(page.locator("#prep-fields")).toBeInViewport();
-  await expect(page.locator("#prep-fields")).toHaveAttribute(
-    "data-state",
-    "open",
-  );
-  await expect(page.locator("#prep-fields")).toHaveScreenshot(
-    "spa-document-anchor.png",
-  );
-  await page.locator('#prep-fields a[href="/#confirmation-fields"]').click();
-  await expect(page.locator("#confirmation-fields")).toBeInViewport();
-  await page.goto("/architecture/");
-  await expect(page.locator("h1")).toBeVisible();
-  await expect(page.locator("body")).toHaveClass("planning-page");
-  await page.goto("/demo/stocktake/history/");
+  await page.goto("/stocktake/history/");
   await expect(page.locator("#workspace")).toBeVisible();
   await expect(page.locator("#content h2")).toHaveText("歷史盤點紀錄");
 });

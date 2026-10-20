@@ -6,7 +6,7 @@ import * as fs from "node:fs";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
-  await page.goto("/demo");
+  await page.goto("/");
   await expect(page.locator("#workspace")).toBeVisible();
   await page.addStyleTag({
     content: "#notice {visibility:hidden !important;}",
@@ -256,18 +256,16 @@ test("入庫單價輸入、沿用主檔及送出重新驗證，不回寫主檔",
 });
 
 test(
-  "/demo/historical-cost 直接進入與重新整理",
+  "/historical-cost 直接進入與重新整理",
   { tag: "@critical" },
   async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-    await page.goto("/demo/historical-cost");
+    await page.goto("/historical-cost");
     await expect(page.locator("#workspace")).toBeVisible();
     await expect(
       page.locator("#workspace").getByRole("heading").first(),
     ).not.toBeEmpty();
-    await expect(page).toHaveURL(
-      (url) => url.pathname === "/demo/historical-cost",
-    );
+    await expect(page).toHaveURL((url) => url.pathname === "/historical-cost");
     const entryURL = page.url();
     await page.reload();
     await expect(page).toHaveURL(entryURL);

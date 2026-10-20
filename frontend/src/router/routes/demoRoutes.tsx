@@ -9,14 +9,14 @@ const DemoPage = lazy(() =>
 
 export const demoRoutes: RouteObject[] = [
   {
-    path: "/demo",
+    path: "/",
     element: <DemoLayout />,
     children: [
       { index: true, element: <DemoPage /> },
       ...Object.values(demoModulePaths)
-        .filter((path) => path !== "/demo")
+        .filter((path) => path !== "/")
         .map((path) => ({
-          path: path.slice("/demo/".length),
+          path: path.slice("/".length),
           element: <DemoPage />,
         })),
       { path: "overview", element: <DemoPage /> },
@@ -24,7 +24,7 @@ export const demoRoutes: RouteObject[] = [
       { path: "stocktakes/:id/count", element: <DemoPage /> },
       { path: "stocktakes/:id/review", element: <DemoPage /> },
       ...Object.values(itemGroupPaths).map((path) => ({
-        path: path.slice("/demo/".length),
+        path: path.slice("/".length),
         element: <DemoPage />,
       })),
     ],

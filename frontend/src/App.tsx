@@ -5,8 +5,6 @@ import { Component, Suspense, useEffect, useLayoutEffect } from "react";
 import type { ReactNode } from "react";
 import { Outlet, useBlocker, useLocation } from "react-router";
 import { executeDemoCommand } from "@/store/demo";
-import planningCss from "@/styles/layout/planning.css?inline";
-import architectureCss from "@/styles/layout/architecture.css?inline";
 import boardCss from "@/styles/layout/board.css?inline";
 import demoCss from "@/styles/layout/demo.css?inline";
 import themeCss from "@/styles/themes/default.css?inline";
@@ -54,17 +52,8 @@ export function App() {
       ) && currentLocation.pathname !== nextLocation.pathname
     );
   });
-  const page =
-    pathname === "/architecture"
-      ? "architecture"
-      : pathname === "/board"
-        ? "board"
-        : pathname === "/demo" || pathname.startsWith("/demo/")
-          ? "demo"
-          : "planning";
+  const page = pathname === "/board" ? "board" : "demo";
   const css = {
-    planning: planningCss,
-    architecture: architectureCss,
     board: boardCss,
     demo: demoCss,
   }[page];
@@ -84,12 +73,10 @@ export function App() {
 
   useLayoutEffect(() => {
     const query = new URLSearchParams(location.search);
-    document.body.className = `${page === "architecture" ? "planning" : page}-page${page === "demo" && query.get("embed") === "1" ? " embedded" : ""}${page === "demo" && query.get("preview") === "1" ? " preview-mode" : ""}`;
+    document.body.className = `${page}-page${page === "demo" && query.get("embed") === "1" ? " embedded" : ""}${page === "demo" && query.get("preview") === "1" ? " preview-mode" : ""}`;
     document.title = {
-      planning: "庫存管理系統 — HIS 與 OTC 庫存系統規劃",
-      architecture: "庫存管理系統 — 程式架構",
       board: "庫存管理系統 — 畫面規劃板",
-      demo: "庫存管理系統 · Demo",
+      demo: "庫存管理系統",
     }[page];
     // Demo 自行管理工作區焦點與捲動，避免模組切換改變黏附側欄的位置。
     if (!location.hash && page !== "demo") window.scrollTo(0, 0);

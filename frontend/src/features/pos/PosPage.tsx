@@ -45,7 +45,7 @@ export function PosPage() {
   const state = useAppSelector((root) => root.pos),
     items = useAppSelector((root) => root.items.items);
   const options = useBaseDataOptions();
-  const salesView = location.pathname === "/demo/sales";
+  const salesView = location.pathname === "/sales";
   const [cart, setCart] = useState<CartLine[]>([]),
     [orderDiscount, setOrderDiscount] = useState(0),
     [warehouse, setWarehouse] = useState("主倉庫");
@@ -165,7 +165,7 @@ export function PosPage() {
         <div className="pos-actions">
           <BaseButton
             variant="outline"
-            onClick={() => navigate(salesView ? "/demo/pos" : "/demo/sales")}
+            onClick={() => navigate(salesView ? "/pos" : "/sales")}
           >
             {salesView ? "前往 POS" : "銷售紀錄"}
           </BaseButton>

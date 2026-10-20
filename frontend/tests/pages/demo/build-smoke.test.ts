@@ -5,12 +5,13 @@ import { readdirSync } from "node:fs";
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
 });
-test("build 單一 HTML、四個路由、錨點與正式版無測試入口", async ({ page }) => {
+test("build 靜態文件、系統路由、錨點與正式版無測試入口", async ({ page }) => {
   expect(
-    readdirSync("dist", { recursive: true, encoding: "utf8" }).filter((name) =>
-      name.endsWith(".html"),
-    ),
-  ).toEqual(["index.html"]);
+    readdirSync("dist", { recursive: true, encoding: "utf8" })
+      .filter((name) => name.endsWith(".html"))
+      .map((name) => name.replaceAll("\\", "/"))
+      .sort(),
+  ).toEqual(["docs/architecture.html", "docs/planning.html", "index.html"]);
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   for (const path of [
@@ -21,10 +22,10 @@ test("build 單一 HTML、四個路由、錨點與正式版無測試入口", asy
   ]) {
     await page.goto(
       {
-        "index.html": "/",
-        "architecture.html": "/architecture",
+        "index.html": "/docs/planning.html",
+        "architecture.html": "/docs/architecture.html",
         "board.html": "/board",
-        "demo.html": "/demo",
+        "demo.html": "/",
       }[path],
     );
     await expect(
@@ -34,7 +35,9 @@ test("build 單一 HTML、四個路由、錨點與正式版無測試入口", asy
       const documentPath = await page
         .locator('footer a[href$=".md"]')
         .getAttribute("href");
-      const source = await page.request.get(documentPath);
+      const source = await page.request.get(
+        new URL(documentPath!, page.url()).href,
+      );
       expect(source.ok()).toBe(true);
       expect(await source.text()).toContain("# 庫存管理系統程式架構規劃");
     }
@@ -42,9 +45,9 @@ test("build 單一 HTML、四個路由、錨點與正式版無測試入口", asy
       "undefined",
     );
   }
-  await page.goto("/#development-readiness");
+  await page.goto("/docs/planning.html#development-readiness");
   await expect(page.locator("#development-readiness")).toBeVisible();
-  await page.goto("/demo/stocktake/history");
+  await page.goto("/stocktake/history");
   await expect(page.locator("#workspace")).toBeVisible();
   await expect(page.locator("#content h2")).toHaveText("歷史盤點紀錄");
   expect(errors).toEqual([]);
@@ -54,7 +57,7 @@ test("build 單一 HTML、四個路由、錨點與正式版無測試入口", asy
 test("build 本機 XLSX 與條碼套件、傳票及下載", async ({ page }) => {
   const response = await page.request.get("/vendor/zxing-browser-0.2.1.min.js");
   expect(response.ok()).toBe(true);
-  await page.goto("/demo");
+  await page.goto("/");
   await expect(page.locator("#workspace")).toBeVisible();
   if (page.viewportSize().width <= 800)
     await page.locator("#menu-toggle").click();
@@ -101,7 +104,7 @@ test("build 實際載入本機辨識 SDK 並顯示相機權限提示", async ({ 
       },
     });
   });
-  await page.goto("/demo");
+  await page.goto("/");
   await expect(page.locator("#workspace")).toBeVisible();
   if (page.viewportSize().width <= 800)
     await page.locator("#menu-toggle").click();

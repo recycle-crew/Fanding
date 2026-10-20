@@ -26,7 +26,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("shadcn 確認視窗的鍵盤取消、焦點限制與回復", async ({ page }) => {
-  await page.goto("/demo/vendors");
+  await page.goto("/vendors");
   if (loginEnabled)
     await page.locator("#demo-permission").selectOption("privileged");
   await expect(page.locator("#workspace")).toBeVisible();

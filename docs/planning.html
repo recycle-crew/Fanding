@@ -1,0 +1,1623 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>庫存管理系統 — HIS 與 OTC 庫存系統規劃</title>
+    <link rel="stylesheet" href="assets/document.css" />
+    <link rel="stylesheet" href="assets/planning.css" />
+  </head>
+  <body class="planning-page">
+    <div
+      class="shell mx-auto max-w-[1200px] px-[18px] sm:px-6 md:px-[40px] print:max-w-none print:p-0"
+    >
+      <header
+        class="flex flex-col items-start justify-between gap-6 border-b border-[var(--line)] py-6 sm:flex-row md:items-center"
+      >
+        <a
+          class="shrink-0 text-[22px] font-bold tracking-[-0.7px] no-underline text-[var(--ink)]"
+          href="planning.html"
+          >庫存管理系統</a
+        >
+        <nav
+          class="flex flex-wrap justify-start gap-3 text-[14px] md:justify-end md:gap-[18px]"
+          aria-label="主要導覽"
+        >
+          <a
+            class="no-underline whitespace-nowrap"
+            href="planning.html"
+            aria-current="page"
+            >功能與流程規劃</a
+          ><a class="no-underline whitespace-nowrap" href="architecture.html"
+            >程式架構</a
+          ><a class="no-underline whitespace-nowrap" href="../board"
+            >畫面規劃板 ↗</a
+          ><a class="no-underline whitespace-nowrap" href="../"
+            >庫存管理系統 ↗</a
+          >
+        </nav>
+      </header>
+      <main>
+        <div class="hero" id="overview">
+          <div>
+            <div class="eyebrow">HIS 與 OTC 庫存系統 · 規劃草稿 05</div>
+            <h1>庫存管理系統<br />功能與流程規劃</h1>
+            <p class="intro">
+              整合登入、廠商維護、HIS 藥品資料與 OTC 庫存作業。HIS 與 OTC
+              分開呈現，以目前需求為基礎，逐步釐清作業細節。
+            </p>
+            <a
+              href="#features"
+              data-slot="button"
+              class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3"
+              >查看目前功能需求 ↗</a
+            >
+          </div>
+          <aside
+            class="block rounded-xl border bg-card py-6 text-card-foreground shadow-sm brief"
+            aria-label="規劃概要"
+            data-slot="card"
+          >
+            <div class="eyebrow">系統概要</div>
+            <h2>查詢、維護與盤點<br />明確劃分系統責任</h2>
+            <dl>
+              <div>
+                <dt>專案</dt>
+                <dd>庫存管理系統</dd>
+              </div>
+              <div>
+                <dt>工作區</dt>
+                <dd>HIS 與 OTC 分開呈現</dd>
+              </div>
+              <div>
+                <dt>HIS 扣庫</dt>
+                <dd>由 HIS 執行</dd>
+              </div>
+              <div>
+                <dt>盤點範圍</dt>
+                <dd>HIS 與 OTC</dd>
+              </div>
+              <div>
+                <dt>目前階段</dt>
+                <dd>需求規劃，細節待確認</dd>
+              </div>
+            </dl>
+          </aside>
+        </div>
+        <section id="workspaces">
+          <div class="section-heading">
+            <span class="number">01 / 分工</span>
+            <h2>HIS 與 OTC 的資料與責任</h2>
+          </div>
+          <p class="section-intro">
+            兩個工作區分開呈現各自的來源資料，採一致的介面方向；實際可用功能依各自的作業需求規劃。
+          </p>
+          <div
+            class="table-wrap overflow-x-auto print:overflow-visible"
+            tabindex="0"
+            role="region"
+            aria-label="系統分工表，可左右捲動"
+          >
+            <table data-slot="table" class="w-full caption-bottom text-sm">
+              <caption
+                data-slot="table-caption"
+                class="mt-4 text-sm text-muted-foreground"
+              >
+                目前規劃的系統分工
+              </caption>
+              <thead data-slot="table-header" class="[&amp;_tr]:border-b">
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="col"
+                  >
+                    工作區
+                  </th>
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="col"
+                  >
+                    資料來源
+                  </th>
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="col"
+                  >
+                    本系統責任
+                  </th>
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="col"
+                  >
+                    庫存處理
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                data-slot="table-body"
+                class="[&amp;_tr:last-child]:border-0"
+              >
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="row"
+                  >
+                    HIS
+                  </th>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    既有 HIS 資料庫，包含「藥品檔」。
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    即時查詢、藥品檔修改與回寫，以及盤點資訊輸入。
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    扣庫由 HIS 執行；盤點調整如何交由 HIS 執行仍待確認。
+                  </td>
+                </tr>
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="row"
+                  >
+                    OTC
+                  </th>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    內部資料，原規劃透過 localhost
+                    服務存取；儲存與部署方式待確認。
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    資料維護、入庫、出庫／耗用、領用與盤點。
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    規劃支援庫存調整；領用與耗用的扣庫規則、調整流程待確認。
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div
+            class="table-pagination m-[14px_0_20px] flex flex-wrap items-center gap-x-5 gap-y-3 text-[12px] text-[var(--muted)] print:hidden"
+          >
+            <span class="mr-auto tabular-nums" role="status" aria-live="polite"
+              >第 1–2 筆，共 2 筆</span
+            ><button
+              data-slot="button"
+              class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4 shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-9 has-[&gt;svg]:px-3 border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
+              type="button"
+              title="匯出目前篩選條件下的全部資料，包含所有分頁"
+            >
+              匯出 Excel (.xlsx)</button
+            ><label
+              data-slot="label"
+              class="select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 flex items-center gap-2 whitespace-nowrap text-[12px] font-medium"
+              >每頁筆數
+              <div
+                class="group/native-select relative min-w-0 w-full has-[select:disabled]:opacity-50"
+                data-slot="native-select-wrapper"
+              >
+                <select
+                  data-slot="native-select"
+                  class="h-9 appearance-none rounded-md text-sm shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed data-[size=sm]:h-8 data-[size=sm]:py-1 dark:bg-input/30 dark:hover:bg-input/50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 w-auto min-w-[60px] border border-[#bac9d4] bg-white p-[6px_9px] text-[var(--ink)]"
+                >
+                  <option
+                    data-slot="native-select-option"
+                    class="bg-[Canvas] text-[CanvasText]"
+                  >
+                    5
+                  </option>
+                  <option
+                    data-slot="native-select-option"
+                    class="bg-[Canvas] text-[CanvasText]"
+                  >
+                    10
+                  </option>
+                  <option
+                    data-slot="native-select-option"
+                    class="bg-[Canvas] text-[CanvasText]"
+                  >
+                    20
+                  </option>
+                  <option
+                    data-slot="native-select-option"
+                    class="bg-[Canvas] text-[CanvasText]"
+                  >
+                    50
+                  </option></select
+                ><svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-chevron-down pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-muted-foreground opacity-50 select-none"
+                  aria-hidden="true"
+                  data-slot="native-select-icon"
+                >
+                  <path d="m6 9 6 6 6-6"></path>
+                </svg></div
+            ></label>
+            <nav
+              class="flex flex-wrap items-center justify-start gap-2"
+              aria-label="表格分頁"
+            >
+              <button
+                data-slot="button"
+                class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4 shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-9 has-[&gt;svg]:px-3 border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
+                type="button"
+                disabled=""
+              >
+                上一頁</button
+              ><label
+                data-slot="label"
+                class="select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 flex items-center gap-2 whitespace-nowrap text-[12px] font-medium"
+                >頁碼
+                <div
+                  class="group/native-select relative min-w-0 w-full has-[select:disabled]:opacity-50"
+                  data-slot="native-select-wrapper"
+                >
+                  <select
+                    data-slot="native-select"
+                    class="h-9 appearance-none rounded-md text-sm shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed data-[size=sm]:h-8 data-[size=sm]:py-1 dark:bg-input/30 dark:hover:bg-input/50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 w-auto min-w-[60px] border border-[#bac9d4] bg-white p-[6px_9px] text-[var(--ink)]"
+                    disabled=""
+                  >
+                    <option
+                      data-slot="native-select-option"
+                      class="bg-[Canvas] text-[CanvasText]"
+                    >
+                      1
+                    </option></select
+                  ><svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-chevron-down pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-muted-foreground opacity-50 select-none"
+                    aria-hidden="true"
+                    data-slot="native-select-icon"
+                  >
+                    <path d="m6 9 6 6 6-6"></path>
+                  </svg>
+                </div>
+                <span class="pagination-total">／ 1 頁</span></label
+              ><button
+                data-slot="button"
+                class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4 shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-9 has-[&gt;svg]:px-3 border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
+                type="button"
+                disabled=""
+              >
+                下一頁
+              </button>
+            </nav>
+            <span
+              class="export-status basis-full text-[var(--muted)]"
+              role="status"
+              aria-live="polite"
+            ></span>
+          </div>
+          <p class="section-intro mt-5">
+            OTC 沿用目前名稱，完整名稱與品項範圍尚待確認。HIS 藥品檔回寫與 HIS
+            扣庫是不同作業，不將扣庫責任移至本系統。
+          </p>
+        </section>
+        <section id="features">
+          <div class="section-heading">
+            <span class="number">02 / 需求</span>
+            <h2>目前提出的五個功能模組</h2>
+          </div>
+          <p class="section-intro">
+            以下為目前需要的功能，尚未定稿。每個模組的未決細節另列為待確認，不代表已完成實作或已決定第一版交付範圍。
+          </p>
+          <div class="feature-list">
+            <article class="topic">
+              <h3>1. SSO 登入</h3>
+              <ul>
+                <li>串接 NAS LDAP 登入。</li>
+              </ul>
+              <div class="prompt">
+                待確認：SSO
+                是同一個庫存管理系統系統內共用登入，還是與其他獨立系統的跨系統登入？另需確認
+                NAS LDAP 的用途、使用者角色與操作權限。
+              </div>
+            </article>
+            <article class="topic">
+              <h3>2. 廠商資料維護設定</h3>
+              <ul>
+                <li>以表格呈現廠商列表。</li>
+                <li>支援新增、查詢、修改、刪除（CRUD）。</li>
+              </ul>
+              <div class="prompt">
+                待確認：廠商欄位、資料來源、HIS 與 OTC
+                是否共用，以及已被使用的廠商能否刪除。
+              </div>
+            </article>
+            <article class="topic">
+              <h3>3. HIS 藥品資料查詢與修改</h3>
+              <ul>
+                <li>讀取並同步 HIS 資料庫「藥品檔」，即時呈現資料。</li>
+                <li>提供資料修改功能，並將修改內容寫回 HIS 資料庫。</li>
+                <li>扣庫直接由 HIS 執行，本系統負責方便查詢與修改。</li>
+              </ul>
+              <div class="prompt">
+                待確認：可修改欄位、讀寫介面、更新頻率、同步方式、修改紀錄，以及連線失敗或同時修改時的處理方式。
+              </div>
+            </article>
+            <article class="topic">
+              <h3>4. OTC 資料維護</h3>
+              <ul>
+                <li>
+                  <strong>入庫（新增）：</strong
+                  >掃描國際條碼。資料已存在時，輸入入庫資訊後入庫；資料不存在時，跳出提醒，輸入相關資訊新增資料後入庫。
+                </li>
+                <li>
+                  <strong>資料編輯：</strong>支援現有 OTC
+                  資料的新增、查詢、修改、刪除（CRUD）。
+                </li>
+                <li>
+                  <strong>出庫（耗用）：</strong
+                  >掃描國際條碼並輸入相關出庫資訊。
+                </li>
+                <li>
+                  <strong>領用：</strong
+                  >支援領用資料的新增、查詢、修改、刪除（CRUD）。
+                </li>
+              </ul>
+              <div class="prompt">
+                待確認：各作業的輸入欄位、未知條碼出庫時的處理、領用與耗用的關係、扣庫時點，以及避免重複扣庫的規則。
+              </div>
+            </article>
+            <article class="topic">
+              <h3>5. 庫存盤點</h3>
+              <ul>
+                <li>盤點範圍涵蓋 HIS 與 OTC。</li>
+                <li>掃描並輸入盤點資訊。</li>
+                <li>支援盤盈、盤差庫存調整。</li>
+              </ul>
+              <div class="prompt">
+                待確認：HIS 調整如何交由 HIS 執行、OTC
+                調整流程、差異計算基準，以及是否需要審核。
+              </div>
+            </article>
+          </div>
+        </section>
+        <section id="workflow">
+          <div class="section-heading">
+            <span class="number">03 / 流程</span>
+            <h2>目前需求對應的作業流程</h2>
+          </div>
+          <p class="section-intro">
+            以下整理目前提出的操作順序；審核、扣庫細節與異常處理仍待確認。
+          </p>
+          <h3 class="workflow-heading">HIS 藥品資料</h3>
+          <ol
+            class="workflow grid grid-cols-1 gap-[14px] sm:grid-cols-2 md:grid-cols-4"
+          >
+            <li>
+              <strong>讀取藥品檔</strong>
+              <p>從 HIS 資料庫取得資料，供即時查詢。</p>
+            </li>
+            <li>
+              <strong>查詢與修改</strong>
+              <p>查找藥品，修改允許維護的欄位；欄位範圍待確認。</p>
+            </li>
+            <li>
+              <strong>回寫 HIS</strong>
+              <p>將修改內容寫回 HIS 資料庫；介面與同步方式待確認。</p>
+            </li>
+            <li>
+              <strong>由 HIS 扣庫</strong>
+              <p>扣庫維持由 HIS 執行，本系統不另行扣庫。</p>
+            </li>
+          </ol>
+          <h3 class="workflow-heading">OTC 入庫</h3>
+          <ol
+            class="workflow grid grid-cols-1 gap-[14px] sm:grid-cols-2 md:grid-cols-4"
+          >
+            <li>
+              <strong>掃描國際條碼</strong>
+              <p>辨識本次要入庫的品項。</p>
+            </li>
+            <li>
+              <strong>判斷資料是否存在</strong>
+              <p>
+                已存在：直接輸入入庫資訊。不存在：提醒並輸入相關資訊新增資料。
+              </p>
+            </li>
+            <li>
+              <strong>完成入庫</strong>
+              <p>依輸入資訊辦理入庫；必填欄位待確認。</p>
+            </li>
+            <li>
+              <strong>後續庫存作業</strong>
+              <p>
+                出庫／耗用掃碼後輸入資訊；領用資料另提供 CRUD，兩者關係待確認。
+              </p>
+            </li>
+          </ol>
+          <h3 class="workflow-heading">HIS 與 OTC 盤點</h3>
+          <ol
+            class="workflow grid grid-cols-1 gap-[14px] sm:grid-cols-2 md:grid-cols-4"
+          >
+            <li>
+              <strong>選擇盤點範圍</strong>
+              <p>分別處理 HIS 或 OTC；倉庫與盤點批次規則待確認。</p>
+            </li>
+            <li>
+              <strong>掃描並輸入</strong>
+              <p>掃描品項，輸入盤點資訊。</p>
+            </li>
+            <li>
+              <strong>核對盤盈盤差</strong>
+              <p>核對帳面與實際庫存差異；比較基準待確認。</p>
+            </li>
+            <li>
+              <strong>庫存調整</strong>
+              <p>HIS 調整交由 HIS 執行的方式、OTC 調整與審核流程待確認。</p>
+            </li>
+          </ol>
+        </section>
+        <section id="development-readiness">
+          <div class="section-heading">
+            <span class="number">04 / 確認</span>
+            <h2>開發前需確認的事項</h2>
+          </div>
+          <p class="section-intro">
+            先確認作業需求，再整理成可開發、可驗收的規格。以下六項尚未定案；點選產出名稱，可查看架構頁需要準備的內容。
+          </p>
+          <div
+            class="table-wrap overflow-x-auto print:overflow-visible"
+            tabindex="0"
+            role="region"
+            aria-label="開發前確認清單，可左右捲動"
+          >
+            <table data-slot="table" class="w-full caption-bottom text-sm">
+              <caption
+                data-slot="table-caption"
+                class="mt-4 text-sm text-muted-foreground"
+              >
+                客戶需求確認摘要 · 確認狀態由文件維護
+              </caption>
+              <thead data-slot="table-header" class="[&amp;_tr]:border-b">
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="col"
+                  >
+                    項目
+                  </th>
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="col"
+                  >
+                    要確認的重點
+                  </th>
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="col"
+                  >
+                    確認後產出
+                  </th>
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="col"
+                  >
+                    目前狀態
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                data-slot="table-body"
+                class="[&amp;_tr:last-child]:border-0"
+              >
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                  id="confirmation-scope"
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="row"
+                  >
+                    01 · 第一版範圍
+                  </th>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    必做、延後、不包含的功能。<br /><a href="#features"
+                      >查看相關需求</a
+                    >
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <a href="architecture.html#prep-scope">第一版交付清單 ↗</a>
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <span
+                      data-slot="badge"
+                      class="inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;&gt;svg]:pointer-events-none [&amp;&gt;svg]:size-3 bg-secondary text-secondary-foreground [a&amp;]:hover:bg-secondary/90 status"
+                      >待確認</span
+                    >
+                  </td>
+                </tr>
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                  id="confirmation-fields"
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="row"
+                  >
+                    02 · 欄位與資料來源
+                  </th>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    必填、單位、可修改欄位與資料來源。<br /><a
+                      href="#question-barcode"
+                      >查看相關需求</a
+                    >
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <a href="architecture.html#prep-fields">欄位規格表 ↗</a>
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <span
+                      data-slot="badge"
+                      class="inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;&gt;svg]:pointer-events-none [&amp;&gt;svg]:size-3 bg-secondary text-secondary-foreground [a&amp;]:hover:bg-secondary/90 status"
+                      >待確認</span
+                    >
+                  </td>
+                </tr>
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                  id="confirmation-permissions"
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="row"
+                  >
+                    03 · 角色與權限
+                  </th>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    誰能查詢、維護、撤銷、審核及調整。<br /><a
+                      href="#question-login"
+                      >查看相關需求</a
+                    >
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <a href="architecture.html#prep-permissions"
+                      >操作權限表 ↗</a
+                    >
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <span
+                      data-slot="badge"
+                      class="inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;&gt;svg]:pointer-events-none [&amp;&gt;svg]:size-3 bg-secondary text-secondary-foreground [a&amp;]:hover:bg-secondary/90 status"
+                      >待確認</span
+                    >
+                  </td>
+                </tr>
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                  id="confirmation-rules"
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="row"
+                  >
+                    04 · 庫存與作業規則
+                  </th>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    扣庫時點、領用與耗用關係、盤點基準、退回與更正。<br /><a
+                      href="#question-requisition"
+                      >查看相關需求</a
+                    >
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <a href="architecture.html#prep-rules"
+                      >作業規則與狀態流程 ↗</a
+                    >
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <span
+                      data-slot="badge"
+                      class="inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;&gt;svg]:pointer-events-none [&amp;&gt;svg]:size-3 bg-secondary text-secondary-foreground [a&amp;]:hover:bg-secondary/90 status"
+                      >待確認</span
+                    >
+                  </td>
+                </tr>
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                  id="confirmation-failures"
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="row"
+                  >
+                    05 · 異常處理
+                  </th>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    未知條碼、庫存不足、連線失敗、重複提交與多人修改。<br /><a
+                      href="#question-his"
+                      >查看相關需求</a
+                    >
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <a href="architecture.html#prep-failures">異常情境清單 ↗</a>
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <span
+                      data-slot="badge"
+                      class="inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;&gt;svg]:pointer-events-none [&amp;&gt;svg]:size-3 bg-secondary text-secondary-foreground [a&amp;]:hover:bg-secondary/90 status"
+                      >待確認</span
+                    >
+                  </td>
+                </tr>
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                  id="confirmation-acceptance"
+                  hidden=""
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="row"
+                  >
+                    06 · 驗收條件
+                  </th>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    操作前提、操作步驟與預期結果。<br /><a href="#workflow"
+                      >查看相關需求</a
+                    >
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <a href="architecture.html#prep-acceptance"
+                      >客戶驗收案例 ↗</a
+                    >
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <span
+                      data-slot="badge"
+                      class="inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;&gt;svg]:pointer-events-none [&amp;&gt;svg]:size-3 bg-secondary text-secondary-foreground [a&amp;]:hover:bg-secondary/90 status"
+                      >待確認</span
+                    >
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div
+            class="table-pagination m-[14px_0_20px] flex flex-wrap items-center gap-x-5 gap-y-3 text-[12px] text-[var(--muted)] print:hidden"
+          >
+            <span class="mr-auto tabular-nums" role="status" aria-live="polite"
+              >第 1–5 筆，共 6 筆</span
+            ><button
+              data-slot="button"
+              class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4 shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-9 has-[&gt;svg]:px-3 border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
+              type="button"
+              title="匯出目前篩選條件下的全部資料，包含所有分頁"
+            >
+              匯出 Excel (.xlsx)</button
+            ><label
+              data-slot="label"
+              class="select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 flex items-center gap-2 whitespace-nowrap text-[12px] font-medium"
+              >每頁筆數
+              <div
+                class="group/native-select relative min-w-0 w-full has-[select:disabled]:opacity-50"
+                data-slot="native-select-wrapper"
+              >
+                <select
+                  data-slot="native-select"
+                  class="h-9 appearance-none rounded-md text-sm shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed data-[size=sm]:h-8 data-[size=sm]:py-1 dark:bg-input/30 dark:hover:bg-input/50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 w-auto min-w-[60px] border border-[#bac9d4] bg-white p-[6px_9px] text-[var(--ink)]"
+                >
+                  <option
+                    data-slot="native-select-option"
+                    class="bg-[Canvas] text-[CanvasText]"
+                  >
+                    5
+                  </option>
+                  <option
+                    data-slot="native-select-option"
+                    class="bg-[Canvas] text-[CanvasText]"
+                  >
+                    10
+                  </option>
+                  <option
+                    data-slot="native-select-option"
+                    class="bg-[Canvas] text-[CanvasText]"
+                  >
+                    20
+                  </option>
+                  <option
+                    data-slot="native-select-option"
+                    class="bg-[Canvas] text-[CanvasText]"
+                  >
+                    50
+                  </option></select
+                ><svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-chevron-down pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-muted-foreground opacity-50 select-none"
+                  aria-hidden="true"
+                  data-slot="native-select-icon"
+                >
+                  <path d="m6 9 6 6 6-6"></path>
+                </svg></div
+            ></label>
+            <nav
+              class="flex flex-wrap items-center justify-start gap-2"
+              aria-label="表格分頁"
+            >
+              <button
+                data-slot="button"
+                class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4 shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-9 has-[&gt;svg]:px-3 border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
+                type="button"
+                disabled=""
+              >
+                上一頁</button
+              ><label
+                data-slot="label"
+                class="select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 flex items-center gap-2 whitespace-nowrap text-[12px] font-medium"
+                >頁碼
+                <div
+                  class="group/native-select relative min-w-0 w-full has-[select:disabled]:opacity-50"
+                  data-slot="native-select-wrapper"
+                >
+                  <select
+                    data-slot="native-select"
+                    class="h-9 appearance-none rounded-md text-sm shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed data-[size=sm]:h-8 data-[size=sm]:py-1 dark:bg-input/30 dark:hover:bg-input/50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 w-auto min-w-[60px] border border-[#bac9d4] bg-white p-[6px_9px] text-[var(--ink)]"
+                  >
+                    <option
+                      data-slot="native-select-option"
+                      class="bg-[Canvas] text-[CanvasText]"
+                    >
+                      1
+                    </option>
+                    <option
+                      data-slot="native-select-option"
+                      class="bg-[Canvas] text-[CanvasText]"
+                    >
+                      2
+                    </option></select
+                  ><svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-chevron-down pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-muted-foreground opacity-50 select-none"
+                    aria-hidden="true"
+                    data-slot="native-select-icon"
+                  >
+                    <path d="m6 9 6 6 6-6"></path>
+                  </svg>
+                </div>
+                <span class="pagination-total">／ 2 頁</span></label
+              ><button
+                data-slot="button"
+                class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4 shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-9 has-[&gt;svg]:px-3 border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
+                type="button"
+              >
+                下一頁
+              </button>
+            </nav>
+            <span
+              class="export-status basis-full text-[var(--muted)]"
+              role="status"
+              aria-live="polite"
+            ></span>
+          </div>
+          <p class="section-intro">
+            優先釐清領用與耗用的扣庫關係、盤點調整責任，以及批號／效期／倉庫與單位換算是否納入第一版。Demo
+            中的展示假設需另行確認，不能直接視為正式規格。
+          </p>
+          <p>
+            <a href="architecture.html#preparation">查看開發規格準備清單 ↗</a> ·
+            <a href="architecture.html#receipt-spec-example"
+              >查看 OTC 入庫的待確認範例 ↗</a
+            >
+          </p>
+        </section>
+        <section id="discussion">
+          <div class="section-heading">
+            <span class="number">05 / 討論</span>
+            <h2>待確認問題與可能缺漏</h2>
+          </div>
+          <p class="section-intro">
+            以下問題用於後續需求訪談；尚未回答的項目不視為確定功能或技術決策。
+          </p>
+          <div data-slot="accordion">
+            <details
+              class="border-b last:border-b-0"
+              data-slot="accordion-item"
+              id="question-login"
+              open=""
+            >
+              <summary
+                class="flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&amp;[data-state=open]&gt;svg]:rotate-180"
+                data-slot="accordion-trigger"
+              >
+                SSO 是同一個系統內共用登入，還是跨不同系統？<svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-chevron-down pointer-events-none size-4 shrink-0 translate-y-0.5 text-muted-foreground transition-transform duration-200"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6"></path>
+                </svg>
+              </summary>
+              <div>
+                <div class="pt-0 pb-4">
+                  <p>
+                    跨系統登入的建議做法已整理在
+                    <a href="architecture.html#oidc-login"
+                      >架構文件：OIDC 登入流程</a
+                    >；適用前提為院內服務支援 OIDC，實際協定仍待確認。
+                  </p>
+                  <p>
+                    請確認：此處的 SSO 是指庫存管理系統同一個系統內，HIS、OTC
+                    等功能共用一次登入，還是庫存管理系統與其他獨立系統之間的跨系統單一登入？
+                  </p>
+                  <p>
+                    若是同一個系統，請確認各功能是否共用登入狀態及各自的操作權限；若是不同系統，請列出要整合的系統、既有驗證服務，以及登入狀態或
+                    Token 如何取得與驗證。LDAP 指 NAS
+                    的權限管理，作為帳號與群組權限來源，實際群組與角色映射需確認。
+                  </p>
+                  <p>
+                    另需確認使用者角色：誰能維護廠商、修改 HIS 藥品檔、操作 OTC
+                    庫存或執行盤點調整？
+                  </p>
+                </div>
+              </div>
+            </details>
+          </div>
+          <div data-slot="accordion">
+            <details
+              class="border-b last:border-b-0"
+              data-slot="accordion-item"
+              id="question-activation"
+              open=""
+            >
+              <summary
+                class="flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&amp;[data-state=open]&gt;svg]:rotate-180"
+                data-slot="accordion-trigger"
+              >
+                LDAP 群組如何對應操作與料號啟用權限？<svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-chevron-down pointer-events-none size-4 shrink-0 translate-y-0.5 text-muted-foreground transition-transform duration-200"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6"></path>
+                </svg>
+              </summary>
+              <div>
+                <div class="pt-0 pb-4">
+                  <p>
+                    已確認此處 LDAP 指 NAS
+                    的權限管理。需與使用者確認群組對應角色、哪些欄位可修改、誰可啟用／停用料號，以及各庫存作業限制。忘記密碼需確認院內重設服務或管理員處理方式。
+                  </p>
+                  <p>
+                    <a href="architecture.html#activation-policy"
+                      >查看 LDAP 權限與忘記密碼規格</a
+                    >
+                  </p>
+                </div>
+              </div>
+            </details>
+          </div>
+          <div data-slot="accordion">
+            <details
+              class="border-b last:border-b-0"
+              data-slot="accordion-item"
+              id="question-suppliers"
+              open=""
+            >
+              <summary
+                class="flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&amp;[data-state=open]&gt;svg]:rotate-180"
+                data-slot="accordion-trigger"
+              >
+                廠商資料由哪裡維護，兩個工作區是否共用？<svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-chevron-down pointer-events-none size-4 shrink-0 translate-y-0.5 text-muted-foreground transition-transform duration-200"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6"></path>
+                </svg>
+              </summary>
+              <div>
+                <div class="pt-0 pb-4">
+                  <p>
+                    廠商需要哪些欄位？既有資料來源為何？HIS 與 OTC
+                    是否共用廠商？已有入庫或其他紀錄的廠商，刪除與停用應如何處理？
+                  </p>
+                </div>
+              </div>
+            </details>
+          </div>
+          <div data-slot="accordion">
+            <details
+              class="border-b last:border-b-0"
+              data-slot="accordion-item"
+              id="question-his"
+              open=""
+            >
+              <summary
+                class="flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&amp;[data-state=open]&gt;svg]:rotate-180"
+                data-slot="accordion-trigger"
+              >
+                HIS 藥品檔如何即時讀取與回寫？<svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-chevron-down pointer-events-none size-4 shrink-0 translate-y-0.5 text-muted-foreground transition-transform duration-200"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6"></path>
+                </svg>
+              </summary>
+              <div>
+                <div class="pt-0 pb-4">
+                  <p>
+                    允許修改哪些欄位？使用何種讀寫介面？「即時」需要多快更新？是否保留本地副本？需記錄哪些修改資訊？來源無法連線、回寫失敗或多人同時修改時，如何處理？扣庫責任已明確由
+                    HIS 承擔。
+                  </p>
+                </div>
+              </div>
+            </details>
+          </div>
+          <div data-slot="accordion">
+            <details
+              class="border-b last:border-b-0"
+              data-slot="accordion-item"
+              id="question-requisition"
+              open=""
+            >
+              <summary
+                class="flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&amp;[data-state=open]&gt;svg]:rotate-180"
+                data-slot="accordion-trigger"
+              >
+                OTC 領用與出庫／耗用有什麼關係？<svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-chevron-down pointer-events-none size-4 shrink-0 translate-y-0.5 text-muted-foreground transition-transform duration-200"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6"></path>
+                </svg>
+              </summary>
+              <div>
+                <div class="pt-0 pb-4">
+                  <p>
+                    領用是申請、實際領取，還是另一種出庫用途？在哪個步驟扣庫？如何避免領用與耗用重複扣庫？修改、刪除或取消紀錄是否需回復庫存？
+                  </p>
+                </div>
+              </div>
+            </details>
+          </div>
+          <div data-slot="accordion">
+            <details
+              class="border-b last:border-b-0"
+              data-slot="accordion-item"
+              id="question-barcode"
+              open=""
+            >
+              <summary
+                class="flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&amp;[data-state=open]&gt;svg]:rotate-180"
+                data-slot="accordion-trigger"
+              >
+                條碼作業需要哪些資訊與設備？<svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-chevron-down pointer-events-none size-4 shrink-0 translate-y-0.5 text-muted-foreground transition-transform duration-200"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6"></path>
+                </svg>
+              </summary>
+              <div>
+                <div class="pt-0 pb-4">
+                  <p>
+                    國際條碼使用哪種格式與掃描設備？同一品項不同包裝是否使用不同條碼？入庫與出庫需要哪些欄位？未知條碼出庫、重複掃描及庫存不足時如何處理？
+                  </p>
+                </div>
+              </div>
+            </details>
+          </div>
+          <div data-slot="accordion">
+            <details
+              class="border-b last:border-b-0"
+              data-slot="accordion-item"
+              id="question-stocktake"
+              open=""
+            >
+              <summary
+                class="flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&amp;[data-state=open]&gt;svg]:rotate-180"
+                data-slot="accordion-trigger"
+              >
+                HIS 與 OTC 的盤點差異如何調整？<svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-chevron-down pointer-events-none size-4 shrink-0 translate-y-0.5 text-muted-foreground transition-transform duration-200"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6"></path>
+                </svg>
+              </summary>
+              <div>
+                <div class="pt-0 pb-4">
+                  <p>
+                    以哪個時間點的帳面庫存作為基準？盤點期間是否仍可入出庫？HIS
+                    盤點調整如何交由 HIS 執行？OTC
+                    如何調整？是否需要審核、調整原因與操作紀錄？
+                  </p>
+                </div>
+              </div>
+            </details>
+          </div>
+          <div
+            class="table-wrap overflow-x-auto print:overflow-visible mt-[30px]"
+            tabindex="0"
+            role="region"
+            aria-label="補充討論項目表，可左右捲動"
+          >
+            <table data-slot="table" class="w-full caption-bottom text-sm">
+              <caption
+                data-slot="table-caption"
+                class="mt-4 text-sm text-muted-foreground"
+              >
+                保留的補充討論項目，尚未列為確定需求
+              </caption>
+              <thead data-slot="table-header" class="[&amp;_tr]:border-b">
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="col"
+                  >
+                    項目
+                  </th>
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="col"
+                  >
+                    需要釐清的內容
+                  </th>
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="col"
+                  >
+                    狀態
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                data-slot="table-body"
+                class="[&amp;_tr:last-child]:border-0"
+              >
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="row"
+                  >
+                    批號與效期
+                  </th>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    哪些品項需追蹤批號、效期？是否需要效期提醒與批次選擇規則？
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <span
+                      data-slot="badge"
+                      class="inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;&gt;svg]:pointer-events-none [&amp;&gt;svg]:size-3 bg-secondary text-secondary-foreground [a&amp;]:hover:bg-secondary/90 status"
+                      >待確認</span
+                    >
+                  </td>
+                </tr>
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="row"
+                  >
+                    單位換算
+                  </th>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    採購、入庫、領用與耗用單位是否不同？包裝與基本單位如何換算？
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <span
+                      data-slot="badge"
+                      class="inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;&gt;svg]:pointer-events-none [&amp;&gt;svg]:size-3 bg-secondary text-secondary-foreground [a&amp;]:hover:bg-secondary/90 status"
+                      >待確認</span
+                    >
+                  </td>
+                </tr>
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="row"
+                  >
+                    倉庫與儲位
+                  </th>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    是否有多院區、多倉庫、部門庫存或儲位？是否需要庫存移轉？
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <span
+                      data-slot="badge"
+                      class="inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;&gt;svg]:pointer-events-none [&amp;&gt;svg]:size-3 bg-secondary text-secondary-foreground [a&amp;]:hover:bg-secondary/90 status"
+                      >待確認</span
+                    >
+                  </td>
+                </tr>
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="row"
+                  >
+                    退貨與退回
+                  </th>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    是否需要廠商退貨、領用退回或耗用取消？庫存與紀錄如何回復？
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <span
+                      data-slot="badge"
+                      class="inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;&gt;svg]:pointer-events-none [&amp;&gt;svg]:size-3 bg-secondary text-secondary-foreground [a&amp;]:hover:bg-secondary/90 status"
+                      >待確認</span
+                    >
+                  </td>
+                </tr>
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="row"
+                  >
+                    報表與操作紀錄
+                  </th>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    需要哪些庫存、效期、異動與盤點報表？哪些操作需保留歷程？
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <span
+                      data-slot="badge"
+                      class="inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;&gt;svg]:pointer-events-none [&amp;&gt;svg]:size-3 bg-secondary text-secondary-foreground [a&amp;]:hover:bg-secondary/90 status"
+                      >待確認</span
+                    >
+                  </td>
+                </tr>
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                  hidden=""
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="row"
+                  >
+                    採購與成本
+                  </th>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    是否包含採購單、成本計算或會計銜接？第一版是否需要？
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <span
+                      data-slot="badge"
+                      class="inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;&gt;svg]:pointer-events-none [&amp;&gt;svg]:size-3 bg-secondary text-secondary-foreground [a&amp;]:hover:bg-secondary/90 status"
+                      >待確認</span
+                    >
+                  </td>
+                </tr>
+                <tr
+                  data-slot="table-row"
+                  class="border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted"
+                  hidden=""
+                >
+                  <th
+                    data-slot="table-head"
+                    class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                    scope="row"
+                  >
+                    部署與既有資料
+                  </th>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    OTC
+                    服務如何部署？是否多人共用？既有資料是否需匯入？是否有特殊藥品或儲存條件？
+                  </td>
+                  <td
+                    data-slot="table-cell"
+                    class="p-2 align-middle whitespace-nowrap [&amp;:has([role=checkbox])]:pr-0 [&amp;&gt;[role=checkbox]]:translate-y-[2px]"
+                  >
+                    <span
+                      data-slot="badge"
+                      class="inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;&gt;svg]:pointer-events-none [&amp;&gt;svg]:size-3 bg-secondary text-secondary-foreground [a&amp;]:hover:bg-secondary/90 status"
+                      >待確認</span
+                    >
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div
+            class="table-pagination m-[14px_0_20px] flex flex-wrap items-center gap-x-5 gap-y-3 text-[12px] text-[var(--muted)] print:hidden"
+          >
+            <span class="mr-auto tabular-nums" role="status" aria-live="polite"
+              >第 1–5 筆，共 7 筆</span
+            ><button
+              data-slot="button"
+              class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4 shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-9 has-[&gt;svg]:px-3 border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
+              type="button"
+              title="匯出目前篩選條件下的全部資料，包含所有分頁"
+            >
+              匯出 Excel (.xlsx)</button
+            ><label
+              data-slot="label"
+              class="select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 flex items-center gap-2 whitespace-nowrap text-[12px] font-medium"
+              >每頁筆數
+              <div
+                class="group/native-select relative min-w-0 w-full has-[select:disabled]:opacity-50"
+                data-slot="native-select-wrapper"
+              >
+                <select
+                  data-slot="native-select"
+                  class="h-9 appearance-none rounded-md text-sm shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed data-[size=sm]:h-8 data-[size=sm]:py-1 dark:bg-input/30 dark:hover:bg-input/50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 w-auto min-w-[60px] border border-[#bac9d4] bg-white p-[6px_9px] text-[var(--ink)]"
+                >
+                  <option
+                    data-slot="native-select-option"
+                    class="bg-[Canvas] text-[CanvasText]"
+                  >
+                    5
+                  </option>
+                  <option
+                    data-slot="native-select-option"
+                    class="bg-[Canvas] text-[CanvasText]"
+                  >
+                    10
+                  </option>
+                  <option
+                    data-slot="native-select-option"
+                    class="bg-[Canvas] text-[CanvasText]"
+                  >
+                    20
+                  </option>
+                  <option
+                    data-slot="native-select-option"
+                    class="bg-[Canvas] text-[CanvasText]"
+                  >
+                    50
+                  </option></select
+                ><svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-chevron-down pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-muted-foreground opacity-50 select-none"
+                  aria-hidden="true"
+                  data-slot="native-select-icon"
+                >
+                  <path d="m6 9 6 6 6-6"></path>
+                </svg></div
+            ></label>
+            <nav
+              class="flex flex-wrap items-center justify-start gap-2"
+              aria-label="表格分頁"
+            >
+              <button
+                data-slot="button"
+                class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4 shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-9 has-[&gt;svg]:px-3 border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
+                type="button"
+                disabled=""
+              >
+                上一頁</button
+              ><label
+                data-slot="label"
+                class="select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 flex items-center gap-2 whitespace-nowrap text-[12px] font-medium"
+                >頁碼
+                <div
+                  class="group/native-select relative min-w-0 w-full has-[select:disabled]:opacity-50"
+                  data-slot="native-select-wrapper"
+                >
+                  <select
+                    data-slot="native-select"
+                    class="h-9 appearance-none rounded-md text-sm shadow-xs transition-[color,box-shadow] outline-none selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed data-[size=sm]:h-8 data-[size=sm]:py-1 dark:bg-input/30 dark:hover:bg-input/50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 w-auto min-w-[60px] border border-[#bac9d4] bg-white p-[6px_9px] text-[var(--ink)]"
+                  >
+                    <option
+                      data-slot="native-select-option"
+                      class="bg-[Canvas] text-[CanvasText]"
+                    >
+                      1
+                    </option>
+                    <option
+                      data-slot="native-select-option"
+                      class="bg-[Canvas] text-[CanvasText]"
+                    >
+                      2
+                    </option></select
+                  ><svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-chevron-down pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-muted-foreground opacity-50 select-none"
+                    aria-hidden="true"
+                    data-slot="native-select-icon"
+                  >
+                    <path d="m6 9 6 6 6-6"></path>
+                  </svg>
+                </div>
+                <span class="pagination-total">／ 2 頁</span></label
+              ><button
+                data-slot="button"
+                class="inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&amp;_svg]:pointer-events-none [&amp;_svg]:shrink-0 [&amp;_svg:not([class*='size-'])]:size-4 shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50 h-9 has-[&gt;svg]:px-3 border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
+                type="button"
+              >
+                下一頁
+              </button>
+            </nav>
+            <span
+              class="export-status basis-full text-[var(--muted)]"
+              role="status"
+              aria-live="polite"
+            ></span>
+          </div>
+          <div class="next">
+            <div class="eyebrow">下一步需求討論</div>
+            <h3 class="mt-[10px]">先釐清資料欄位與庫存異動規則</h3>
+            <p>
+              從 HIS 可修改欄位、OTC
+              領用與耗用的關係，以及兩邊的盤點調整流程開始，逐步補齊需求並決定第一版範圍。
+            </p>
+            <p>
+              本頁為靜態規劃草稿，功能清單不代表已實作；目前不提供登入、資料庫連線、實際庫存操作或回答保存功能。
+            </p>
+          </div>
+        </section>
+      </main>
+      <footer class="flex flex-col flex-wrap justify-between gap-5 sm:flex-row">
+        <span>庫存管理系統 · HIS 與 OTC 庫存系統</span
+        ><span>規劃草稿 05 · 作業細節待確認</span>
+      </footer>
+    </div>
+  </body>
+</html>

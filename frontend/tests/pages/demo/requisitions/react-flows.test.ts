@@ -4,7 +4,7 @@ import type { Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
-  await page.goto("/demo");
+  await page.goto("/");
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
@@ -38,18 +38,16 @@ test("React 領用新增、庫存不足、刪除回復及查無資料", async ({
 });
 
 test(
-  "/demo/requisitions 直接進入與重新整理",
+  "/requisitions 直接進入與重新整理",
   { tag: "@critical" },
   async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-    await page.goto("/demo/requisitions");
+    await page.goto("/requisitions");
     await expect(page.locator("#workspace")).toBeVisible();
     await expect(
       page.locator("#workspace").getByRole("heading").first(),
     ).not.toBeEmpty();
-    await expect(page).toHaveURL(
-      (url) => url.pathname === "/demo/requisitions",
-    );
+    await expect(page).toHaveURL((url) => url.pathname === "/requisitions");
     const entryURL = page.url();
     await page.reload();
     await expect(page).toHaveURL(entryURL);

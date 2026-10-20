@@ -6,7 +6,7 @@ import * as XLSX from "xlsx";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-  await page.goto("/demo/items");
+  await page.goto("/items");
   await expect(page.locator("#login-form")).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "品項與庫存管理", exact: true }),
@@ -17,7 +17,7 @@ for (const group of ["his", "general"]) {
   test(`@critical ${group} 品項必填標示、逐欄漏填阻擋與補齊儲存`, async ({
     page,
   }) => {
-    await page.goto(`/demo/items/${group}`);
+    await page.goto(`/items/${group}`);
     await page.getByRole("button", { name: "新增品項", exact: true }).click();
     const modal = page.getByRole("dialog");
     const fields = [
@@ -71,10 +71,10 @@ test(
       name: "自費／OTC／其他商品",
       exact: true,
     });
-    await expect(page).toHaveURL(/\/demo\/items\/his$/);
+    await expect(page).toHaveURL(/\/items\/his$/);
     await expect(his).toHaveAttribute("aria-selected", "true");
     await general.click();
-    await expect(page).toHaveURL(/\/demo\/items\/general$/);
+    await expect(page).toHaveURL(/\/items\/general$/);
     await expect(general).toHaveAttribute("aria-selected", "true");
     await page.goBack();
     await expect(his).toHaveAttribute("aria-selected", "true");
@@ -83,10 +83,10 @@ test(
     await page.reload();
     await expect(general).toHaveAttribute("aria-selected", "true");
     await expect(table(page)).toContainText("OTC0001");
-    await page.goto("/demo/items/his?embed=1");
+    await page.goto("/items/his?embed=1");
     await expect(his).toHaveAttribute("aria-selected", "true");
     await general.click();
-    await expect(page).toHaveURL(/\/demo\/items\/general\?embed=1$/);
+    await expect(page).toHaveURL(/\/items\/general\?embed=1$/);
   },
 );
 
@@ -299,29 +299,25 @@ test("新舊入口並存及桌面／手機基本版面", async ({ page }, testIn
   await page
     .getByRole("button", { name: "藥品查詢與修改", exact: true })
     .click();
-  await expect(page).toHaveURL(/\/demo\/his/);
+  await expect(page).toHaveURL(/\/his/);
   if (mobile)
     await page
       .getByRole("button", { name: /功能選單|開啟選單|顯示選單/ })
       .click();
   await page.getByRole("button", { name: "品項資料維護", exact: true }).click();
-  await expect(page).toHaveURL(/\/demo\/products/);
+  await expect(page).toHaveURL(/\/products/);
 });
 
-test(
-  "/demo/items 直接進入與重新整理",
-  { tag: "@critical" },
-  async ({ page }) => {
-    await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-    await page.goto("/demo/items");
-    await expect(page.locator("#workspace")).toBeVisible();
-    await expect(
-      page.locator("#workspace").getByRole("heading").first(),
-    ).not.toBeEmpty();
-    await expect(page).toHaveURL((url) => url.pathname === "/demo/items/his");
-    const entryURL = page.url();
-    await page.reload();
-    await expect(page).toHaveURL(entryURL);
-    await expect(page.locator("#workspace").first()).toBeVisible();
-  },
-);
+test("/items 直接進入與重新整理", { tag: "@critical" }, async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+  await page.goto("/items");
+  await expect(page.locator("#workspace")).toBeVisible();
+  await expect(
+    page.locator("#workspace").getByRole("heading").first(),
+  ).not.toBeEmpty();
+  await expect(page).toHaveURL((url) => url.pathname === "/items/his");
+  const entryURL = page.url();
+  await page.reload();
+  await expect(page).toHaveURL(entryURL);
+  await expect(page.locator("#workspace").first()).toBeVisible();
+});

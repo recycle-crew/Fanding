@@ -124,7 +124,7 @@
   }
   .demo-banner {
     grid-area: banner;
-    @apply bg-[#dff3ff] text-[#0369a1] text-[12px] p-[7px_24px] font-[700] flex justify-between;
+    @apply bg-[#dff3ff] text-[#0369a1] text-[12px] p-[7px_24px] font-[700] flex flex-wrap items-center justify-between gap-x-4 gap-y-2;
   }
   .demo-banner span {
     @apply font-[400];

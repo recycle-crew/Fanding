@@ -10,14 +10,13 @@ const consumptionSource = readFileSync(
   "utf8",
 );
 const consumptionRoutes = [
-  ...consumptionSource.matchAll(/"(\/demo\/consumptions[^\"]*)"/g),
+  ...consumptionSource.matchAll(/"(\/consumptions[^\"]*)"/g),
 ].map((match) => match[1]);
 const routes = [
   ...new Set([
     "/",
-    "/architecture",
     "/board",
-    "/demo/overview",
+    "/overview",
     ...Object.values(demoModulePaths),
     ...Object.values(itemGroupPaths),
     ...consumptionRoutes,
@@ -25,7 +24,8 @@ const routes = [
 ];
 describe("route 與頁面測試對應", () => {
   it.each(routes)("%s 有所屬的 Playwright 頁面測試", (route) => {
-    const folder = route === "/" ? "index" : route.slice(1);
+    const folder =
+      route === "/" ? "index" : route === "/board" ? "board" : `demo${route}`;
     const directory = new URL(`../../tests/pages/${folder}/`, import.meta.url);
     expect(
       existsSync(directory),

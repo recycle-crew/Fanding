@@ -20,7 +20,7 @@ test(
       .getByRole("status");
 
     await test.step("進入 HIS 品項頁，確認初始資料", async () => {
-      await page.goto("/demo/items/his");
+      await page.goto("/items/his");
       await expect(
         page.getByRole("heading", { name: "品項與庫存管理", exact: true }),
       ).toBeVisible();

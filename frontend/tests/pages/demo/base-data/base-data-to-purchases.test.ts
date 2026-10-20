@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-  await page.goto("/demo/base-data");
+  await page.goto("/base-data");
   await expect(
     page.getByRole("heading", { name: "基礎資料管理", exact: true }),
   ).toBeVisible();

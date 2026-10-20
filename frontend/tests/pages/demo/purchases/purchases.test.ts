@@ -38,7 +38,7 @@ async function finish(page: Page) {
 }
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-  await page.goto("/demo/purchases");
+  await page.goto("/purchases");
   await expect(
     page.getByRole("heading", { name: "進貨管理", exact: true }),
   ).toBeVisible();
@@ -408,7 +408,7 @@ test("未儲存提醒、鍵盤與版面", async ({ page }, testInfo) => {
 
 test("數量、成本、品項與批號更正均保留原始明細", async ({ page }) => {
   for (const type of ["數量更正", "成本更正", "品項更正", "批號更正"]) {
-    await page.goto("/demo/purchases");
+    await page.goto("/purchases");
     await action(page, "PO20261019008", "結帳後更正");
     await page.locator("#operation-type").selectOption(type);
     await page.locator("#operation-reason").fill(`測試${type}`);
@@ -486,16 +486,16 @@ test("a11y 進貨列表、選單及所有主要視窗", async ({ page }) => {
 });
 
 test(
-  "/demo/purchases 直接進入與重新整理",
+  "/purchases 直接進入與重新整理",
   { tag: "@critical" },
   async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-    await page.goto("/demo/purchases");
+    await page.goto("/purchases");
     await expect(page.locator("#workspace")).toBeVisible();
     await expect(
       page.locator("#workspace").getByRole("heading").first(),
     ).not.toBeEmpty();
-    await expect(page).toHaveURL((url) => url.pathname === "/demo/purchases");
+    await expect(page).toHaveURL((url) => url.pathname === "/purchases");
     const entryURL = page.url();
     await page.reload();
     await expect(page).toHaveURL(entryURL);

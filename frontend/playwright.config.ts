@@ -63,7 +63,7 @@ export default defineConfig({
     command: buildOnly
       ? `${viteCommand} preview --host 127.0.0.1 --port ${port} --strictPort`
       : `${viteCommand} --mode test --host 127.0.0.1 --port ${port} --strictPort`,
-    url: `${baseURL}/demo`,
+    url: baseURL,
     reuseExistingServer: false,
   },
   projects: buildOnly

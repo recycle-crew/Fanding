@@ -38,10 +38,10 @@ const tabs = [
   { value: "runs", label: "同步紀錄" },
 ];
 const paths: Record<string, string> = {
-  summary: "/demo/consumptions",
-  exceptions: "/demo/consumptions/exceptions",
-  mappings: "/demo/consumptions/mappings",
-  runs: "/demo/consumptions/runs",
+  summary: "/consumptions",
+  exceptions: "/consumptions/exceptions",
+  mappings: "/consumptions/mappings",
+  runs: "/consumptions/runs",
 };
 const emptyFilters = () => ({
   search: "",

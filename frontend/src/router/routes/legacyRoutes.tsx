@@ -1,25 +1,40 @@
+import { useEffect } from "react";
 import { Navigate, useLocation } from "react-router";
 import type { RouteObject } from "react-router";
-
-const legacyPaths: Record<string, string> = {
-  "/index.html": "/",
-  "/architecture.html": "/architecture",
-  "/board.html": "/board",
-  "/demo.html": "/demo",
+const documentPaths: Record<string, string> = {
+  "/planning": "/docs/planning.html",
+  "/planning.html": "/docs/planning.html",
+  "/architecture": "/docs/architecture.html",
+  "/architecture.html": "/docs/architecture.html",
 };
-
-// 保留舊頁面網址、文件錨點及展示參數，盤點 hash 轉換成 SPA 路徑。
 function LegacyRedirect() {
   const location = useLocation();
-  let path = legacyPaths[location.pathname];
+  const documentPath = documentPaths[location.pathname.replace(/\/+$/, "")];
+  useEffect(() => {
+    if (documentPath)
+      window.location.replace(documentPath + location.search + location.hash);
+  }, [documentPath, location.search, location.hash]);
+  if (documentPath) return <p role="status">正在開啟規劃文件…</p>;
+  let path =
+    location.pathname === "/board.html"
+      ? "/board"
+      : location.pathname.replace(/^\/demo(?:\/|\.html)?/, "/");
+  if (location.pathname === "/index.html") path = "/";
   let hash = location.hash;
-  if (path === "/demo") {
-    if (hash.startsWith("#/stocktake/")) path += hash.slice(1);
+  if (
+    (location.pathname === "/demo" || location.pathname === "/demo.html") &&
+    hash.startsWith("#/stocktake/")
+  ) {
+    path = hash.slice(1);
     hash = "";
   }
-  return <Navigate replace to={`${path}${location.search}${hash}`} />;
+  return <Navigate replace to={path + location.search + hash} />;
 }
-
-export const legacyRoutes: RouteObject[] = Object.keys(legacyPaths).map(
-  (path) => ({ path, element: <LegacyRedirect /> }),
-);
+export const legacyRoutes: RouteObject[] = [
+  ...Object.keys(documentPaths),
+  "/index.html",
+  "/board.html",
+  "/demo.html",
+  "/demo",
+  "/demo/*",
+].map((path) => ({ path, element: <LegacyRedirect /> }));

@@ -3,7 +3,7 @@ import { DEMO_LOGIN_ENABLED as loginEnabled } from "../../../../src/constants/de
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
-  await page.goto("/demo");
+  await page.goto("/");
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();

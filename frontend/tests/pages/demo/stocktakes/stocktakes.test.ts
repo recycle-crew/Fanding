@@ -29,7 +29,7 @@ test("@critical 盤點必填標示、人員與範圍漏選阻擋、補齊建立"
   await modal.getByRole("checkbox", { name: "王小明", exact: true }).check();
   await submit.click();
   await expect(modal.getByRole("alert")).toContainText("盤點範圍不可為空");
-  await expect(page).toHaveURL(/\/demo\/stocktakes$/);
+  await expect(page).toHaveURL(/\/stocktakes$/);
   await modal
     .getByRole("checkbox", { name: "OTC0001 葉黃素膠囊（盒）", exact: true })
     .check();
@@ -46,26 +46,26 @@ test(
   { tag: "@critical" },
   async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-    await page.goto("/demo/stocktakes/ST1/count");
+    await page.goto("/stocktakes/ST1/count");
     await expect(page.locator("#workspace")).toBeVisible();
     await expect(
       page.locator("#workspace").getByRole("heading").first(),
     ).not.toBeEmpty();
     await expect(page).toHaveURL(
-      (url) => url.pathname === "/demo/stocktakes/ST1/count",
+      (url) => url.pathname === "/stocktakes/ST1/count",
     );
     const entryURL = page.url();
     await page.reload();
     await expect(page).toHaveURL(entryURL);
     await expect(page.locator("#workspace").first()).toBeVisible();
     await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-    await page.goto("/demo/stocktakes/ST2/review");
+    await page.goto("/stocktakes/ST2/review");
     await expect(page.locator("#workspace")).toBeVisible();
     await expect(
       page.locator("#workspace").getByRole("heading").first(),
     ).not.toBeEmpty();
     await expect(page).toHaveURL(
-      (url) => url.pathname === "/demo/stocktakes/ST2/review",
+      (url) => url.pathname === "/stocktakes/ST2/review",
     );
     const entryURL2 = page.url();
     await page.reload();
@@ -75,23 +75,23 @@ test(
 );
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-  await page.goto("/demo/stocktakes");
+  await page.goto("/stocktakes");
   await expect(
     page.getByRole("heading", { name: "盤點管理", exact: true }),
   ).toBeVisible();
 });
 const dialog = (page: Page) => page.getByRole("dialog");
 test(
-  "/demo/stocktakes 直接進入與重新整理",
+  "/stocktakes 直接進入與重新整理",
   { tag: "@critical" },
   async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-    await page.goto("/demo/stocktakes");
+    await page.goto("/stocktakes");
     await expect(page.locator("#workspace")).toBeVisible();
     await expect(
       page.locator("#workspace").getByRole("heading").first(),
     ).not.toBeEmpty();
-    await expect(page).toHaveURL((url) => url.pathname === "/demo/stocktakes");
+    await expect(page).toHaveURL((url) => url.pathname === "/stocktakes");
     const entryURL3 = page.url();
     await page.reload();
     await expect(page).toHaveURL(entryURL3);

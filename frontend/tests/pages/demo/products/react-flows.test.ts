@@ -4,7 +4,7 @@ import type { Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
-  await page.goto("/demo");
+  await page.goto("/");
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
@@ -71,20 +71,16 @@ test("React 品項新增、重複料號條碼、日期驗證與高權限編輯",
   await expect(page.locator("#list-table")).toContainText("目前沒有符合的資料");
 });
 
-test(
-  "/demo/products 直接進入與重新整理",
-  { tag: "@critical" },
-  async ({ page }) => {
-    await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-    await page.goto("/demo/products");
-    await expect(page.locator("#workspace")).toBeVisible();
-    await expect(
-      page.locator("#workspace").getByRole("heading").first(),
-    ).not.toBeEmpty();
-    await expect(page).toHaveURL((url) => url.pathname === "/demo/products");
-    const entryURL = page.url();
-    await page.reload();
-    await expect(page).toHaveURL(entryURL);
-    await expect(page.locator("#workspace").first()).toBeVisible();
-  },
-);
+test("/products 直接進入與重新整理", { tag: "@critical" }, async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+  await page.goto("/products");
+  await expect(page.locator("#workspace")).toBeVisible();
+  await expect(
+    page.locator("#workspace").getByRole("heading").first(),
+  ).not.toBeEmpty();
+  await expect(page).toHaveURL((url) => url.pathname === "/products");
+  const entryURL = page.url();
+  await page.reload();
+  await expect(page).toHaveURL(entryURL);
+  await expect(page.locator("#workspace").first()).toBeVisible();
+});

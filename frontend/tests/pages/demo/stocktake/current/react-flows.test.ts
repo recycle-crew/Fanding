@@ -4,7 +4,7 @@ import type { Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
-  await page.goto("/demo");
+  await page.goto("/");
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
@@ -31,7 +31,7 @@ test("React 盤點草稿、路由保護、鎖定與歷史更正", async ({ page 
   await page.locator("#editor [name=actual]").fill("238");
   await page.goBack();
   await expect(page.locator("#editor")).toBeVisible();
-  await expect(page).toHaveURL(/\/demo\/stocktake\/current$/);
+  await expect(page).toHaveURL(/\/stocktake\/current$/);
   const warningStyle = await page.addStyleTag({
     content: "#notice{visibility:visible!important}",
   });
@@ -68,11 +68,11 @@ test("React 盤點草稿、路由保護、鎖定與歷史更正", async ({ page 
 });
 
 test("React 盤點路由直接開啟與上一頁", async ({ page }) => {
-  await page.goto("/demo/stocktake/history");
+  await page.goto("/stocktake/history");
   await expect(page.locator("#workspace")).toBeVisible();
   await expect(page.locator("#content h2")).toHaveText("歷史盤點紀錄");
   await navigate(page, "stocktake");
-  await expect(page).toHaveURL(/\/demo\/stocktake\/current$/);
+  await expect(page).toHaveURL(/\/stocktake\/current$/);
   await page.goBack();
   await expect(page.locator("#content h2")).toHaveText("歷史盤點紀錄");
 });

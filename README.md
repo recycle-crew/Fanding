@@ -1,5 +1,15 @@
 # 庫存管理系統規劃與客戶展示
 
+## 網站入口與規劃文件
+
+網站首頁 `/` 直接開啟庫存管理系統；功能頁採 `/items/his`、`/purchases`、`/stocktake/history` 等根路徑，不再使用 `/demo` 前綴。舊 `/demo` 與其子路徑仍會轉到新網址，保留查詢參數及章節錨點。
+
+「功能與流程規劃」與「程式架構」的內容直接維護於 [docs/planning.html](docs/planning.html) 與 [docs/architecture.html](docs/architecture.html)，樣式位於 `docs/assets/`。兩份文件可直接用瀏覽器開啟，不需要 React 或 JavaScript；開發伺服器與正式建置會提供 `/docs/` 下相同文件。原 `/architecture` 網址轉到靜態文件。這兩份文件已不使用 React page。
+
+系統介面不提供上述兩份文件的入口，文件只保留於 `docs/`。最上方展示模式列僅提供「畫面規劃板」入口。`/board` 保留互動規劃板，嵌入系統使用 `/?embed=1`；系統內切換功能與規劃板仍沿用 SPA 導覽。
+
+以下較早的交接與驗證紀錄保留當時的網址；目前入口與文件位置以上述說明為準。
+
 React＋TypeScript 的庫存管理展示網站，包含 HIS／OTC 功能規劃、假資料操作 Demo，以及畫面規劃與流程示範。共用樣式位於 `frontend/src/styles/`，使用系統字型及本機套件資源。
 
 2026/10/20 更新：新版模組 1 位於 `/demo/items`，原 HIS／OTC 頁面保留。展示期間暫停登入頁，直接以 `demo.pharmacy` 進入工作區；登入程式保留，恢復方式見 `frontend/src/constants/demoAccess.ts`。目前也移除工作區標題 bar，手機仍可用功能選單開啟側欄。新版功能、無障礙驗證與待辦見 [本次交接](docs/20261020.md)。

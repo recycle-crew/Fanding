@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-  await page.goto("/demo/consumptions");
+  await page.goto("/consumptions");
   await expect(
     page.getByRole("heading", { name: "藥品耗用查詢", exact: true }),
   ).toBeVisible();
@@ -33,18 +33,16 @@ test("@critical 耗用唯讀查詢、日期、單位、明細與匯出", async (
 });
 
 test(
-  "/demo/consumptions 直接進入與重新整理",
+  "/consumptions 直接進入與重新整理",
   { tag: "@critical" },
   async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-    await page.goto("/demo/consumptions");
+    await page.goto("/consumptions");
     await expect(page.locator("#workspace")).toBeVisible();
     await expect(
       page.locator("#workspace").getByRole("heading").first(),
     ).not.toBeEmpty();
-    await expect(page).toHaveURL(
-      (url) => url.pathname === "/demo/consumptions",
-    );
+    await expect(page).toHaveURL((url) => url.pathname === "/consumptions");
     const entryURL = page.url();
     await page.reload();
     await expect(page).toHaveURL(entryURL);

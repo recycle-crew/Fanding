@@ -4,7 +4,7 @@ import type { Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
-  await page.goto("/demo");
+  await page.goto("/");
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
@@ -39,14 +39,14 @@ test("React HIS 高權限回寫展示不修改庫存", async ({ page }) => {
   );
 });
 
-test("/demo/his 直接進入與重新整理", { tag: "@critical" }, async ({ page }) => {
+test("/his 直接進入與重新整理", { tag: "@critical" }, async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-  await page.goto("/demo/his");
+  await page.goto("/his");
   await expect(page.locator("#workspace")).toBeVisible();
   await expect(
     page.locator("#workspace").getByRole("heading").first(),
   ).not.toBeEmpty();
-  await expect(page).toHaveURL((url) => url.pathname === "/demo/his");
+  await expect(page).toHaveURL((url) => url.pathname === "/his");
   const entryURL = page.url();
   await page.reload();
   await expect(page).toHaveURL(entryURL);

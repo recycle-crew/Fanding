@@ -125,7 +125,7 @@ export function BaseSidebar(props: BaseSidebarProps) {
       <div
         className={`sidebar-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto ${embedded ? "p-[18px_12px]" : "p-[24px_16px]"}`}
       >
-        <Link className="brand mx-[10px]" to="/demo">
+        <Link className="brand mx-[10px]" to="/">
           庫存管理系統
         </Link>
         <p
@@ -137,7 +137,7 @@ export function BaseSidebar(props: BaseSidebarProps) {
           variant="outline"
           className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === "items" ? "bg-blue-50 text-blue-700" : ""}`}
           aria-current={s.activeModule === "items" ? "page" : undefined}
-          onClick={() => navigate(`/demo/items${location.search}`)}
+          onClick={() => navigate(`/items${location.search}`)}
         >
           品項與庫存管理（新版）
         </BaseButton>
@@ -145,7 +145,7 @@ export function BaseSidebar(props: BaseSidebarProps) {
           variant="outline"
           className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === "purchases" ? "bg-blue-50 text-blue-700" : ""}`}
           aria-current={s.activeModule === "purchases" ? "page" : undefined}
-          onClick={() => navigate(`/demo/purchases${location.search}`)}
+          onClick={() => navigate(`/purchases${location.search}`)}
         >
           進貨管理（新版）
         </BaseButton>
@@ -153,12 +153,35 @@ export function BaseSidebar(props: BaseSidebarProps) {
           variant="outline"
           className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === "base-data" ? "bg-blue-50 text-blue-700" : ""}`}
           aria-current={s.activeModule === "base-data" ? "page" : undefined}
-          onClick={() => navigate(`/demo/base-data${location.search}`)}
-        >基礎資料管理（新版）</BaseButton>
-        <BaseButton variant="outline" className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === "consumptions" ? "bg-blue-50 text-blue-700" : ""}`}
-          aria-current={s.activeModule === "consumptions" ? "page" : undefined} onClick={() => navigate(`/demo/consumptions${location.search}`)}>耗用查詢（新版）</BaseButton>
-        {(["pos", "sales", "stocktakes"] as const).map((key) => <BaseButton key={key} variant="outline" className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === key ? "bg-blue-50 text-blue-700" : ""}`}
-          aria-current={s.activeModule === key ? "page" : undefined} onClick={() => navigate(`${demoModulePaths[key]}${location.search}`)}>{key === "pos" ? "POS 銷售（新版）" : key === "sales" ? "銷售紀錄（新版）" : "盤點管理（新版）"}</BaseButton>)}
+          onClick={() => navigate(`/base-data${location.search}`)}
+        >
+          基礎資料管理（新版）
+        </BaseButton>
+        <BaseButton
+          variant="outline"
+          className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === "consumptions" ? "bg-blue-50 text-blue-700" : ""}`}
+          aria-current={s.activeModule === "consumptions" ? "page" : undefined}
+          onClick={() => navigate(`/consumptions${location.search}`)}
+        >
+          耗用查詢（新版）
+        </BaseButton>
+        {(["pos", "sales", "stocktakes"] as const).map((key) => (
+          <BaseButton
+            key={key}
+            variant="outline"
+            className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === key ? "bg-blue-50 text-blue-700" : ""}`}
+            aria-current={s.activeModule === key ? "page" : undefined}
+            onClick={() =>
+              navigate(`${demoModulePaths[key]}${location.search}`)
+            }
+          >
+            {key === "pos"
+              ? "POS 銷售（新版）"
+              : key === "sales"
+                ? "銷售紀錄（新版）"
+                : "盤點管理（新版）"}
+          </BaseButton>
+        ))}
         <BaseButton
           variant="ghost"
           id="legacy-pages-toggle"
@@ -193,7 +216,18 @@ export function BaseSidebar(props: BaseSidebarProps) {
           aria-label="舊頁面功能選單"
         >
           {s.modules
-            .filter((module) => !["items", "purchases", "base-data", "consumptions", "pos", "sales", "stocktakes"].includes(module.key))
+            .filter(
+              (module) =>
+                ![
+                  "items",
+                  "purchases",
+                  "base-data",
+                  "consumptions",
+                  "pos",
+                  "sales",
+                  "stocktakes",
+                ].includes(module.key),
+            )
             .map((module) => (
               <Fragment key={module.key}>
                 {module.group && (
@@ -232,18 +266,6 @@ export function BaseSidebar(props: BaseSidebarProps) {
               </Fragment>
             ))}
         </nav>
-        <Link
-          className={`planning-link m-[36px_12px_12px] block text-[13px]${embedded ? " hidden" : ""}`}
-          to="/board"
-        >
-          畫面規劃與流程示範 ↗
-        </Link>
-        <Link
-          className={`planning-link m-[36px_12px_12px] block text-[13px]${embedded ? " hidden" : ""}`}
-          to="/"
-        >
-          ← 返回系統規劃
-        </Link>
         <p className="small muted mx-3 mb-[14px]">所有操作僅影響當次假資料</p>
       </div>
       <div

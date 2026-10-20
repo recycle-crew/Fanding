@@ -40,7 +40,7 @@ export function BoardPage() {
     frame.current?.contentWindow?.postMessage(message, "*");
     clearTimeout(timeout.current);
     timeout.current = setTimeout(
-      () => setStatus("畫面尚未回應，請關閉後重試，或開啟完整 Demo。"),
+      () => setStatus("畫面尚未回應，請關閉後重試，或開啟庫存管理系統。"),
       8000,
     );
   }
@@ -252,7 +252,7 @@ export function BoardPage() {
                     </div>
                     <div className="frame-preview" inert>
                       <iframe
-                        src={`/demo?embed=1&preview=1&scene=${f.scene}`}
+                        src={`/?embed=1&preview=1&scene=${f.scene}`}
                         title={`${f.title}初始畫面`}
                         tabIndex={-1}
                         loading="lazy"
@@ -311,8 +311,8 @@ export function BoardPage() {
                 <iframe
                   ref={frame}
                   id="interactive-demo"
-                  src="/demo?embed=1"
-                  title="可操作的庫存管理系統 Demo"
+                  src="/?embed=1"
+                  title="可操作的庫存管理系統"
                 />
               </section>
               <aside className="step-notes">

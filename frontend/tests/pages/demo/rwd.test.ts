@@ -17,15 +17,15 @@ const test = base.extend<{ browserErrors: string[] }>({
 });
 
 test("RWD shadcn 表單、Accordion 與確認視窗鍵盤操作", async ({ page }) => {
-  await page.goto("/#question-activation");
+  await page.goto("/docs/planning.html#question-activation");
   const question = page.locator("#question-activation");
-  await expect(question).toHaveAttribute("data-state", "open");
+  await expect(question).toHaveAttribute("open", "");
   const disclosure = question.locator('[data-slot="accordion-trigger"]');
   await disclosure.focus();
   await page.keyboard.press("Enter");
-  await expect(question).toHaveAttribute("data-state", "closed");
+  await expect(question).not.toHaveAttribute("open", "");
   await page.keyboard.press("Space");
-  await expect(question).toHaveAttribute("data-state", "open");
+  await expect(question).toHaveAttribute("open", "");
   await checkResponsiveLayout(page);
   await expect(question).toHaveScreenshot("shadcn-accordion.png");
   await enterDemoModule(page, "vendors", true);
@@ -93,7 +93,7 @@ test("RWD Layout 外框與 Home 登入流程及切頁保護", async ({
   page,
 }, testInfo) => {
   test.skip(!loginEnabled, "Demo 已暫停登入，沒有登入／登出 UI");
-  await page.goto("/demo/vendors");
+  await page.goto("/vendors");
   await expect(page.locator("#login")).toBeVisible();
   await expect(page.locator("#sidebar")).toBeHidden();
   await expect(page.locator(".topbar")).toBeHidden();
@@ -148,7 +148,7 @@ test("RWD Layout 外框與 Home 登入流程及切頁保護", async ({
   if (page.viewportSize().width < 768)
     await page.locator("#menu-toggle").click();
   await page.locator('#module-nav [data-module="products"]').click();
-  await expect(page).toHaveURL(/\/demo\/vendors$/);
+  await expect(page).toHaveURL(/\/vendors$/);
   await expect(page.locator("#editor")).toBeVisible();
   await expect(page.locator("#notice")).toContainText("請先儲存");
   await checkResponsiveLayout(page);
@@ -192,7 +192,7 @@ test("RWD Layout 外框與 Home 登入流程及切頁保護", async ({
 });
 
 test("RWD Demo Layout 承載子頁並保留工作區", async ({ page }) => {
-  await page.goto("/demo/vendors");
+  await page.goto("/vendors");
   await expect(page.locator("#workspace")).toBeVisible();
   await expect(page.locator("#content h2")).toHaveText("廠商資料維護");
   await expect(page.locator("#workspace > #sidebar")).toBeAttached();
@@ -257,7 +257,7 @@ test("RWD Tailwind 版面斷點兩側", async ({ page }, testInfo) => {
   const documentPage = testInfo.project.name === "rwd-tablet";
   const boardPage = testInfo.project.name === "rwd-desktop";
   await page.goto(
-    documentPage ? "/architecture" : boardPage ? "/board" : "/demo/vendors",
+    documentPage ? "/architecture" : boardPage ? "/board" : "/vendors",
   );
   if (!documentPage && !boardPage) {
     await expect(page.locator("#workspace")).toBeVisible();
@@ -316,7 +316,7 @@ test("RWD Tailwind 版面斷點兩側", async ({ page }, testInfo) => {
 });
 
 test("RWD React 重複代碼錯誤及唯讀說明", async ({ page }) => {
-  await page.goto("/demo");
+  await page.goto("/");
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
   await expect(page.locator("#workspace")).toBeVisible();
   if (page.viewportSize().width < 768)
@@ -341,17 +341,17 @@ test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
 });
 
-test("RWD SPA 跨頁切換、錨點與找不到頁面", async ({ page }) => {
-  await page.goto("/");
+test("RWD 靜態文件切換、錨點與找不到頁面", async ({ page }) => {
+  await page.goto("/docs/planning.html");
   await expect(page.locator(".shell > header")).toBeVisible();
   await expect(page.locator(".shell > footer")).toBeVisible();
-  await page.locator('nav a[href="/architecture"]').click();
+  await page.locator('nav a[href="architecture.html"]').click();
   await expect(page.locator(".document-layout")).toBeVisible();
   await expect(page.locator(".shell > header")).toBeVisible();
   await expect(page.locator(".shell > footer")).toBeVisible();
   await checkResponsiveLayout(page);
   await expect(page).toHaveScreenshot("spa-architecture-navigation.png");
-  await page.locator('nav a[href="/demo"]').click();
+  await page.locator('nav a[href="../"]').click();
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
@@ -397,13 +397,15 @@ test("RWD 舊頁面區預設展開與鍵盤收合保留目前頁面", async ({ p
   await page.keyboard.press("Enter");
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   await expect(page.locator("#module-nav")).toBeHidden();
-  await expect(page).toHaveURL(/\/demo\/vendors$/);
+  await expect(page).toHaveURL(/\/vendors$/);
   await expect(page.locator("#content h2")).toHaveText("廠商資料維護");
   await expect(
     page.locator(loginEnabled ? "#logout" : "#account-label"),
   ).toBeInViewport();
-  await expect(page.locator('.planning-link[href="/board"]')).toBeVisible();
-  await expect(page.locator('.planning-link[href="/"]')).toBeVisible();
+  await expect(page.locator('.demo-banner a[href="/board"]')).toBeVisible();
+  await expect(
+    page.locator('.demo-banner a[href="/docs/planning.html"]'),
+  ).toHaveCount(0);
   await checkResponsiveLayout(page);
   await expect(page.locator("#sidebar")).toHaveScreenshot(
     "legacy-pages-collapsed.png",
@@ -424,7 +426,7 @@ test("RWD 舊頁面區預設展開與鍵盤收合保留目前頁面", async ({ p
     "page",
   );
   await page.locator('[data-module="products"]').click();
-  await expect(page).toHaveURL(/\/demo\/products$/);
+  await expect(page).toHaveURL(/\/products$/);
   if (mobile) {
     await expect(page.locator("#sidebar")).toBeHidden();
     await page.locator("#menu-toggle").click();
@@ -442,16 +444,16 @@ test("RWD 舊頁面區預設展開與鍵盤收合保留目前頁面", async ({ p
 
 test("RWD 舊頁面區所有既有網址可直接開啟", async ({ page }) => {
   for (const [module, path] of [
-    ["overview", "/demo"],
-    ["vendors", "/demo/vendors"],
-    ["his", "/demo/his"],
-    ["products", "/demo/products"],
-    ["historical-cost", "/demo/historical-cost"],
-    ["receipt", "/demo/receipt"],
-    ["issue", "/demo/issue"],
-    ["requisitions", "/demo/requisitions"],
-    ["stocktake", "/demo/stocktake/current"],
-    ["stocktake-history", "/demo/stocktake/history"],
+    ["overview", "/"],
+    ["vendors", "/vendors"],
+    ["his", "/his"],
+    ["products", "/products"],
+    ["historical-cost", "/historical-cost"],
+    ["receipt", "/receipt"],
+    ["issue", "/issue"],
+    ["requisitions", "/requisitions"],
+    ["stocktake", "/stocktake/current"],
+    ["stocktake-history", "/stocktake/history"],
   ] as const) {
     await page.goto(path);
     await expect(page.locator("#workspace")).toBeVisible();
@@ -521,7 +523,7 @@ async function checkResponsiveLayout(page: Page) {
   }
 }
 async function enterDemoModule(page: Page, module: string, privileged = false) {
-  await page.goto("/demo");
+  await page.goto("/");
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
@@ -581,10 +583,10 @@ for (const path of [
   test(`RWD 網站頁面 ${path}`, async ({ page }) => {
     await page.goto(
       {
-        "index.html": "/",
+        "index.html": "/docs/planning.html",
         "architecture.html": "/architecture",
         "board.html": "/board",
-        "demo.html": "/demo",
+        "demo.html": "/",
       }[path],
     );
     await expect(
@@ -914,7 +916,7 @@ test("RWD 帳號固定側欄底部且縮放後可登出", async ({ page }) => {
 });
 test("RWD 長帳號與權限在側欄底部不溢出", async ({ page }) => {
   test.skip(!loginEnabled, "Demo 已暫停登入，沒有登入／登出 UI");
-  await page.goto("/demo");
+  await page.goto("/");
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
@@ -1095,7 +1097,7 @@ for (const [module, action] of [
 }
 test("RWD 忘記密碼", async ({ page }) => {
   test.skip(!loginEnabled, "Demo 已暫停登入，沒有登入／登出 UI");
-  await page.goto("/demo");
+  await page.goto("/");
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();

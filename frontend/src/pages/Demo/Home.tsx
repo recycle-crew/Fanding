@@ -125,14 +125,18 @@ export function DemoPage() {
   }, [s.notice]);
   // 盤點與各模組路由支援直接連結與瀏覽器上一頁／下一頁，未完成表單由 App 保護。
   useEffect(() => {
-    const pathname = routeLocation.pathname.replace(/\/+$/, "");
+    const pathname = routeLocation.pathname.replace(/\/+$/, "") || "/";
     const requested =
       s.stocktakeRoutes[pathname] ??
-      (pathname.startsWith("/demo/stocktakes/") ? "stocktakes" : pathname.startsWith("/demo/consumptions/") ? "consumptions" : pathname.startsWith("/demo/items/")
-        ? "items"
-        : pathname === "/demo"
-          ? "overview"
-          : pathname.slice("/demo/".length));
+      (pathname.startsWith("/stocktakes/")
+        ? "stocktakes"
+        : pathname.startsWith("/consumptions/")
+          ? "consumptions"
+          : pathname.startsWith("/items/")
+            ? "items"
+            : pathname === "/"
+              ? "overview"
+              : pathname.slice("/".length));
     const module = s.modules.find((module) => module.key === requested);
     if (module && module.key !== s.activeModule)
       dispatch(executeDemoCommand({ type: "navigate", module: module.key }));
@@ -460,10 +464,19 @@ export function DemoPage() {
       value={{ revision: s.pageRevision, states: pageStates }}
     >
       <div className="demo-banner">
-        展示模式・假資料 <span>重新整理即重置</span>
+        <span>展示模式・假資料</span>
+        {!embedded && (
+          <nav
+            aria-label="畫面規劃"
+            className="flex flex-wrap items-center gap-3"
+          >
+            <Link to="/board">畫面規劃板 ↗</Link>
+          </nav>
+        )}
+        <span>重新整理即重置</span>
       </div>
-      {/* 登入頁暫時停用；開啟 DEMO_LOGIN_ENABLED 後恢復原表單。 */}
-      {DEMO_LOGIN_ENABLED && (
+      {/* 系統首頁略過登入；規劃板嵌入畫面仍展示登入及密碼重設流程。 */}
+      {(DEMO_LOGIN_ENABLED || embedded) && (
         <section id="login" className="login-layout" hidden={s.loggedIn}>
           <div className="login-story">
             <div className="brand">庫存管理系統</div>
@@ -576,7 +589,7 @@ export function DemoPage() {
                 >
                   忘記密碼？
                 </BaseButton>
-                <Link to="/">← 返回系統規劃</Link>
+                <Link to="/">← 返回庫存管理系統</Link>
               </div>
             </form>
           </BaseCard>
@@ -759,11 +772,19 @@ export function DemoPage() {
               setVendorOptions(false);
           }}
         >
-          {!["items", "purchases", "base-data", "consumptions", "pos", "sales", "stocktakes"].includes(s.activeModule) && (
+          {![
+            "items",
+            "purchases",
+            "base-data",
+            "consumptions",
+            "pos",
+            "sales",
+            "stocktakes",
+          ].includes(s.activeModule) && (
             <div className="page-heading">
               <div>
                 <p className="eyebrow">
-                  庫存管理系統 / {s.activeModule === "his" ? "HIS" : "DEMO"}
+                  庫存管理系統 / {s.activeModule === "his" ? "HIS" : "工作區"}
                 </p>
                 <h2>{module.label}</h2>
                 <p>{subtitles[s.activeModule]}</p>
@@ -771,7 +792,11 @@ export function DemoPage() {
               {["vendors", "products", "requisitions"].includes(
                 s.activeModule,
               ) ? (
-                <BaseButton variant="default" className="primary" data-action="add">
+                <BaseButton
+                  variant="default"
+                  className="primary"
+                  data-action="add"
+                >
                   ＋ 新增資料
                 </BaseButton>
               ) : (
@@ -978,7 +1003,11 @@ export function DemoPage() {
                 <BaseButton variant="outline" value="cancel">
                   取消
                 </BaseButton>
-                <BaseButton variant="default" value="confirm" className="primary">
+                <BaseButton
+                  variant="default"
+                  value="confirm"
+                  className="primary"
+                >
                   確認
                 </BaseButton>
               </div>
@@ -1012,7 +1041,7 @@ export function DemoPage() {
               <p id="readonly-policy">
                 權限採 LDAP
                 群組對應系統角色的方向。需與使用者確認各群組可修改的欄位、料號啟用／停用權限，以及對入庫、出庫與領用的限制；目前
-                Demo 尚未串接 LDAP。
+                系統尚未串接 LDAP。
               </p>
               <div className="dialog-actions">
                 <BaseButton variant="default" className="primary" value="close">

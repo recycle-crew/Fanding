@@ -146,7 +146,7 @@ export function StocktakesPage() {
           {params.id ? (
             <BaseButton
               variant="outline"
-              onClick={() => navigate("/demo/stocktakes")}
+              onClick={() => navigate("/stocktakes")}
             >
               返回盤點列表
             </BaseButton>
@@ -296,7 +296,7 @@ export function StocktakesPage() {
                 aria-label={`開啟盤點 ${row.number}`}
                 onClick={() =>
                   navigate(
-                    `/demo/stocktakes/${row.id}/${manager && row.status !== "盤點中" && row.closedAt ? "review" : "count"}`,
+                    `/stocktakes/${row.id}/${manager && row.status !== "盤點中" && row.closedAt ? "review" : "count"}`,
                   )
                 }
               >
@@ -338,9 +338,7 @@ export function StocktakesPage() {
                   <>
                     <BaseButton
                       variant="outline"
-                      onClick={() =>
-                        navigate(`/demo/stocktakes/${order.id}/review`)
-                      }
+                      onClick={() => navigate(`/stocktakes/${order.id}/review`)}
                     >
                       主管差異核對
                     </BaseButton>
@@ -415,7 +413,7 @@ export function StocktakesPage() {
               onDone={(id) => {
                 close(true);
                 setNotice("盤點單已建立，範圍快照已鎖定。");
-                navigate(`/demo/stocktakes/${id}/count`);
+                navigate(`/stocktakes/${id}/count`);
               }}
             />
           )}
@@ -437,8 +435,8 @@ export function StocktakesPage() {
                   close(true);
                   setNotice("盤點展示操作已完成，原始紀錄與稽核保留。");
                   if (kind === "close")
-                    navigate(`/demo/stocktakes/${order.id}/review`);
-                  else if (kind === "cancel") navigate("/demo/stocktakes");
+                    navigate(`/stocktakes/${order.id}/review`);
+                  else if (kind === "cancel") navigate("/stocktakes");
                 }}
               />
             )}

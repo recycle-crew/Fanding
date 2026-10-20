@@ -5,10 +5,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("SPA 找不到頁面可返回首頁", async ({ page }) => {
-  await page.goto("/demo/missing-module");
+  await page.goto("/missing-module");
   await expect(page.getByRole("heading", { name: "找不到頁面" })).toBeVisible();
   await expect(page).toHaveScreenshot("spa-not-found.png");
-  await page.getByRole("link", { name: "返回系統規劃" }).click();
+  await page.getByRole("link", { name: "返回庫存管理系統" }).click();
   await expect(page).toHaveURL("/");
-  await expect(page.locator("h1")).toBeVisible();
+  await expect(page.locator("#workspace")).toBeVisible();
 });

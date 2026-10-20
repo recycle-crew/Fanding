@@ -25,7 +25,7 @@ async function audit(page: Page) {
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.goto("/demo/items");
+  await page.goto("/items");
   await expect(
     page.getByRole("heading", { name: "品項與庫存管理", exact: true }),
   ).toBeVisible();

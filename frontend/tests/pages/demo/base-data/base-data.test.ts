@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-  await page.goto("/demo/base-data");
+  await page.goto("/base-data");
   await expect(
     page.getByRole("heading", { name: "基礎資料管理", exact: true }),
   ).toBeVisible();
@@ -171,16 +171,16 @@ test("無障礙與桌面／手機版面", async ({ page }, testInfo) => {
 });
 
 test(
-  "/demo/base-data 直接進入與重新整理",
+  "/base-data 直接進入與重新整理",
   { tag: "@critical" },
   async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-    await page.goto("/demo/base-data");
+    await page.goto("/base-data");
     await expect(page.locator("#workspace")).toBeVisible();
     await expect(
       page.locator("#workspace").getByRole("heading").first(),
     ).not.toBeEmpty();
-    await expect(page).toHaveURL((url) => url.pathname === "/demo/base-data");
+    await expect(page).toHaveURL((url) => url.pathname === "/base-data");
     const entryURL = page.url();
     await page.reload();
     await expect(page).toHaveURL(entryURL);

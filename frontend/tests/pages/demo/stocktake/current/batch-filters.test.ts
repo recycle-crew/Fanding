@@ -25,7 +25,7 @@ const queryForms = {
 };
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
-  await page.goto("/demo");
+  await page.goto("/");
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
@@ -94,17 +94,17 @@ test("盤點按品項核對庫存，不套用出入庫傳票批次", async ({ pa
 });
 
 test(
-  "/demo/stocktake/current 直接進入與重新整理",
+  "/stocktake/current 直接進入與重新整理",
   { tag: "@critical" },
   async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
-    await page.goto("/demo/stocktake/current");
+    await page.goto("/stocktake/current");
     await expect(page.locator("#workspace")).toBeVisible();
     await expect(
       page.locator("#workspace").getByRole("heading").first(),
     ).not.toBeEmpty();
     await expect(page).toHaveURL(
-      (url) => url.pathname === "/demo/stocktake/current",
+      (url) => url.pathname === "/stocktake/current",
     );
     const entryURL = page.url();
     await page.reload();
