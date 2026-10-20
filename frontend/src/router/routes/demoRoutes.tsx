@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import type { RouteObject } from "react-router";
-import { demoModulePaths } from "@/constants/demoRoutes";
+import { demoModulePaths, itemGroupPaths } from "@/constants/demoRoutes";
 import { DemoLayout } from "@/pages/Demo/Layout";
 
 const DemoPage = lazy(() =>
@@ -20,6 +20,13 @@ export const demoRoutes: RouteObject[] = [
           element: <DemoPage />,
         })),
       { path: "overview", element: <DemoPage /> },
+      { path: "consumptions/:view", element: <DemoPage /> },
+      { path: "stocktakes/:id/count", element: <DemoPage /> },
+      { path: "stocktakes/:id/review", element: <DemoPage /> },
+      ...Object.values(itemGroupPaths).map((path) => ({
+        path: path.slice("/demo/".length),
+        element: <DemoPage />,
+      })),
     ],
   },
 ];

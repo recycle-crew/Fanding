@@ -1,18 +1,18 @@
 import {
-  TableRow,
-  TableHead,
-  TableCell,
-  Table,
-  TableCaption,
-  TableHeader,
-  TableBody,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+  BaseTableRow,
+  BaseTableHead,
+  BaseTableCell,
+  BaseTable,
+  BaseTableCaption,
+  BaseTableHeader,
+  BaseTableBody,
+} from "@/components/ui/BaseTable";
+import { BaseButton } from "@/components/ui/BaseButton";
+import { BaseLabel } from "@/components/ui/BaseLabel";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select";
+  BaseNativeSelect,
+  BaseNativeSelectOption,
+} from "@/components/ui/BaseNativeSelect";
 import { useLocation } from "react-router";
 import React, {
   createContext,
@@ -34,25 +34,26 @@ export function BaseDataTable({
   editableColumns = null,
   tableKey,
   privileged = false,
+  exportable = true,
 }: {
   headers: string[];
   rows: ReactNode[][];
   editableColumns?: string[] | null;
   tableKey: string;
   privileged?: boolean;
+  exportable?: boolean;
 }) {
   return (
     <BaseTableFrame
       tableKey={tableKey}
+      exportable={exportable}
       headers={
-        <TableRow>
+        <BaseTableRow>
           {headers.map((header) => (
-            <TableHead
+            <BaseTableHead
               key={header}
               scope="col"
-              data-export-ignore={
-                header === "操作" && editableColumns ? "true" : undefined
-              }
+              data-export-ignore={header === "操作" ? "true" : undefined}
             >
               {header}
               {editableColumns && header !== "操作" && (
@@ -70,16 +71,16 @@ export function BaseDataTable({
                     : "唯讀"}
                 </span>
               )}
-            </TableHead>
+            </BaseTableHead>
           ))}
-        </TableRow>
+        </BaseTableRow>
       }
       rows={rows.map((row, index) => (
-        <TableRow key={index}>
+        <BaseTableRow key={index}>
           {row.map((cell, i) => (
-            <TableCell key={i}>{cell}</TableCell>
+            <BaseTableCell key={i}>{cell}</BaseTableCell>
           ))}
-        </TableRow>
+        </BaseTableRow>
       ))}
       columns={headers.length}
     />
@@ -93,6 +94,7 @@ export function BaseTableFrame({
   caption,
   region = "資料表，可左右捲動",
   className = "",
+  exportable = true,
 }: {
   tableKey: string;
   headers: ReactNode;
@@ -101,6 +103,7 @@ export function BaseTableFrame({
   caption?: ReactNode;
   region?: string;
   className?: string;
+  exportable?: boolean;
 }) {
   const { states, revision } = useContext(BasePaginationContext);
   const [pagination, setPagination] = useState<PageState>(
@@ -156,10 +159,10 @@ export function BaseTableFrame({
         role="region"
         aria-label={region}
       >
-        <Table ref={table}>
-          {caption && <TableCaption>{caption}</TableCaption>}
-          <TableHeader>{headers}</TableHeader>
-          <TableBody>
+        <BaseTable ref={table}>
+          {caption && <BaseTableCaption>{caption}</BaseTableCaption>}
+          <BaseTableHeader>{headers}</BaseTableHeader>
+          <BaseTableBody>
             {rows.length ? (
               rows.map((row, index) =>
                 React.isValidElement<{ hidden?: boolean }>(row)
@@ -171,17 +174,17 @@ export function BaseTableFrame({
                   : row,
               )
             ) : (
-              <TableRow>
-                <TableCell
+              <BaseTableRow>
+                <BaseTableCell
                   colSpan={columns}
                   className="empty p-9 text-center text-[var(--muted)]"
                 >
                   目前沒有符合的資料
-                </TableCell>
-              </TableRow>
+                </BaseTableCell>
+              </BaseTableRow>
             )}
-          </TableBody>
-        </Table>
+          </BaseTableBody>
+        </BaseTable>
       </div>
       <div className="table-pagination m-[14px_0_20px] flex flex-wrap items-center gap-x-5 gap-y-3 text-[12px] text-[var(--muted)] print:hidden">
         <span className="mr-auto tabular-nums" role="status" aria-live="polite">
@@ -189,34 +192,36 @@ export function BaseTableFrame({
             ? `第 ${offset + 1}–${Math.min(offset + pagination.pageSize, rows.length)} 筆，共 ${rows.length} 筆`
             : "共 0 筆"}
         </span>
-        <Button
-          variant="outline"
-          type="button"
-          className="border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
-          data-export-excel
-          disabled={exporting}
-          title="匯出目前篩選條件下的全部資料，包含所有分頁"
-          onClick={async () => {
-            if (!table.current) return;
-            setExporting(true);
-            setStatus("");
-            try {
-              const count = await downloadTable(table.current);
-              setStatus(`已產生 XLSX，共 ${count} 筆（含所有分頁）。`);
-            } catch (error) {
-              setStatus(
-                `匯出失敗：${error instanceof Error ? error.message : String(error)}。請重試。`,
-              );
-            } finally {
-              setExporting(false);
-            }
-          }}
-        >
-          {exporting ? "匯出中…" : "匯出 Excel (.xlsx)"}
-        </Button>
-        <Label className="flex items-center gap-2 whitespace-nowrap text-[12px] font-medium">
+        {exportable && (
+          <BaseButton
+            variant="outline"
+            type="button"
+            className="border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
+            data-export-excel
+            disabled={exporting}
+            title="匯出目前篩選條件下的全部資料，包含所有分頁"
+            onClick={async () => {
+              if (!table.current) return;
+              setExporting(true);
+              setStatus("");
+              try {
+                const count = await downloadTable(table.current);
+                setStatus(`已產生 XLSX，共 ${count} 筆（含所有分頁）。`);
+              } catch (error) {
+                setStatus(
+                  `匯出失敗：${error instanceof Error ? error.message : String(error)}。請重試。`,
+                );
+              } finally {
+                setExporting(false);
+              }
+            }}
+          >
+            {exporting ? "匯出中…" : "匯出 Excel (.xlsx)"}
+          </BaseButton>
+        )}
+        <BaseLabel className="flex items-center gap-2 whitespace-nowrap text-[12px] font-medium">
           每頁筆數
-          <NativeSelect
+          <BaseNativeSelect
             className="w-auto min-w-[60px] border border-[#bac9d4] bg-white p-[6px_9px] text-[var(--ink)]"
             data-page-size
             value={pagination.pageSize}
@@ -225,15 +230,15 @@ export function BaseTableFrame({
             }
           >
             {[5, 10, 20, 50].map((size) => (
-              <NativeSelectOption key={size}>{size}</NativeSelectOption>
+              <BaseNativeSelectOption key={size}>{size}</BaseNativeSelectOption>
             ))}
-          </NativeSelect>
-        </Label>
+          </BaseNativeSelect>
+        </BaseLabel>
         <nav
           className="flex flex-wrap items-center justify-start gap-2"
           aria-label="表格分頁"
         >
-          <Button
+          <BaseButton
             variant="outline"
             type="button"
             className="border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
@@ -246,10 +251,10 @@ export function BaseTableFrame({
             }}
           >
             上一頁
-          </Button>
-          <Label className="flex items-center gap-2 whitespace-nowrap text-[12px] font-medium">
+          </BaseButton>
+          <BaseLabel className="flex items-center gap-2 whitespace-nowrap text-[12px] font-medium">
             頁碼
-            <NativeSelect
+            <BaseNativeSelect
               className="w-auto min-w-[60px] border border-[#bac9d4] bg-white p-[6px_9px] text-[var(--ink)]"
               ref={pageSelector}
               data-page-number
@@ -263,12 +268,12 @@ export function BaseTableFrame({
               }
             >
               {Array.from({ length: pageCount }, (_, i) => (
-                <NativeSelectOption key={i}>{i + 1}</NativeSelectOption>
+                <BaseNativeSelectOption key={i}>{i + 1}</BaseNativeSelectOption>
               ))}
-            </NativeSelect>
+            </BaseNativeSelect>
             <span className="pagination-total">／ {pageCount} 頁</span>
-          </Label>
-          <Button
+          </BaseLabel>
+          <BaseButton
             variant="outline"
             type="button"
             className="border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
@@ -281,7 +286,7 @@ export function BaseTableFrame({
             }}
           >
             下一頁
-          </Button>
+          </BaseButton>
         </nav>
         <span
           className="export-status basis-full text-[var(--muted)]"

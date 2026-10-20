@@ -1,13 +1,13 @@
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { BaseLabel } from "@/components/ui/BaseLabel";
+import { BaseInput } from "@/components/ui/BaseInput";
+import { BaseCard } from "@/components/ui/BaseCard";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select";
-import { Button } from "@/components/ui/button";
+  BaseNativeSelect,
+  BaseNativeSelectOption,
+} from "@/components/ui/BaseNativeSelect";
+import { BaseButton } from "@/components/ui/BaseButton";
 import { useAppSelector } from "@/store/hooks";
-import { Badge } from "@/components/ui/badge";
+import { BaseBadge } from "@/components/ui/BaseBadge";
 import { BaseFilterForm } from "@/components/ui/BaseFilterForm";
 import React from "react";
 import { BaseDataTable } from "@/components/ui/BaseDataTable";
@@ -21,7 +21,7 @@ import type {
   Product,
   Vendor,
   Requisition,
-} from "@/types/demo";
+} from "@/features/demo/types";
 
 type DisplayRecord = {
   id: string | number;
@@ -37,9 +37,9 @@ function renderInventoryIdentityFilters(
     <>
       {voucherIds ? (
         <>
-          <Label>
+          <BaseLabel>
             {"批次／傳票編號"}
-            <Input
+            <BaseInput
               name={"voucherId"}
               list={String(listId) + "-batches"}
               placeholder={"所有批次，可輸入日期或傳票編號"}
@@ -47,7 +47,7 @@ function renderInventoryIdentityFilters(
               autoComplete={"off"}
               inputMode={"numeric"}
             />
-          </Label>
+          </BaseLabel>
           <datalist id={String(listId) + "-batches"}>
             {React.Children.toArray(
               [...new Set(voucherIds.filter(Boolean))]
@@ -55,7 +55,7 @@ function renderInventoryIdentityFilters(
                 .reverse()
                 .map((voucherId, rowIndex) => (
                   <React.Fragment key={rowIndex}>
-                    <option value={String(voucherId ?? "")}></option>
+                    <BaseNativeSelectOption value={String(voucherId ?? "")}></BaseNativeSelectOption>
                   </React.Fragment>
                 )),
             )}
@@ -64,29 +64,29 @@ function renderInventoryIdentityFilters(
       ) : (
         ""
       )}
-      <Label>
+      <BaseLabel>
         {"料號"}
-        <Input
+        <BaseInput
           name={"materialNumber"}
           placeholder={"所有料號"}
           defaultValue={String(filters.materialNumber ?? "")}
         />
-      </Label>
-      <Label>
+      </BaseLabel>
+      <BaseLabel>
         {String(personLabel ?? "")}
-        <Input
+        <BaseInput
           name={"person"}
           list={listId}
           placeholder={"所有人員"}
           autoComplete={"off"}
           defaultValue={String(filters.person ?? "")}
         />
-      </Label>
+      </BaseLabel>
       <datalist id={listId}>
         {React.Children.toArray(
           [...new Set(people.filter(Boolean))].map((person, rowIndex) => (
             <React.Fragment key={rowIndex}>
-              <option value={String(person ?? "")}></option>
+              <BaseNativeSelectOption value={String(person ?? "")}></BaseNativeSelectOption>
             </React.Fragment>
           )),
         )}
@@ -220,7 +220,7 @@ export function OverviewMovements() {
   ];
   return (
     <>
-      <Card className={"panel"}>
+      <BaseCard className={"panel"}>
         <h3>{"庫存總覽"}</h3>
         <BaseFilterForm
           id={"overview-movement-filter"}
@@ -236,72 +236,72 @@ export function OverviewMovements() {
                 "人員",
                 movements.map((movement) => movement.voucherId),
               )}
-              <Label>
+              <BaseLabel>
                 {"日期"}
-                <Input
+                <BaseInput
                   type={"date"}
                   name={"date"}
                   defaultValue={String(overviewMovementFilter.date ?? "")}
                 />
-              </Label>
-              <Label>
+              </BaseLabel>
+              <BaseLabel>
                 {"品項"}
-                <NativeSelect name={"product"}>
-                  <NativeSelectOption value={""}>{"所有"}</NativeSelectOption>
+                <BaseNativeSelect name={"product"}>
+                  <BaseNativeSelectOption value={""}>{"所有"}</BaseNativeSelectOption>
                   {products.map((product, rowIndex) => {
                     const key = `${product.workspace}:${product.id}`;
                     return (
                       <React.Fragment key={rowIndex}>
-                        <NativeSelectOption value={String(key ?? "")}>
+                        <BaseNativeSelectOption value={String(key ?? "")}>
                           {String(
                             `${product.workspace} · ${product.id} ${product.name}`,
                           )}
-                        </NativeSelectOption>
+                        </BaseNativeSelectOption>
                       </React.Fragment>
                     );
                   })}
-                </NativeSelect>
-              </Label>
-              <Label>
+                </BaseNativeSelect>
+              </BaseLabel>
+              <BaseLabel>
                 {"動作"}
-                <NativeSelect name={"action"}>
-                  <NativeSelectOption value={""}>{"所有"}</NativeSelectOption>
+                <BaseNativeSelect name={"action"}>
+                  <BaseNativeSelectOption value={""}>{"所有"}</BaseNativeSelectOption>
                   {React.Children.toArray(
                     actions.map((action, rowIndex) => (
                       <React.Fragment key={rowIndex}>
-                        <NativeSelectOption value={String(action ?? "")}>
+                        <BaseNativeSelectOption value={String(action ?? "")}>
                           {String(action ?? "")}
-                        </NativeSelectOption>
+                        </BaseNativeSelectOption>
                       </React.Fragment>
                     )),
                   )}
-                </NativeSelect>
-              </Label>
-              <Label>
+                </BaseNativeSelect>
+              </BaseLabel>
+              <BaseLabel>
                 {"工作區"}
-                <NativeSelect name={"workspace"}>
-                  <NativeSelectOption value={""}>{"所有"}</NativeSelectOption>
+                <BaseNativeSelect name={"workspace"}>
+                  <BaseNativeSelectOption value={""}>{"所有"}</BaseNativeSelectOption>
                   {React.Children.toArray(
                     ["HIS", "OTC"].map((workspace, rowIndex) => (
                       <React.Fragment key={rowIndex}>
-                        <NativeSelectOption value={workspace}>
+                        <BaseNativeSelectOption value={workspace}>
                           {workspace}
-                        </NativeSelectOption>
+                        </BaseNativeSelectOption>
                       </React.Fragment>
                     )),
                   )}
-                </NativeSelect>
-              </Label>
-              <Button variant="default" type={"submit"} className={"primary"}>
+                </BaseNativeSelect>
+              </BaseLabel>
+              <BaseButton variant="default" type={"submit"} className={"primary"}>
                 {"搜尋"}
-              </Button>
-              <Button
+              </BaseButton>
+              <BaseButton
                 variant="outline"
                 type={"button"}
                 data-action={"reset-overview-filter"}
               >
                 {"重設為當日所有"}
-              </Button>
+              </BaseButton>
             </>
           }
         />
@@ -311,7 +311,7 @@ export function OverviewMovements() {
           }
         </p>
         <div id={"overview-movements-table"}>{<MovementsTable />}</div>
-      </Card>
+      </BaseCard>
     </>
   );
 }
@@ -379,35 +379,35 @@ export function ListPage({
   const rows = filtered.map((entry) => {
     const status = (
       <>
-        <Badge
+        <BaseBadge
           variant="secondary"
           className={"tag " + String(entry.status === "停用" ? "off" : "")}
         >
           {String(entry.status ?? "")}
-        </Badge>
+        </BaseBadge>
       </>
     );
     const actions = (
       <>
         <div className={"actions"}>
-          <Button
+          <BaseButton
             variant="outline"
             data-action={"edit"}
             data-id={String(entry.id ?? "")}
           >
             {"編輯"}
-          </Button>
+          </BaseButton>
           {activeModule === "his" ? (
             ""
           ) : (
             <>
-              <Button
+              <BaseButton
                 variant="outline"
                 data-action={"delete"}
                 data-id={String(entry.id ?? "")}
               >
                 {"刪除"}
-              </Button>
+              </BaseButton>
             </>
           )}
         </div>
@@ -514,9 +514,9 @@ export function ListPage({
         <>
           {entry.status === "啟用" &&
           entry.stock < (activeModule === "his" ? 20 : entry.minStock) ? (
-            <Badge variant="secondary" className="tag low">
+            <BaseBadge variant="secondary" className="tag low">
               {entry.stock}
-            </Badge>
+            </BaseBadge>
           ) : (
             entry.stock
           )}
@@ -608,7 +608,7 @@ export function ListPage({
             ];
   return (
     <>
-      <Card className={"panel list-panel"}>
+      <BaseCard className={"panel list-panel"}>
         <div className={"toolbar"}>
           <div
             className={
@@ -616,7 +616,7 @@ export function ListPage({
               String(activeModule === "vendors" ? "vendor-search" : "")
             }
           >
-            <Input
+            <BaseInput
               id={"search"}
               type={"search"}
               aria-label={"搜尋資料"}
@@ -648,7 +648,7 @@ export function ListPage({
                     React.Children.toArray(
                       filtered.slice(0, 5).map((vendor, rowIndex) => (
                         <React.Fragment key={rowIndex}>
-                          <Button
+                          <BaseButton
                             variant="outline"
                             type={"button"}
                             role={"option"}
@@ -669,7 +669,7 @@ export function ListPage({
                             ) : (
                               ""
                             )}
-                          </Button>
+                          </BaseButton>
                         </React.Fragment>
                       )),
                     )
@@ -686,27 +686,27 @@ export function ListPage({
           </div>
           {activeModule === "vendors" ? (
             <>
-              <Label className={"vendor-filter"}>
+              <BaseLabel className={"vendor-filter"}>
                 {"廠商狀態"}
-                <NativeSelect
+                <BaseNativeSelect
                   id={"vendor-status-filter"}
                   value={vendorStatusFilter}
                   onChange={() => {}}
                 >
-                  <NativeSelectOption value={""}>
+                  <BaseNativeSelectOption value={""}>
                     {"全部狀態"}
-                  </NativeSelectOption>
+                  </BaseNativeSelectOption>
                   {React.Children.toArray(
                     ["啟用", "停用"].map((status, rowIndex) => (
                       <React.Fragment key={rowIndex}>
-                        <NativeSelectOption value={status}>
+                        <BaseNativeSelectOption value={status}>
                           {status}
-                        </NativeSelectOption>
+                        </BaseNativeSelectOption>
                       </React.Fragment>
                     )),
                   )}
-                </NativeSelect>
-              </Label>
+                </BaseNativeSelect>
+              </BaseLabel>
             </>
           ) : (
             ""
@@ -731,38 +731,38 @@ export function ListPage({
                     "requisition-filter-people",
                     "領用人",
                   )}
-                  <Label>
+                  <BaseLabel>
                     {"開始時間"}
-                    <Input
+                    <BaseInput
                       name={"start"}
                       type={"datetime-local"}
                       step={"60"}
                       defaultValue={String(requisitionFilter.start ?? "")}
                     />
-                  </Label>
-                  <Label>
+                  </BaseLabel>
+                  <BaseLabel>
                     {"結束時間"}
-                    <Input
+                    <BaseInput
                       name={"end"}
                       type={"datetime-local"}
                       step={"60"}
                       defaultValue={String(requisitionFilter.end ?? "")}
                     />
-                  </Label>
-                  <Button
+                  </BaseLabel>
+                  <BaseButton
                     variant="default"
                     type={"submit"}
                     className={"primary"}
                   >
                     {"搜尋"}
-                  </Button>
-                  <Button
+                  </BaseButton>
+                  <BaseButton
                     variant="outline"
                     type={"button"}
                     data-action={"clear-requisition-filter"}
                   >
                     {"清除條件"}
-                  </Button>
+                  </BaseButton>
                 </>
               }
             />
@@ -794,7 +794,7 @@ export function ListPage({
             />
           }
         </div>
-      </Card>
+      </BaseCard>
     </>
   );
 }
@@ -884,7 +884,7 @@ export function HistoricalCostsPage() {
   });
   return (
     <>
-      <Card className={"panel"}>
+      <BaseCard className={"panel"}>
         <BaseFilterForm
           id={"historical-cost-filter"}
           className={"overview-movement-filter"}
@@ -899,32 +899,32 @@ export function HistoricalCostsPage() {
                 "送出人員",
                 postedReceipts.map((voucher) => voucher.id),
               )}
-              <Label>
+              <BaseLabel>
                 {"開始時間"}
-                <Input
+                <BaseInput
                   type={"datetime-local"}
                   name={"start"}
                   defaultValue={String(historicalCostFilter.start ?? "")}
                 />
-              </Label>
-              <Label>
+              </BaseLabel>
+              <BaseLabel>
                 {"結束時間"}
-                <Input
+                <BaseInput
                   type={"datetime-local"}
                   name={"end"}
                   defaultValue={String(historicalCostFilter.end ?? "")}
                 />
-              </Label>
-              <Button variant="default" type={"submit"} className={"primary"}>
+              </BaseLabel>
+              <BaseButton variant="default" type={"submit"} className={"primary"}>
                 {"搜尋"}
-              </Button>
-              <Button
+              </BaseButton>
+              <BaseButton
                 variant="outline"
                 type={"button"}
                 data-action={"clear-historical-cost-filter"}
               >
                 {"清除條件"}
-              </Button>
+              </BaseButton>
             </>
           }
         />
@@ -954,8 +954,8 @@ export function HistoricalCostsPage() {
             privileged={canEditExistingData}
           />
         }
-      </Card>
-      <Card className={"panel"}>
+      </BaseCard>
+      <BaseCard className={"panel"}>
         <h3>{"入庫成本明細"}</h3>
         <p className={"field-hint"}>
           {"保存當次入庫單價，品項成本價之後變更也不回寫歷史傳票。"}
@@ -1003,7 +1003,7 @@ export function HistoricalCostsPage() {
             privileged={canEditExistingData}
           />
         }
-      </Card>
+      </BaseCard>
     </>
   );
 }
@@ -1028,23 +1028,23 @@ export function MovementVoucher() {
             {activeModule === "receipt" ? "入庫" : "出庫"}
             {"傳票"}
           </h3>
-          <Button
+          <BaseButton
             variant="outline"
             type={"button"}
             data-action={"create-voucher"}
             disabled={voucher && !locked}
           >
             {"建立傳票"}
-          </Button>
+          </BaseButton>
         </div>
-        <Label>
+        <BaseLabel>
           {"選擇傳票"}
-          <NativeSelect
+          <BaseNativeSelect
             id={"movement-voucher"}
             value={selectedMovementVoucherIds[activeModule] ?? ""}
             onChange={() => {}}
           >
-            <NativeSelectOption value={""}>{"尚未建立"}</NativeSelectOption>
+            <BaseNativeSelectOption value={""}>{"尚未建立"}</BaseNativeSelectOption>
             {React.Children.toArray(
               movementVouchers
                 .filter((entry) => entry.direction === activeModule)
@@ -1052,7 +1052,7 @@ export function MovementVoucher() {
                 .reverse()
                 .map((entry, rowIndex) => (
                   <React.Fragment key={rowIndex}>
-                    <NativeSelectOption value={entry.id}>
+                    <BaseNativeSelectOption value={entry.id}>
                       {entry.id}
                       {" · "}
                       {entry.cancelledAt
@@ -1060,12 +1060,12 @@ export function MovementVoucher() {
                         : entry.submittedAt
                           ? "已送出"
                           : "草稿"}
-                    </NativeSelectOption>
+                    </BaseNativeSelectOption>
                   </React.Fragment>
                 )),
             )}
-          </NativeSelect>
-        </Label>
+          </BaseNativeSelect>
+        </BaseLabel>
         <p className={"field-hint"}>
           {
             "一張傳票是一個批次，編號為日期＋三碼流水號；加入明細後整批送出才更新庫存。"
@@ -1135,13 +1135,13 @@ export function MovementVoucher() {
                     "鎖定"
                   ) : (
                     <>
-                      <Button
+                      <BaseButton
                         variant="outline"
                         type={"button"}
                         data-remove-voucher-line={index}
                       >
                         {"移除"}
-                      </Button>
+                      </BaseButton>
                     </>
                   ),
                 ])}
@@ -1155,7 +1155,7 @@ export function MovementVoucher() {
             ) : (
               <>
                 <div className={"time-filter-actions"}>
-                  <Button
+                  <BaseButton
                     variant="default"
                     type={"button"}
                     className={"primary"}
@@ -1163,14 +1163,14 @@ export function MovementVoucher() {
                     disabled={!voucher.lines.length}
                   >
                     {"確認送出傳票"}
-                  </Button>
-                  <Button
+                  </BaseButton>
+                  <BaseButton
                     variant="outline"
                     type={"button"}
                     data-action={"cancel-voucher"}
                   >
                     {"取消傳票"}
-                  </Button>
+                  </BaseButton>
                 </div>
               </>
             )}

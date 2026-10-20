@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import type { ChangeEvent, ReactNode } from "react";
-import type { InventoryFilter } from "@/types/demo";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
+import type { InventoryFilter } from "@/features/demo/types";
+import { BaseInput } from "@/components/ui/BaseInput";
+import { BaseNativeSelect } from "@/components/ui/BaseNativeSelect";
 type ControlProps = {
   children?: ReactNode;
   name?: string;
@@ -24,7 +24,7 @@ export function BaseFilterForm(props: {
       if (!React.isValidElement<ControlProps>(child)) return child;
       const controlProps = child.props;
       if (
-        (child.type === Input || child.type === NativeSelect) &&
+        (child.type === BaseInput || child.type === BaseNativeSelect) &&
         controlProps.name
       ) {
         const name = controlProps.name as keyof InventoryFilter;

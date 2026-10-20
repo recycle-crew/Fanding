@@ -40,6 +40,6 @@ npx shadcn@latest add <component>
 
 ## 驗證範圍
 
-沿用 `docs/ui-case-matrix.md` 的完整正常、錯誤、找不到、取消、重試、權限與設備模擬案例。`shadcn.spec.js` 新增鍵盤焦點限制、Esc／取消、焦點回復，以及規劃板關閉重開保留實際新增廠商；`rwd.spec.js` 新增四種尺寸的 Accordion 鍵盤、原生選擇欄、資料表與確認視窗案例。
+沿用 `docs/ui-case-matrix.md` 的完整正常、錯誤、找不到、取消、重試、權限與設備模擬案例。`shadcn.test.js` 新增鍵盤焦點限制、Esc／取消、焦點回復，以及規劃板關閉重開保留實際新增廠商；`rwd.test.js` 新增四種尺寸的 Accordion 鍵盤、原生選擇欄、資料表與確認視窗案例。
 
 執行結果與截圖檢視另記於 `docs/ui-testing.md`。實際相機、USB／藍牙掃碼槍、NAS／HIS、正式後端及部署仍依案例清單標示待驗證。

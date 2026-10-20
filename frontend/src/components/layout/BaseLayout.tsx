@@ -47,6 +47,18 @@ export function BaseLayout({ variant }: BaseLayoutProps) {
       className={`demo-frame${loggedIn ? " authenticated" : ""}`}
       style={{ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties}
     >
+      {loggedIn && (
+        <a
+          href="#content"
+          className="fixed left-4 top-4 z-[100] -translate-y-[200%] rounded-md border border-blue-800 bg-white px-4 py-3 font-semibold text-blue-800 focus:translate-y-0 focus:outline-2 focus:outline-blue-800"
+          onClick={(event) => {
+            event.preventDefault();
+            document.getElementById("content")?.focus();
+          }}
+        >
+          跳至主要內容
+        </a>
+      )}
       <BaseSidebar
         hidden={!loggedIn}
         open={menuOpen}

@@ -6,7 +6,7 @@ import {
   recordInventoryMovement,
   startStocktakeBatch,
 } from "@/features/demo/domain";
-import type { DemoState, ModuleKey } from "@/types/demo";
+import type { DemoState, ModuleKey } from "@/features/demo/types";
 import type { SceneRequest, SceneResponse } from "@/features/planning/scenes";
 const scenes = new Set(
   planningPages.flatMap((page) => page.frames.map((frame) => frame.scene)),

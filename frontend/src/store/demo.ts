@@ -11,7 +11,7 @@ import {
   startStocktakeBatch,
   submitMovementVoucher,
 } from "@/features/demo/domain";
-import type { DemoState, EditorKind, ModuleKey, Workspace } from "@/types/demo";
+import type { DemoState, EditorKind, ModuleKey, Workspace } from "@/features/demo/types";
 
 enablePatches();
 export type Command =

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  BaseDialog,
+  BaseDialogContent,
+  BaseDialogTitle,
+  BaseDialogDescription,
+} from "@/components/ui/BaseDialog";
 export function BaseModal(props: {
   id: string;
   open: boolean;
@@ -40,9 +40,9 @@ export function BaseModal(props: {
     } else if (!open && element.open) element.close("cancel");
   }, [dialog, open, preview]);
   return (
-    <Dialog open={open} modal={false}>
+    <BaseDialog open={open} modal={false}>
       {/* 原生 top layer 保留規劃板 iframe 的生命週期，焦點與表單關閉仍由瀏覽器處理。 */}
-      <DialogContent
+      <BaseDialogContent
         asChild
         forceMount={variant === "player" ? true : undefined}
         showCloseButton={false}
@@ -64,15 +64,15 @@ export function BaseModal(props: {
             if (open) onClose(event.currentTarget.returnValue);
           }}
         >
-          <DialogTitle className="sr-only">{props.title}</DialogTitle>
-          <DialogDescription className="sr-only">
+          <BaseDialogTitle className="sr-only">{props.title}</BaseDialogTitle>
+          <BaseDialogDescription className="sr-only">
             {variant === "player"
               ? "可操作展示畫面並切換流程步驟。"
               : "請閱讀內容後選擇操作。"}
-          </DialogDescription>
+          </BaseDialogDescription>
           {props.dialogContent}
         </dialog>
-      </DialogContent>
-    </Dialog>
+      </BaseDialogContent>
+    </BaseDialog>
   );
 }

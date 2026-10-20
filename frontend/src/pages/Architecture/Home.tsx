@@ -1,14 +1,14 @@
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { BaseBadge } from "@/components/ui/BaseBadge";
+import { BaseCard } from "@/components/ui/BaseCard";
+import { BaseTableRow, BaseTableHead, BaseTableCell } from "@/components/ui/BaseTable";
 import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
+  BaseAccordion,
+  BaseAccordionItem,
+  BaseAccordionTrigger,
+  BaseAccordionContent,
+} from "@/components/ui/BaseAccordion";
 import { Link } from "react-router";
-import { Button } from "@/components/ui/button";
+import { BaseButton } from "@/components/ui/BaseButton";
 import React from "react";
 import { BaseTableFrame } from "@/components/ui/BaseDataTable";
 export function ArchitecturePage() {
@@ -22,20 +22,20 @@ export function ArchitecturePage() {
             <br />
             {"看清程式分工。"}
           </h1>
-          <Badge variant="secondary" className={"badge"}>
+          <BaseBadge variant="secondary" className={"badge"}>
             {"架構討論草案 · 2026-10-14"}
-          </Badge>
+          </BaseBadge>
           <p className={"intro"}>
             {
               "前端以 React＋TypeScript 呈現操作，後端以 Python＋FastAPI 處理業務與資料存取。沿用 IA_Map 的 Controller、Service、Repository、DTO 與 Entity 分層，各層再依業務功能拆檔。"
             }
           </p>
-          <Button asChild>
+          <BaseButton asChild>
             <a href={"#section-3"}>{"查看程式目錄 ↓"}</a>
-          </Button>
+          </BaseButton>
         </div>
         {"\n"}
-        <Card asChild>
+        <BaseCard asChild>
           <aside
             className={"system-map"}
             aria-label={
@@ -72,7 +72,7 @@ export function ArchitecturePage() {
               </div>
             </div>
           </aside>
-        </Card>
+        </BaseCard>
       </div>
       {"\n"}
       <div
@@ -114,43 +114,43 @@ export function ArchitecturePage() {
               tableKey="document-table-1"
               headers={
                 <>
-                  <TableRow>
-                    <TableHead scope={"col"}>{"項目"}</TableHead>
-                    <TableHead scope={"col"}>{"決定"}</TableHead>
-                  </TableRow>
+                  <BaseTableRow>
+                    <BaseTableHead scope={"col"}>{"項目"}</BaseTableHead>
+                    <BaseTableHead scope={"col"}>{"決定"}</BaseTableHead>
+                  </BaseTableRow>
                 </>
               }
               rows={[
-                <TableRow>
-                  <TableCell>{"前端"}</TableCell>
-                  <TableCell>{"React＋TypeScript"}</TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>{"後端"}</TableCell>
-                  <TableCell>{"Python＋FastAPI"}</TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>{"使用方式"}</TableCell>
-                  <TableCell>
+                <BaseTableRow>
+                  <BaseTableCell>{"前端"}</BaseTableCell>
+                  <BaseTableCell>{"React＋TypeScript"}</BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>{"後端"}</BaseTableCell>
+                  <BaseTableCell>{"Python＋FastAPI"}</BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>{"使用方式"}</BaseTableCell>
+                  <BaseTableCell>
                     {"院內多人共用，集中部署，透過瀏覽器操作"}
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>{"功能分區"}</TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>{"功能分區"}</BaseTableCell>
+                  <BaseTableCell>
                     {"HIS 與 OTC 分開呈現；另有登入、廠商及盤點模組"}
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>{"HIS 扣庫"}</TableCell>
-                  <TableCell>{"由 HIS 執行"}</TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>{"本次交付"}</TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>{"HIS 扣庫"}</BaseTableCell>
+                  <BaseTableCell>{"由 HIS 執行"}</BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>{"本次交付"}</BaseTableCell>
+                  <BaseTableCell>
                     {"全站 React 展示前端、靜態 build 與瀏覽器驗證"}
-                  </TableCell>
-                </TableRow>,
+                  </BaseTableCell>
+                </BaseTableRow>,
               ]}
               columns={2}
               region={"1. 已確認的方向，可左右捲動"}
@@ -204,7 +204,7 @@ export function ArchitecturePage() {
             <pre tabIndex={0} aria-label={"架構與程式目錄，可左右捲動"}>
               <code>
                 {
-                  "Fanding/\n├─ package.json                # npm workspace 指令入口\n├─ package-lock.json           # workspace 依賴鎖定\n├─ frontend/\n│  ├─ package.json\n│  ├─ index.html               # SPA 唯一 HTML 入口\n│  ├─ vite.config.ts\n│  ├─ playwright.config.js\n│  ├─ tests/                   # 瀏覽器案例與截圖基準\n│  ├─ scripts/                 # 畫面擷取與正式產物驗證\n│  ├─ tsconfig.json\n│  └─ src/\n│     ├─ main.tsx              # 掛載 React、Redux Provider 與 Router\n│     ├─ App.tsx               # 全站外殼與路由保護\n│     ├─ pages/\n│     │  ├─ Planning/          # Layout.tsx、Home.tsx\n│     │  ├─ Architecture/      # Layout.tsx、Home.tsx\n│     │  ├─ Board/             # Layout.tsx、Home.tsx\n│     │  ├─ Demo/              # Layout.tsx 版型選擇、Home.tsx 頁面流程\n│     │  └─ Error/             # Layout.tsx、NotFound.tsx\n│     ├─ features/             # demo 功能與交易、planning 場景\n│     ├─ components/\n│     │  ├─ layout/            # 側欄與版面元件\n│     │  └─ ui/                # 表格、篩選表單與視窗\n│     ├─ router/               # index.tsx、routes 分模組路由\n│     ├─ store/                # Redux store、typed hooks、展示 slice\n│     ├─ constants/            # 模組路徑契約\n│     ├─ helpers/              # 庫存篩選與 Excel 匯出\n│     ├─ styles/               # tailwind.css、layout、themes；全站 Tailwind CSS\n│     ├─ types/                # demo、inventory、suppliers、otc、stocktaking\n│     └─ api/server/           # 正式串接時新增，目前未建立\n├─ backend/\n│  ├─ pyproject.toml\n│  ├─ app/\n│  │  ├─ __init__.py\n│  │  ├─ main.py                 # 建立 FastAPI、註冊模組路由\n│  │  ├─ core/                   # 設定、登入與權限依賴\n│  │  │  └─ __init__.py\n│  │  ├─ db/                     # 本系統資料庫連線與交易資源\n│  │  │  └─ __init__.py\n│  │  ├─ integrations/\n│  │  │  ├─ __init__.py\n│  │  │  └─ his/                 # HIS 存取與來源欄位轉換\n│  │  │     └─ __init__.py\n│  │  ├─ controllers/                 # HTTP API 入口\n│  │  │  ├─ __init__.py\n│  │  │  ├─ auth.py\n│  │  │  ├─ suppliers.py\n│  │  │  ├─ his.py\n│  │  │  ├─ otc.py\n│  │  │  └─ stocktaking.py\n│  │  ├─ services/                 # 業務規則與交易流程\n│  │  │  ├─ __init__.py\n│  │  │  ├─ auth.py\n│  │  │  ├─ suppliers.py\n│  │  │  ├─ his.py\n│  │  │  ├─ otc.py\n│  │  │  └─ stocktaking.py\n│  │  ├─ repositories/           # 資料庫查詢與寫入\n│  │  │  ├─ __init__.py\n│  │  │  ├─ auth.py\n│  │  │  ├─ suppliers.py\n│  │  │  ├─ his.py\n│  │  │  ├─ otc.py\n│  │  │  └─ stocktaking.py\n│  │  ├─ dto/                    # 層間傳遞及 API 請求／回應型別\n│  │  │  ├─ __init__.py\n│  │  │  └─ otc.py\n│  │  └─ entities/               # 採用 ORM 時的資料表映射\n│  │     ├─ __init__.py\n│  │     └─ otc.py\n│  └─ tests/                     # 對應業務模組的後端測試\n└─ docs/\n   └─ architecture.md"
+                  "Fanding/\n├─ package.json                # npm workspace 指令入口\n├─ package-lock.json           # workspace 依賴鎖定\n├─ frontend/\n│  ├─ package.json\n│  ├─ index.html               # SPA 唯一 HTML 入口\n│  ├─ vite.config.ts\n│  ├─ playwright.config.js    # tests/pages/**/*.test.js\n│  ├─ vitest.config.ts        # src/**/*.test.ts\n│  ├─ tests/\n│  │  ├─ pages/              # 依 route 放頁面行為與截圖基準\n│  │  └─ helpers/            # 共用測試工具\n│  ├─ scripts/                 # test-ui.cjs 統一執行模式\n│  ├─ tsconfig.json\n│  └─ src/\n│     ├─ main.tsx              # 掛載 React、Redux Provider 與 Router\n│     ├─ App.tsx               # 全站外殼與路由保護\n│     ├─ pages/\n│     │  ├─ Planning/          # Layout.tsx、Home.tsx\n│     │  ├─ Architecture/      # Layout.tsx、Home.tsx\n│     │  ├─ Board/             # Layout.tsx、Home.tsx\n│     │  ├─ Demo/              # Layout.tsx 版型選擇、Home.tsx 頁面流程\n│     │  └─ Error/             # Layout.tsx、NotFound.tsx\n│     ├─ features/             # 各功能與所屬型別、邏輯測試\n│     ├─ components/\n│     │  ├─ layout/            # 側欄與版面元件\n│     │  └─ ui/                # 表格、篩選表單與視窗\n│     ├─ router/               # index.tsx、routes 分模組路由\n│     ├─ store/                # Redux store、typed hooks、展示 slice\n│     ├─ constants/            # 模組路徑契約\n│     ├─ helpers/              # 庫存篩選與 Excel 匯出\n│     ├─ styles/               # tailwind.css、layout、themes；全站 Tailwind CSS\n│     ├─ types/                # 舊 import 相容轉接；型別由 features 擁有\n│     └─ api/server/           # 正式串接時新增，目前未建立\n├─ backend/\n│  ├─ pyproject.toml\n│  ├─ app/\n│  │  ├─ __init__.py\n│  │  ├─ main.py                 # 建立 FastAPI、註冊模組路由\n│  │  ├─ core/                   # 設定、登入與權限依賴\n│  │  │  └─ __init__.py\n│  │  ├─ db/                     # 本系統資料庫連線與交易資源\n│  │  │  └─ __init__.py\n│  │  ├─ integrations/\n│  │  │  ├─ __init__.py\n│  │  │  └─ his/                 # HIS 存取與來源欄位轉換\n│  │  │     └─ __init__.py\n│  │  ├─ controllers/                 # HTTP API 入口\n│  │  │  ├─ __init__.py\n│  │  │  ├─ auth.py\n│  │  │  ├─ suppliers.py\n│  │  │  ├─ his.py\n│  │  │  ├─ otc.py\n│  │  │  └─ stocktaking.py\n│  │  ├─ services/                 # 業務規則與交易流程\n│  │  │  ├─ __init__.py\n│  │  │  ├─ auth.py\n│  │  │  ├─ suppliers.py\n│  │  │  ├─ his.py\n│  │  │  ├─ otc.py\n│  │  │  └─ stocktaking.py\n│  │  ├─ repositories/           # 資料庫查詢與寫入\n│  │  │  ├─ __init__.py\n│  │  │  ├─ auth.py\n│  │  │  ├─ suppliers.py\n│  │  │  ├─ his.py\n│  │  │  ├─ otc.py\n│  │  │  └─ stocktaking.py\n│  │  ├─ dto/                    # 層間傳遞及 API 請求／回應型別\n│  │  │  ├─ __init__.py\n│  │  │  └─ otc.py\n│  │  └─ entities/               # 採用 ORM 時的資料表映射\n│  │     ├─ __init__.py\n│  │     └─ otc.py\n│  └─ tests/                     # 對應業務模組的後端測試\n└─ docs/\n   └─ architecture.md"
                 }
               </code>
             </pre>
@@ -271,65 +271,65 @@ export function ArchitecturePage() {
               tableKey="document-table-2"
               headers={
                 <>
-                  <TableRow>
-                    <TableHead scope={"col"}>{"庫存管理系統位置"}</TableHead>
-                    <TableHead scope={"col"}>{"責任"}</TableHead>
-                    <TableHead scope={"col"}>{"IA_Map 對照"}</TableHead>
-                  </TableRow>
+                  <BaseTableRow>
+                    <BaseTableHead scope={"col"}>{"庫存管理系統位置"}</BaseTableHead>
+                    <BaseTableHead scope={"col"}>{"責任"}</BaseTableHead>
+                    <BaseTableHead scope={"col"}>{"IA_Map 對照"}</BaseTableHead>
+                  </BaseTableRow>
                 </>
               }
               rows={[
-                <TableRow>
-                  <TableCell>
+                <BaseTableRow>
+                  <BaseTableCell>
                     <code>{"controllers/otc.py"}</code>
-                  </TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                  <BaseTableCell>
                     {"HTTP 端點、取得登入者、套用權限依賴、呼叫作業及回應"}
-                  </TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                  <BaseTableCell>
                     <code>{"IA.Server/Controllers/"}</code>
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>
                     <code>{"services/otc.py"}</code>
-                  </TableCell>
-                  <TableCell>{"入出庫規則、跨資料操作及交易流程"}</TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                  <BaseTableCell>{"入出庫規則、跨資料操作及交易流程"}</BaseTableCell>
+                  <BaseTableCell>
                     <code>{"IA.Services/"}</code>
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>
                     <code>{"repositories/otc.py"}</code>
-                  </TableCell>
-                  <TableCell>{"明確的資料庫查詢與寫入"}</TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                  <BaseTableCell>{"明確的資料庫查詢與寫入"}</BaseTableCell>
+                  <BaseTableCell>
                     <code>{"IA.DataAccess/"}</code>
                     {"，例如 "}
                     <code>{"WeeklyProgressDao.cs"}</code>
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>
                     <code>{"dto/otc.py"}</code>
-                  </TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                  <BaseTableCell>
                     {"層間傳遞及 API 請求／回應型別、欄位驗證"}
-                  </TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                  <BaseTableCell>
                     <code>{"IA.DataModels/Models/"}</code>
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>
                     <code>{"entities/otc.py"}</code>
-                  </TableCell>
-                  <TableCell>{"採用 ORM 時的資料表映射"}</TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                  <BaseTableCell>{"採用 ORM 時的資料表映射"}</BaseTableCell>
+                  <BaseTableCell>
                     <code>{"IA.DataModels/Entities/"}</code>
-                  </TableCell>
-                </TableRow>,
+                  </BaseTableCell>
+                </BaseTableRow>,
               ]}
               columns={3}
               region={"3. 建議目錄結構，可左右捲動"}
@@ -359,57 +359,57 @@ export function ArchitecturePage() {
               tableKey="document-table-3"
               headers={
                 <>
-                  <TableRow>
-                    <TableHead scope={"col"}>{"模組"}</TableHead>
-                    <TableHead scope={"col"}>{"責任"}</TableHead>
-                    <TableHead scope={"col"}>{"需確認的邊界"}</TableHead>
-                  </TableRow>
+                  <BaseTableRow>
+                    <BaseTableHead scope={"col"}>{"模組"}</BaseTableHead>
+                    <BaseTableHead scope={"col"}>{"責任"}</BaseTableHead>
+                    <BaseTableHead scope={"col"}>{"需確認的邊界"}</BaseTableHead>
+                  </BaseTableRow>
                 </>
               }
               rows={[
-                <TableRow>
-                  <TableCell>
+                <BaseTableRow>
+                  <BaseTableCell>
                     <code>{"auth"}</code>
-                  </TableCell>
-                  <TableCell>{"使用者身分、登入及權限"}</TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                  <BaseTableCell>{"使用者身分、登入及權限"}</BaseTableCell>
+                  <BaseTableCell>
                     {
                       "同系統共用登入或跨系統 SSO、NAS LDAP 用途、角色與操作權限"
                     }
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>
                     <code>{"suppliers"}</code>
-                  </TableCell>
-                  <TableCell>{"廠商查詢與維護"}</TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                  <BaseTableCell>{"廠商查詢與維護"}</BaseTableCell>
+                  <BaseTableCell>
                     {"HIS／OTC 是否共用、資料來源、停用與刪除規則"}
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>
                     <code>{"his"}</code>
-                  </TableCell>
-                  <TableCell>{"HIS 藥品查詢、允許欄位的修改與回寫"}</TableCell>
-                  <TableCell>{"可寫欄位、讀寫介面及失敗處理"}</TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>
+                  </BaseTableCell>
+                  <BaseTableCell>{"HIS 藥品查詢、允許欄位的修改與回寫"}</BaseTableCell>
+                  <BaseTableCell>{"可寫欄位、讀寫介面及失敗處理"}</BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>
                     <code>{"otc"}</code>
-                  </TableCell>
-                  <TableCell>{"OTC 品項、入庫、出庫／耗用及領用"}</TableCell>
-                  <TableCell>{"欄位、單位、扣庫時點與撤銷方式"}</TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>
+                  </BaseTableCell>
+                  <BaseTableCell>{"OTC 品項、入庫、出庫／耗用及領用"}</BaseTableCell>
+                  <BaseTableCell>{"欄位、單位、扣庫時點與撤銷方式"}</BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>
                     <code>{"stocktaking"}</code>
-                  </TableCell>
-                  <TableCell>{"盤點批次、實際數量輸入及差異計算"}</TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                  <BaseTableCell>{"盤點批次、實際數量輸入及差異計算"}</BaseTableCell>
+                  <BaseTableCell>
                     {"庫存基準、盤點期間異動、審核與調整方式"}
-                  </TableCell>
-                </TableRow>,
+                  </BaseTableCell>
+                </BaseTableRow>,
               ]}
               columns={3}
               region={"4. 業務模組與資料責任，可左右捲動"}
@@ -619,57 +619,57 @@ export function ArchitecturePage() {
               tableKey="document-table-4"
               headers={
                 <>
-                  <TableRow>
-                    <TableHead scope={"col"}>
+                  <BaseTableRow>
+                    <BaseTableHead scope={"col"}>
                       {"院內登入服務提供／確認"}
-                    </TableHead>
-                    <TableHead scope={"col"}>
+                    </BaseTableHead>
+                    <BaseTableHead scope={"col"}>
                       {"庫存管理系統實作（端點為建議名稱）"}
-                    </TableHead>
-                  </TableRow>
+                    </BaseTableHead>
+                  </BaseTableRow>
                 </>
               }
               rows={[
-                <TableRow>
-                  <TableCell>{"OIDC discovery URL、發行者資訊"}</TableCell>
-                  <TableCell>
+                <BaseTableRow>
+                  <BaseTableCell>{"OIDC discovery URL、發行者資訊"}</BaseTableCell>
+                  <BaseTableCell>
                     <code>{"/api/auth/login"}</code>
                     {"：建立登入請求並導向登入服務"}
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>
                     {"Client ID、必要時 Client Secret、支援 PKCE S256"}
-                  </TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                  <BaseTableCell>
                     <code>{"/api/auth/callback"}</code>
                     {"：交換授權碼、驗證登入結果並建立 Session"}
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>{"登記完整且精確匹配的 callback URL"}</TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>{"登記完整且精確匹配的 callback URL"}</BaseTableCell>
+                  <BaseTableCell>
                     <code>{"/api/auth/me"}</code>
                     {"：回傳目前使用者與庫存管理系統權限"}
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>{"登出端點與是否支援跨系統登出"}</TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>{"登出端點與是否支援跨系統登出"}</BaseTableCell>
+                  <BaseTableCell>
                     <code>{"/api/auth/logout"}</code>
                     {"：清除庫存管理系統 Session；是否連動院內登出另行確認"}
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>{"使用者識別欄位、群組或角色資訊"}</TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>{"使用者識別欄位、群組或角色資訊"}</BaseTableCell>
+                  <BaseTableCell>
                     {"以登入服務的發行者與使用者識別（"}
                     <code>{"iss"}</code>
                     {"＋"}
                     <code>{"sub"}</code>
                     {"）對應庫存管理系統帳號，再套用操作權限"}
-                  </TableCell>
-                </TableRow>,
+                  </BaseTableCell>
+                </BaseTableRow>,
               ]}
               columns={2}
               region={"SSO 整合分工，可左右捲動"}
@@ -850,60 +850,60 @@ export function ArchitecturePage() {
               tableKey="document-table-5"
               headers={
                 <>
-                  <TableRow>
-                    <TableHead scope={"col"}>{"項目"}</TableHead>
-                    <TableHead scope={"col"}>{"目前狀態"}</TableHead>
-                    <TableHead scope={"col"}>{"影響"}</TableHead>
-                  </TableRow>
+                  <BaseTableRow>
+                    <BaseTableHead scope={"col"}>{"項目"}</BaseTableHead>
+                    <BaseTableHead scope={"col"}>{"目前狀態"}</BaseTableHead>
+                    <BaseTableHead scope={"col"}>{"影響"}</BaseTableHead>
+                  </BaseTableRow>
                 </>
               }
               rows={[
-                <TableRow>
-                  <TableCell>{"OTC 資料庫"}</TableCell>
-                  <TableCell>{"尚未選定"}</TableCell>
-                  <TableCell>
+                <BaseTableRow>
+                  <BaseTableCell>{"OTC 資料庫"}</BaseTableCell>
+                  <BaseTableCell>{"尚未選定"}</BaseTableCell>
+                  <BaseTableCell>
                     {"資料庫連線、ORM、migration、併發及備份"}
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>{"HIS 串接"}</TableCell>
-                  <TableCell>{"尚未確認是直接連資料庫或 API"}</TableCell>
-                  <TableCell>{"整合實作、回寫與錯誤處理"}</TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>{"登入與權限"}</TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>{"HIS 串接"}</BaseTableCell>
+                  <BaseTableCell>{"尚未確認是直接連資料庫或 API"}</BaseTableCell>
+                  <BaseTableCell>{"整合實作、回寫與錯誤處理"}</BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>{"登入與權限"}</BaseTableCell>
+                  <BaseTableCell>
                     {"採 NAS LDAP 權限管理；群組映射與跨系統 SSO 範圍待確認"}
-                  </TableCell>
-                  <TableCell>
+                  </BaseTableCell>
+                  <BaseTableCell>
                     {"認證、session／token、角色與安全設定"}
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>{"OTC 欄位與單位"}</TableCell>
-                  <TableCell>{"待確認"}</TableCell>
-                  <TableCell>{"schema、資料表及入出庫驗證"}</TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>{"領用與耗用關係"}</TableCell>
-                  <TableCell>{"待確認"}</TableCell>
-                  <TableCell>{"扣庫時點與避免重複扣庫"}</TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>{"批號、效期、倉庫"}</TableCell>
-                  <TableCell>{"待確認"}</TableCell>
-                  <TableCell>{"庫存識別維度與作業流程"}</TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>{"盤點調整"}</TableCell>
-                  <TableCell>{"待確認"}</TableCell>
-                  <TableCell>{"基準快照、審核及 HIS／OTC 調整"}</TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableCell>{"部署與維運"}</TableCell>
-                  <TableCell>{"已確認集中部署，環境待確認"}</TableCell>
-                  <TableCell>{"HTTPS、服務啟動、日誌及備份還原"}</TableCell>
-                </TableRow>,
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>{"OTC 欄位與單位"}</BaseTableCell>
+                  <BaseTableCell>{"待確認"}</BaseTableCell>
+                  <BaseTableCell>{"schema、資料表及入出庫驗證"}</BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>{"領用與耗用關係"}</BaseTableCell>
+                  <BaseTableCell>{"待確認"}</BaseTableCell>
+                  <BaseTableCell>{"扣庫時點與避免重複扣庫"}</BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>{"批號、效期、倉庫"}</BaseTableCell>
+                  <BaseTableCell>{"待確認"}</BaseTableCell>
+                  <BaseTableCell>{"庫存識別維度與作業流程"}</BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>{"盤點調整"}</BaseTableCell>
+                  <BaseTableCell>{"待確認"}</BaseTableCell>
+                  <BaseTableCell>{"基準快照、審核及 HIS／OTC 調整"}</BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableCell>{"部署與維運"}</BaseTableCell>
+                  <BaseTableCell>{"已確認集中部署，環境待確認"}</BaseTableCell>
+                  <BaseTableCell>{"HTTPS、服務啟動、日誌及備份還原"}</BaseTableCell>
+                </BaseTableRow>,
               ]}
               columns={3}
               region={"7. 待討論的決策，可左右捲動"}
@@ -952,16 +952,16 @@ export function ArchitecturePage() {
               </Link>
             </p>
             {"\n"}
-            <Accordion type="single" collapsible>
-              <AccordionItem value="content" id={"prep-scope"}>
+            <BaseAccordion type="single" collapsible>
+              <BaseAccordionItem value="content" id={"prep-scope"}>
                 {"\n"}
-                <AccordionTrigger>{"01 · 第一版範圍"}</AccordionTrigger>
-                <AccordionContent>
+                <BaseAccordionTrigger>{"01 · 第一版範圍"}</BaseAccordionTrigger>
+                <BaseAccordionContent>
                   {"\n"}
                   <p>
-                    <Badge variant="secondary" className={"status"}>
+                    <BaseBadge variant="secondary" className={"status"}>
                       {"待補開發規格"}
-                    </Badge>
+                    </BaseBadge>
                     {" · "}
                     <Link to={"/#confirmation-scope"}>
                       {"對應主頁需求：待確認"}
@@ -990,20 +990,20 @@ export function ArchitecturePage() {
                     {"\n"}
                   </ul>
                   {"\n"}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                </BaseAccordionContent>
+              </BaseAccordionItem>
+            </BaseAccordion>
             {"\n"}
-            <Accordion type="single" collapsible>
-              <AccordionItem value="content" id={"prep-fields"}>
+            <BaseAccordion type="single" collapsible>
+              <BaseAccordionItem value="content" id={"prep-fields"}>
                 {"\n"}
-                <AccordionTrigger>{"02 · 欄位與資料模型"}</AccordionTrigger>
-                <AccordionContent>
+                <BaseAccordionTrigger>{"02 · 欄位與資料模型"}</BaseAccordionTrigger>
+                <BaseAccordionContent>
                   {"\n"}
                   <p>
-                    <Badge variant="secondary" className={"status"}>
+                    <BaseBadge variant="secondary" className={"status"}>
                       {"待補開發規格"}
-                    </Badge>
+                    </BaseBadge>
                     {" · "}
                     <Link to={"/#confirmation-fields"}>
                       {"對應主頁需求：待確認"}
@@ -1038,20 +1038,20 @@ export function ArchitecturePage() {
                     {"\n"}
                   </ul>
                   {"\n"}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                </BaseAccordionContent>
+              </BaseAccordionItem>
+            </BaseAccordion>
             {"\n"}
-            <Accordion type="single" collapsible>
-              <AccordionItem value="content" id={"prep-permissions"}>
+            <BaseAccordion type="single" collapsible>
+              <BaseAccordionItem value="content" id={"prep-permissions"}>
                 {"\n"}
-                <AccordionTrigger>{"03 · 角色與權限"}</AccordionTrigger>
-                <AccordionContent>
+                <BaseAccordionTrigger>{"03 · 角色與權限"}</BaseAccordionTrigger>
+                <BaseAccordionContent>
                   {"\n"}
                   <p>
-                    <Badge variant="secondary" className={"status"}>
+                    <BaseBadge variant="secondary" className={"status"}>
                       {"待補開發規格"}
-                    </Badge>
+                    </BaseBadge>
                     {" · "}
                     <Link to={"/#confirmation-permissions"}>
                       {"對應主頁需求：待確認"}
@@ -1080,20 +1080,20 @@ export function ArchitecturePage() {
                     {"\n"}
                   </ul>
                   {"\n"}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                </BaseAccordionContent>
+              </BaseAccordionItem>
+            </BaseAccordion>
             {"\n"}
-            <Accordion type="single" collapsible>
-              <AccordionItem value="content" id={"prep-rules"}>
+            <BaseAccordion type="single" collapsible>
+              <BaseAccordionItem value="content" id={"prep-rules"}>
                 {"\n"}
-                <AccordionTrigger>{"04 · 作業與狀態"}</AccordionTrigger>
-                <AccordionContent>
+                <BaseAccordionTrigger>{"04 · 作業與狀態"}</BaseAccordionTrigger>
+                <BaseAccordionContent>
                   {"\n"}
                   <p>
-                    <Badge variant="secondary" className={"status"}>
+                    <BaseBadge variant="secondary" className={"status"}>
                       {"待補開發規格"}
-                    </Badge>
+                    </BaseBadge>
                     {" · "}
                     <Link to={"/#confirmation-rules"}>
                       {"對應主頁需求：待確認"}
@@ -1132,22 +1132,22 @@ export function ArchitecturePage() {
                     {"\n"}
                   </ul>
                   {"\n"}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                </BaseAccordionContent>
+              </BaseAccordionItem>
+            </BaseAccordion>
             {"\n"}
-            <Accordion type="single" collapsible>
-              <AccordionItem value="content" id={"prep-failures"}>
+            <BaseAccordion type="single" collapsible>
+              <BaseAccordionItem value="content" id={"prep-failures"}>
                 {"\n"}
-                <AccordionTrigger>
+                <BaseAccordionTrigger>
                   {"05 · 異常處理與 API 契約"}
-                </AccordionTrigger>
-                <AccordionContent>
+                </BaseAccordionTrigger>
+                <BaseAccordionContent>
                   {"\n"}
                   <p>
-                    <Badge variant="secondary" className={"status"}>
+                    <BaseBadge variant="secondary" className={"status"}>
                       {"待補開發規格"}
-                    </Badge>
+                    </BaseBadge>
                     {" · "}
                     <Link to={"/#confirmation-failures"}>
                       {"對應主頁需求：待確認"}
@@ -1182,20 +1182,20 @@ export function ArchitecturePage() {
                     {"\n"}
                   </ul>
                   {"\n"}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                </BaseAccordionContent>
+              </BaseAccordionItem>
+            </BaseAccordion>
             {"\n"}
-            <Accordion type="single" collapsible>
-              <AccordionItem value="content" id={"prep-acceptance"}>
+            <BaseAccordion type="single" collapsible>
+              <BaseAccordionItem value="content" id={"prep-acceptance"}>
                 {"\n"}
-                <AccordionTrigger>{"06 · 驗收與追溯"}</AccordionTrigger>
-                <AccordionContent>
+                <BaseAccordionTrigger>{"06 · 驗收與追溯"}</BaseAccordionTrigger>
+                <BaseAccordionContent>
                   {"\n"}
                   <p>
-                    <Badge variant="secondary" className={"status"}>
+                    <BaseBadge variant="secondary" className={"status"}>
                       {"待補開發規格"}
-                    </Badge>
+                    </BaseBadge>
                     {" · "}
                     <Link to={"/#confirmation-acceptance"}>
                       {"對應主頁需求：待確認"}
@@ -1236,20 +1236,20 @@ export function ArchitecturePage() {
                     {"\n"}
                   </ul>
                   {"\n"}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                </BaseAccordionContent>
+              </BaseAccordionItem>
+            </BaseAccordion>
             {"\n"}
-            <Accordion type="single" collapsible>
-              <AccordionItem value="content" id={"prep-integration"}>
+            <BaseAccordion type="single" collapsible>
+              <BaseAccordionItem value="content" id={"prep-integration"}>
                 {"\n"}
-                <AccordionTrigger>{"共通準備 · 整合與部署"}</AccordionTrigger>
-                <AccordionContent>
+                <BaseAccordionTrigger>{"共通準備 · 整合與部署"}</BaseAccordionTrigger>
+                <BaseAccordionContent>
                   {"\n"}
                   <p>
-                    <Badge variant="secondary" className={"status"}>
+                    <BaseBadge variant="secondary" className={"status"}>
                       {"待補開發規格"}
-                    </Badge>
+                    </BaseBadge>
                     {" · 支援上述六項需求的技術準備"}
                   </p>
                   {"\n"}
@@ -1285,9 +1285,9 @@ export function ArchitecturePage() {
                     <a href={"#section-7"}>{"查看既有待討論決策"}</a>
                   </p>
                   {"\n"}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                </BaseAccordionContent>
+              </BaseAccordionItem>
+            </BaseAccordion>
             {"\n"}
             <h3 id={"receipt-spec-example"}>
               {"OTC 入庫規格整理 · 待確認範例"}
@@ -1303,61 +1303,61 @@ export function ArchitecturePage() {
               tableKey="document-table-6"
               headers={
                 <>
-                  <TableRow>
-                    <TableHead scope={"col"}>{"對應項目"}</TableHead>
-                    <TableHead scope={"col"}>{"整理方式"}</TableHead>
-                  </TableRow>
+                  <BaseTableRow>
+                    <BaseTableHead scope={"col"}>{"對應項目"}</BaseTableHead>
+                    <BaseTableHead scope={"col"}>{"整理方式"}</BaseTableHead>
+                  </BaseTableRow>
                 </>
               }
               rows={[
-                <TableRow>
-                  <TableHead scope={"row"}>{"01 · 範圍與畫面"}</TableHead>
-                  <TableCell>
+                <BaseTableRow>
+                  <BaseTableHead scope={"row"}>{"01 · 範圍與畫面"}</BaseTableHead>
+                  <BaseTableCell>
                     {
                       "對應規劃板「OTC 掃碼入庫」的掃碼、已有品項、未建檔補建及結果畫面；先確認第一版是否包含補建品項。"
                     }
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableHead scope={"row"}>{"02 · 欄位"}</TableHead>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableHead scope={"row"}>{"02 · 欄位"}</BaseTableHead>
+                  <BaseTableCell>
                     {
                       "先確認品項如何識別、數量與單位如何表達；批號、效期、廠商單號、倉庫或儲位是否必填，由需求決定。"
                     }
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableHead scope={"row"}>{"03 · 權限"}</TableHead>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableHead scope={"row"}>{"03 · 權限"}</BaseTableHead>
+                  <BaseTableCell>
                     {
                       "分別確認誰可入庫、誰可補建品項，以及完成後誰可更正或撤銷。"
                     }
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableHead scope={"row"}>{"04 · 規則"}</TableHead>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableHead scope={"row"}>{"04 · 規則"}</BaseTableHead>
+                  <BaseTableCell>
                     {
                       "確認何時入帳、是否需審核、庫存及異動紀錄如何一起保存，以及誤入庫如何處理。"
                     }
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableHead scope={"row"}>{"05 · API 與異常"}</TableHead>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableHead scope={"row"}>{"05 · API 與異常"}</BaseTableHead>
+                  <BaseTableCell>
                     {
                       "依前述答案定義請求、回應、權限與錯誤；確認同次提交如何識別、失敗是否可重試及多人異動如何處理。"
                     }
-                  </TableCell>
-                </TableRow>,
-                <TableRow>
-                  <TableHead scope={"row"}>{"06 · 驗收"}</TableHead>
-                  <TableCell>
+                  </BaseTableCell>
+                </BaseTableRow>,
+                <BaseTableRow>
+                  <BaseTableHead scope={"row"}>{"06 · 驗收"}</BaseTableHead>
+                  <BaseTableCell>
                     {
                       "待確認案例：對已啟用品項，在已確認的庫存維度與單位下入庫 10；成功後庫存增加 10 並保留一筆異動。同次提交重送不再增加；交易中途失敗時庫存與紀錄皆不改變。審核需求若成立，依已確認的入帳時點調整此案例。"
                     }
-                  </TableCell>
-                </TableRow>,
+                  </BaseTableCell>
+                </BaseTableRow>,
               ]}
               columns={2}
               region={"OTC 入庫待確認範例，可左右捲動"}

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { BaseButton } from "@/components/ui/BaseButton";
 import { useEffect, useRef, useState } from "react";
 import { planningPages } from "@/features/planning/scenes";
 import type { SceneRequest, SceneResponse } from "@/features/planning/scenes";
@@ -99,7 +99,7 @@ export function BoardPage() {
           <p className="eyebrow">PAGES / 分類</p>
           <nav id="page-nav" aria-label="畫面分類">
             {planningPages.map((p) => (
-              <Button
+              <BaseButton
                 variant={p.id === pageId ? "secondary" : "ghost"}
                 key={p.id}
                 data-page={p.id}
@@ -113,7 +113,7 @@ export function BoardPage() {
               >
                 {p.title}
                 <small>{p.frames.length}</small>
-              </Button>
+              </BaseButton>
             ))}
           </nav>
           <div className="sidebar-note">
@@ -129,21 +129,21 @@ export function BoardPage() {
               <h1 id="page-title">{page.title}</h1>
               <p id="page-description">{page.description}</p>
             </div>
-            <Button
+            <BaseButton
               variant="default"
               id="start-tour"
               className="primary"
               onClick={() => launch(0, true)}
             >
               ▶ 示範此流程
-            </Button>
+            </BaseButton>
           </section>
           <div className="canvas-toolbar">
             <span id="frame-count">
               {page.frames.length} 個 Frame · 縮圖為初始畫面參考
             </span>
             <div>
-              <Button
+              <BaseButton
                 variant="outline"
                 id="zoom-out"
                 aria-label="縮小畫布"
@@ -155,9 +155,9 @@ export function BoardPage() {
                 }
               >
                 −
-              </Button>
+              </BaseButton>
               <output id="zoom-label">{Math.round(zoom * 100)}%</output>
-              <Button
+              <BaseButton
                 variant="outline"
                 id="zoom-in"
                 aria-label="放大畫布"
@@ -169,8 +169,8 @@ export function BoardPage() {
                 }
               >
                 ＋
-              </Button>
-              <Button
+              </BaseButton>
+              <BaseButton
                 variant="outline"
                 id="zoom-fit"
                 onClick={() => {
@@ -190,7 +190,7 @@ export function BoardPage() {
                 }}
               >
                 適合畫面
-              </Button>
+              </BaseButton>
             </div>
           </div>
           <div
@@ -242,13 +242,13 @@ export function BoardPage() {
                         <span>FRAME {String(index + 1).padStart(2, "0")}</span>
                         <h2>{f.title}</h2>
                       </div>
-                      <Button
+                      <BaseButton
                         variant="outline"
                         data-open={index}
                         onClick={() => launch(index, false)}
                       >
                         操作此畫面 ↗
-                      </Button>
+                      </BaseButton>
                     </div>
                     <div className="frame-preview" inert>
                       <iframe
@@ -297,14 +297,14 @@ export function BoardPage() {
                 </p>
                 <h2 id="step-title">{scene.title}</h2>
               </div>
-              <Button
+              <BaseButton
                 variant="outline"
                 id="close-player"
                 aria-label="關閉示範"
                 onClick={close}
               >
                 ✕ 關閉
-              </Button>
+              </BaseButton>
             </header>
             <div className="player-body h-auto min-h-0 flex-1">
               <section className="demo-stage">
@@ -336,7 +336,7 @@ export function BoardPage() {
               </aside>
             </div>
             <footer className="player-footer h-auto min-h-[70px] shrink-0 max-sm:grid max-sm:grid-cols-3 max-sm:gap-2 max-sm:px-2">
-              <Button
+              <BaseButton
                 variant="outline"
                 id="previous-step"
                 className="max-sm:h-auto max-sm:min-w-0 max-sm:whitespace-normal max-sm:px-2"
@@ -346,16 +346,16 @@ export function BoardPage() {
                 }}
               >
                 ← 上一步
-              </Button>
-              <Button
+              </BaseButton>
+              <BaseButton
                 variant="outline"
                 id="return-board"
                 onClick={close}
                 className="max-sm:h-auto max-sm:min-w-0 max-sm:whitespace-normal max-sm:px-2"
               >
                 返回全部 Frame
-              </Button>
-              <Button
+              </BaseButton>
+              <BaseButton
                 variant="default"
                 id="next-step"
                 className="primary max-sm:h-auto max-sm:min-w-0 max-sm:whitespace-normal max-sm:px-2"
@@ -371,7 +371,7 @@ export function BoardPage() {
                 }}
               >
                 {step === page.frames.length - 1 ? "完成流程 ✓" : "下一步 →"}
-              </Button>
+              </BaseButton>
             </footer>
           </>
         }

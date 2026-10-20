@@ -1,0 +1,337 @@
+import { BaseCheckbox } from "@/components/ui/BaseCheckbox";
+import { BaseTextarea } from "@/components/ui/BaseTextarea";
+import { useState, useEffect, useRef, type FormEvent } from "react";
+import { BaseInput } from "@/components/ui/BaseInput";
+import { BaseLabel } from "@/components/ui/BaseLabel";
+import { BaseButton } from "@/components/ui/BaseButton";
+import {
+  BaseNativeSelect,
+  BaseNativeSelectOption,
+} from "@/components/ui/BaseNativeSelect";
+import { useAppSelector } from "@/store/hooks";
+import { categories, units, validateItem, type Item } from "./model";
+import { useBaseDataOptions } from "@/features/base-data/useBaseDataOptions";
+
+export function ItemEditor({
+  initial,
+  onSave,
+  onCancel,
+  onDirty,
+}: {
+  initial: Item;
+  onSave: (item: Item) => void;
+  onCancel: () => void;
+  onDirty: (dirty: boolean) => void;
+}) {
+  const state = useAppSelector((s) => s.items);
+  const options = useBaseDataOptions();
+  const suppliers = Array.from(new Set([...options.suppliers, ...(initial.supplier ? [initial.supplier] : [])]));
+  const [draft, setDraft] = useState(initial);
+  const [error, setError] = useState("");
+  const [errorField, setErrorField] = useState("");
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (error) errorRef.current?.focus();
+  }, [error]);
+  const [saving, setSaving] = useState(false);
+  const locked =
+    !!initial.id &&
+    (state.batches.some((b) => b.itemId === initial.id) ||
+      state.transactions.some((t) => t.itemId === initial.id) ||
+      state.costs.some((c) => c.itemId === initial.id));
+  function change<K extends keyof Item>(key: K, value: Item[K]) {
+    const next = { ...draft, [key]: value };
+    if (key === "trackExpiry" && value) next.trackBatch = true;
+    setDraft(next);
+    onDirty(JSON.stringify(next) !== JSON.stringify(initial));
+    setError("");
+    setErrorField("");
+  }
+  function field(
+    key: keyof Item,
+    title: string,
+    options: {
+      required?: boolean;
+      type?: string;
+      disabled?: boolean;
+      hint?: string;
+      step?: string;
+    } = {},
+  ) {
+    return (
+      <BaseLabel className="items-field" key={key} htmlFor={`item-${key}`}>
+        <span id={`item-${key}-label`}>
+          {title}
+          {options.required && <em> *</em>}
+        </span>
+        <BaseInput
+          id={`item-${key}`}
+          name={key}
+          aria-labelledby={`item-${key}-label`}
+          aria-invalid={errorField === key || undefined}
+          aria-describedby={
+            [
+              options.hint ? `item-${key}-hint` : "",
+              errorField === key ? "items-editor-error" : "",
+            ]
+              .filter(Boolean)
+              .join(" ") || undefined
+          }
+          type={options.type || "text"}
+          value={
+            key === "safetyStock" && Number.isNaN(draft[key])
+              ? ""
+              : String(draft[key])
+          }
+          required={options.required}
+          disabled={options.disabled}
+          readOnly={key === "code" && !!initial.id}
+          min={options.type === "number" ? 0 : undefined}
+          step={options.step}
+          onChange={(e) =>
+            change(
+              key,
+              key === "safetyStock"
+                ? e.target.value === ""
+                  ? NaN
+                  : Number(e.target.value)
+                : e.target.value,
+            )
+          }
+        />
+        {options.hint && <small id={`item-${key}-hint`}>{options.hint}</small>}
+      </BaseLabel>
+    );
+  }
+  function select(
+    key: "category" | "unit" | "supplier",
+    title: string,
+    values: string[],
+    required = false,
+    disabled = false,
+  ) {
+    return (
+      <BaseLabel className="items-field" htmlFor={`item-${key}`}>
+        <span id={`item-${key}-label`}>
+          {title}
+          {required && <em> *</em>}
+        </span>
+        <BaseNativeSelect
+          id={`item-${key}`}
+          name={key}
+          aria-labelledby={`item-${key}-label`}
+          aria-invalid={errorField === key || undefined}
+          aria-describedby={
+            errorField === key ? "items-editor-error" : undefined
+          }
+          value={draft[key]}
+          required={required}
+          disabled={disabled}
+          onChange={(e) => change(key, e.target.value)}
+        >
+          <BaseNativeSelectOption value="">
+            {required ? "請選擇" : "未指定"}
+          </BaseNativeSelectOption>
+          {values.map((value) => (
+            <BaseNativeSelectOption key={value} value={value}>
+              {value}
+            </BaseNativeSelectOption>
+          ))}
+        </BaseNativeSelect>
+      </BaseLabel>
+    );
+  }
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    if (saving) return;
+    const invalid = (event.currentTarget as HTMLFormElement).querySelector<
+      HTMLInputElement | HTMLSelectElement
+    >(":invalid");
+    if (invalid) {
+      setErrorField(invalid.name);
+      setError(invalid.validationMessage);
+      return;
+    }
+    const normalized = {
+      ...draft,
+      code: draft.code.trim(),
+      name: draft.name.trim(),
+      barcode: draft.barcode.trim(),
+    };
+    const message = validateItem(normalized, state);
+    if (message) {
+      setErrorField(
+        message.includes("料號")
+          ? "code"
+          : message.includes("條碼")
+            ? "barcode"
+            : message.includes("日期")
+              ? "effectiveUntil"
+              : message.includes("安全庫存")
+                ? "safetyStock"
+                : message.includes("價格")
+                  ? Number(draft.referenceCost) < 0
+                    ? "referenceCost"
+                    : "suggestedPrice"
+                  : "name",
+      );
+      setError(message);
+      return;
+    }
+    setSaving(true);
+    onSave(normalized);
+  }
+  return (
+    <form
+      id="items-editor-form"
+      className="items-editor-form"
+      onSubmit={submit}
+      noValidate
+    >
+      <div className="items-modal-scroll">
+        <section>
+          <h3>基本資料</h3>
+          <div className="items-form-grid">
+            <BaseLabel className="items-field" htmlFor="item-group">
+              <span>庫存類型 *</span>
+              <BaseNativeSelect
+                id="item-group"
+                value={draft.group}
+                disabled={!!initial.id}
+                onChange={(e) =>
+                  change("group", e.target.value as Item["group"])
+                }
+              >
+                <BaseNativeSelectOption value="HIS_MEDICINE">
+                  HIS 藥品
+                </BaseNativeSelectOption>
+                <BaseNativeSelectOption value="GENERAL">
+                  自費／OTC／其他商品
+                </BaseNativeSelectOption>
+              </BaseNativeSelect>
+            </BaseLabel>
+            {field("code", "料號", {
+              required: true,
+              hint: initial.id
+                ? "料號建立後不可修改"
+                : "系統建議料號，可自行修改",
+            })}
+            {field("name", "品名", { required: true })}
+            {field("englishName", "英文名稱")}
+            {select("category", "品項分類", categories, true)}
+            {field("specification", "規格")}
+            {field("barcode", "國際條碼")}
+            {field("nhiCode", "健保碼")}
+          </div>
+        </section>
+        <section>
+          <h3>庫存設定</h3>
+          <div className="items-form-grid">
+            {select("unit", "基本單位", units, true, locked)}
+            {field("safetyStock", "安全庫存", {
+              required: true,
+              type: "number",
+              step: "0.001",
+              hint: "依所有倉別可用庫存判斷",
+            })}
+            {select("supplier", "預設供應商", suppliers)}
+            <div className="items-switches">
+              {(
+                [
+                  ["trackBatch", "管理批號"],
+                  ["trackExpiry", "管理效期"],
+                ] as const
+              ).map(([key, title]) => (
+                <BaseLabel key={key} className="items-check">
+                  <BaseCheckbox
+                    name={key}
+                    checked={draft[key]}
+                    disabled={
+                      locked || (key === "trackBatch" && draft.trackExpiry)
+                    }
+                    onCheckedChange={(checked) => change(key, checked === true)}
+                  />
+                  {title}
+                </BaseLabel>
+              ))}
+            </div>
+          </div>
+          {locked && (
+            <p className="items-note">
+              此品項已有庫存或交易，基本單位及追蹤設定已鎖定。
+            </p>
+          )}
+        </section>
+        <section>
+          <h3>價格設定</h3>
+          <div className="items-form-grid">
+            {field("referenceCost", "參考成本", {
+              type: "number",
+              step: "0.0001",
+              hint: "修改不影響歷史進貨成本",
+            })}
+            {field("suggestedPrice", "建議售價", {
+              type: "number",
+              step: "0.01",
+            })}
+          </div>
+        </section>
+        <section>
+          <h3>使用狀態與備註</h3>
+          <div className="items-form-grid">
+            {field("effectiveFrom", "開始使用日期", {
+              type: "date",
+              required: true,
+            })}
+            {field("effectiveUntil", "停止使用日期", { type: "date" })}
+            <BaseLabel className="items-check">
+              <BaseCheckbox
+                checked={draft.active}
+                onCheckedChange={(checked) => change("active", checked === true)}
+              />
+              啟用品項
+            </BaseLabel>
+            <BaseLabel className="items-field" htmlFor="item-remark">
+              <span>備註</span>
+              <BaseTextarea
+                id="item-remark"
+                value={draft.remark}
+                onChange={(e) => change("remark", e.target.value)}
+                rows={2}
+              />
+            </BaseLabel>
+          </div>
+        </section>
+        {initial.active &&
+          !draft.active &&
+          state.batches.some(
+            (b) => b.itemId === initial.id && b.quantity > 0,
+          ) && (
+            <p className="items-error">
+              此品項仍有庫存，停用後庫存與歷史紀錄都會保留。
+            </p>
+          )}
+        {error && (
+          <p
+            ref={errorRef}
+            id="items-editor-error"
+            tabIndex={-1}
+            role="alert"
+            className="items-error"
+          >
+            {error}
+          </p>
+        )}
+      </div>
+      <footer className="items-modal-footer">
+        <span>＊ 必填欄位</span>
+        <BaseButton type="button" variant="outline" onClick={onCancel}>
+          取消
+        </BaseButton>
+        <BaseButton type="submit" disabled={saving}>
+          {saving ? "儲存中…" : initial.id ? "儲存變更" : "儲存品項"}
+        </BaseButton>
+      </footer>
+    </form>
+  );
+}

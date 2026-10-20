@@ -1,15 +1,16 @@
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { BaseCard } from "@/components/ui/BaseCard";
+import { BaseLabel } from "@/components/ui/BaseLabel";
+import { BaseInput } from "@/components/ui/BaseInput";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert } from "@/components/ui/alert";
+  BaseNativeSelect,
+  BaseNativeSelectOption,
+} from "@/components/ui/BaseNativeSelect";
+import { BaseButton } from "@/components/ui/BaseButton";
+import { BaseBadge } from "@/components/ui/BaseBadge";
+import { BaseAlert } from "@/components/ui/BaseAlert";
 import { Link, useLocation, useNavigate } from "react-router";
 import { demoModulePaths } from "@/constants/demoRoutes";
+import { DEMO_LOGIN_ENABLED } from "@/constants/demoAccess";
 import { BaseModal } from "@/components/ui/BaseModal";
 import {
   BaseDataTable,
@@ -27,6 +28,12 @@ import {
 } from "@/features/demo/render";
 import { ScanPage } from "@/features/demo/ScanPage";
 import { EditorPage } from "@/features/demo/EditorPage";
+import { ItemsPage } from "@/features/items/ItemsPage";
+import { PurchasesPage } from "@/features/purchases/PurchasesPage";
+import { BaseDataPage } from "@/features/base-data/BaseDataPage";
+import { ConsumptionsPage } from "@/features/consumptions/ConsumptionsPage";
+import { PosPage } from "@/features/pos/PosPage";
+import { StocktakesPage } from "@/features/stocktakes/StocktakesPage";
 import { compileInventoryFilter } from "@/helpers/inventoryFilter";
 import { createMovementVoucher } from "@/features/demo/domain";
 import type {
@@ -34,8 +41,15 @@ import type {
   EditorKind,
   InventoryFilter,
   ModuleKey,
-} from "@/types/demo";
+} from "@/features/demo/types";
 const subtitles: Record<ModuleKey, string> = {
+  "base-data": "維護倉別與供應商基本資料。",
+  consumptions: "查閱 HIS 來源耗用與同步異常。",
+  pos: "商品搜尋與前端收銀展示。",
+  sales: "銷售歷史、退貨與退款展示。",
+  stocktakes: "盲盤輸入、主管核對與複盤展示。",
+  purchases: "管理進貨單據、核對結帳與進貨明細。",
+  items: "統一管理品項資料、庫存數量及批號效期。",
   "historical-cost": "依已送出的入庫傳票，查閱各料號歷史成本與當次單價。",
   overview: "從資料維護到庫存作業，掌握今天的工作。",
   vendors: "以表格管理廠商基本資料。",
@@ -114,7 +128,11 @@ export function DemoPage() {
     const pathname = routeLocation.pathname.replace(/\/+$/, "");
     const requested =
       s.stocktakeRoutes[pathname] ??
-      (pathname === "/demo" ? "overview" : pathname.slice("/demo/".length));
+      (pathname.startsWith("/demo/stocktakes/") ? "stocktakes" : pathname.startsWith("/demo/consumptions/") ? "consumptions" : pathname.startsWith("/demo/items/")
+        ? "items"
+        : pathname === "/demo"
+          ? "overview"
+          : pathname.slice("/demo/".length));
     const module = s.modules.find((module) => module.key === requested);
     if (module && module.key !== s.activeModule)
       dispatch(executeDemoCommand({ type: "navigate", module: module.key }));
@@ -123,7 +141,13 @@ export function DemoPage() {
     setHighlightedVendor(null);
   }, [s.searchTerm]);
   useEffect(() => {
-    if (!wasLoggedIn.current && s.loggedIn && !preview && !embedded)
+    if (
+      DEMO_LOGIN_ENABLED &&
+      !wasLoggedIn.current &&
+      s.loggedIn &&
+      !preview &&
+      !embedded
+    )
       content.current?.focus();
     if (wasLoggedIn.current && !s.loggedIn)
       document
@@ -438,206 +462,209 @@ export function DemoPage() {
       <div className="demo-banner">
         展示模式・假資料 <span>重新整理即重置</span>
       </div>
-      <section id="login" className="login-layout" hidden={s.loggedIn}>
-        <div className="login-story">
-          <div className="brand">庫存管理系統</div>
-          <p className="eyebrow">INVENTORY WORKSPACE</p>
-          <h1>
-            讓庫存作業
-            <br />
-            清楚、有序。
-          </h1>
-          <p>
-            HIS 藥品查詢與維護、OTC 入出庫與領用，
-            <br />
-            在同一個工作平台掌握。
-          </p>
-          <div className="login-tags">
-            <span>HIS 藥品</span>
-            <span>OTC 庫存</span>
-            <span>掃碼盤點</span>
-          </div>
-        </div>
-        <Card asChild>
-          <form
-            id="login-form"
-            className="login-card"
-            hidden={s.recovery}
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (!account.trim() || !password.trim()) return;
-              dispatch(
-                executeDemoCommand({
-                  type: "update",
-                  update: (d) => {
-                    d.currentAccount = account.trim();
-                    d.canEditExistingData = permission === "privileged";
-                    d.loggedIn = true;
-                    d.activeModule =
-                      d.stocktakeRoutes[routeLocation.pathname] ??
-                      d.activeModule;
-                    d.notice = "已登入展示工作區（未連線 NAS LDAP）";
-                  },
-                }),
-              );
-            }}
-          >
-            <p className="eyebrow">歡迎使用庫存管理系統</p>
-            <h2>登入工作區</h2>
-            <p className="muted">LDAP 帳號登入 · 群組權限管理（展示）</p>
-            <Label>
-              帳號
-              <Input
-                name="account"
-                value={account}
-                onChange={(e) => setAccount(e.target.value)}
-                autoComplete="off"
-                required
-              />
-            </Label>
-            <Label>
-              密碼
-              <Input
-                name="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="off"
-                required
-              />
-            </Label>
-            <Label>
-              展示權限
-              <NativeSelect
-                id="demo-permission"
-                value={permission}
-                onChange={(e) => setPermission(e.target.value)}
-              >
-                <NativeSelectOption value="standard">
-                  一般人員
-                </NativeSelectOption>
-                <NativeSelectOption value="privileged">
-                  高權限人員
-                </NativeSelectOption>
-              </NativeSelect>
-            </Label>
-            <p className="muted small">
-              此選單僅模擬權限；正式權限由 NAS LDAP 群組提供。
+      {/* 登入頁暫時停用；開啟 DEMO_LOGIN_ENABLED 後恢復原表單。 */}
+      {DEMO_LOGIN_ENABLED && (
+        <section id="login" className="login-layout" hidden={s.loggedIn}>
+          <div className="login-story">
+            <div className="brand">庫存管理系統</div>
+            <p className="eyebrow">INVENTORY WORKSPACE</p>
+            <h1>
+              讓庫存作業
+              <br />
+              清楚、有序。
+            </h1>
+            <p>
+              HIS 藥品查詢與維護、OTC 入出庫與領用，
+              <br />
+              在同一個工作平台掌握。
             </p>
-            <Button variant="default" className="primary" type="submit">
-              使用展示帳號登入 →
-            </Button>
-            <p className="muted small">
-              此處僅驗證必填，不驗證真實帳密。請使用展示帳號。
-            </p>
-            <div className="login-links">
-              <Button
-                variant="outline"
-                id="forgot-password"
-                type="button"
-                className="text-button"
-                onClick={() =>
-                  dispatch(
-                    executeDemoCommand({
-                      type: "update",
-                      update: (d) => {
-                        d.recovery = true;
-                        d.recoverySent = false;
-                      },
-                    }),
-                  )
-                }
-              >
-                忘記密碼？
-              </Button>
-              <Link to="/">← 返回系統規劃</Link>
+            <div className="login-tags">
+              <span>HIS 藥品</span>
+              <span>OTC 庫存</span>
+              <span>掃碼盤點</span>
             </div>
-          </form>
-        </Card>
-        <Card
-          id="password-recovery"
-          className="login-card"
-          hidden={!s.recovery}
-        >
-          <p className="eyebrow">LDAP 帳號服務</p>
-          <h2>忘記密碼</h2>
-          <p className="muted">填寫 LDAP 帳號與登記信箱，申請密碼重設。</p>
-          <form
-            id="recovery-form"
-            hidden={s.recoverySent}
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (account.trim())
+          </div>
+          <BaseCard asChild>
+            <form
+              id="login-form"
+              className="login-card"
+              hidden={s.recovery}
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!account.trim() || !password.trim()) return;
                 dispatch(
                   executeDemoCommand({
                     type: "update",
                     update: (d) => {
-                      d.recoverySent = true;
+                      d.currentAccount = account.trim();
+                      d.canEditExistingData = permission === "privileged";
+                      d.loggedIn = true;
+                      d.activeModule =
+                        d.stocktakeRoutes[routeLocation.pathname] ??
+                        d.activeModule;
+                      d.notice = "已登入展示工作區（未連線 NAS LDAP）";
                     },
                   }),
                 );
-            }}
+              }}
+            >
+              <p className="eyebrow">歡迎使用庫存管理系統</p>
+              <h2>登入工作區</h2>
+              <p className="muted">LDAP 帳號登入 · 群組權限管理（展示）</p>
+              <BaseLabel>
+                帳號
+                <BaseInput
+                  name="account"
+                  value={account}
+                  onChange={(e) => setAccount(e.target.value)}
+                  autoComplete="off"
+                  required
+                />
+              </BaseLabel>
+              <BaseLabel>
+                密碼
+                <BaseInput
+                  name="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="off"
+                  required
+                />
+              </BaseLabel>
+              <BaseLabel>
+                展示權限
+                <BaseNativeSelect
+                  id="demo-permission"
+                  value={permission}
+                  onChange={(e) => setPermission(e.target.value)}
+                >
+                  <BaseNativeSelectOption value="standard">
+                    一般人員
+                  </BaseNativeSelectOption>
+                  <BaseNativeSelectOption value="privileged">
+                    高權限人員
+                  </BaseNativeSelectOption>
+                </BaseNativeSelect>
+              </BaseLabel>
+              <p className="muted small">
+                此選單僅模擬權限；正式權限由 NAS LDAP 群組提供。
+              </p>
+              <BaseButton variant="default" className="primary" type="submit">
+                使用展示帳號登入 →
+              </BaseButton>
+              <p className="muted small">
+                此處僅驗證必填，不驗證真實帳密。請使用展示帳號。
+              </p>
+              <div className="login-links">
+                <BaseButton
+                  variant="outline"
+                  id="forgot-password"
+                  type="button"
+                  className="text-button"
+                  onClick={() =>
+                    dispatch(
+                      executeDemoCommand({
+                        type: "update",
+                        update: (d) => {
+                          d.recovery = true;
+                          d.recoverySent = false;
+                        },
+                      }),
+                    )
+                  }
+                >
+                  忘記密碼？
+                </BaseButton>
+                <Link to="/">← 返回系統規劃</Link>
+              </div>
+            </form>
+          </BaseCard>
+          <BaseCard
+            id="password-recovery"
+            className="login-card"
+            hidden={!s.recovery}
           >
-            <Label>
-              LDAP 帳號
-              <Input
-                name="account"
-                value={account}
-                onChange={(e) => setAccount(e.target.value)}
-                autoComplete="username"
-                required
-              />
-            </Label>
-            <Label>
-              登記信箱
-              <Input
-                name="email"
-                type="email"
-                autoComplete="email"
-                placeholder="name@hospital.example"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </Label>
-            <p className="muted small">
-              此為介面展示，請使用假資料；尚未串接院內 LDAP 或寄信服務。
-            </p>
-            <Button variant="default" type="submit" className="primary">
-              模擬申請重設
-            </Button>
-          </form>
-          <Alert
-            id="recovery-result"
-            className="mb-4 bg-secondary p-4 text-sm leading-[1.8]"
-            role="status"
-            tabIndex={-1}
-            hidden={!s.recoverySent}
-          >
-            展示申請流程已完成。正式服務會在資料符合院內規則時提供重設指引；本次未查詢帳號、寄送郵件或變更密碼。
-          </Alert>
-          <Button
-            variant="outline"
-            id="back-to-login"
-            type="button"
-            className="text-button"
-            onClick={() => {
-              setEmail("");
-              dispatch(
-                executeDemoCommand({
-                  type: "update",
-                  update: (d) => {
-                    d.recovery = false;
-                    d.recoverySent = false;
-                  },
-                }),
-              );
-            }}
-          >
-            ← 返回登入
-          </Button>
-        </Card>
-      </section>
+            <p className="eyebrow">LDAP 帳號服務</p>
+            <h2>忘記密碼</h2>
+            <p className="muted">填寫 LDAP 帳號與登記信箱，申請密碼重設。</p>
+            <form
+              id="recovery-form"
+              hidden={s.recoverySent}
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (account.trim())
+                  dispatch(
+                    executeDemoCommand({
+                      type: "update",
+                      update: (d) => {
+                        d.recoverySent = true;
+                      },
+                    }),
+                  );
+              }}
+            >
+              <BaseLabel>
+                LDAP 帳號
+                <BaseInput
+                  name="account"
+                  value={account}
+                  onChange={(e) => setAccount(e.target.value)}
+                  autoComplete="username"
+                  required
+                />
+              </BaseLabel>
+              <BaseLabel>
+                登記信箱
+                <BaseInput
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="name@hospital.example"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </BaseLabel>
+              <p className="muted small">
+                此為介面展示，請使用假資料；尚未串接院內 LDAP 或寄信服務。
+              </p>
+              <BaseButton variant="default" type="submit" className="primary">
+                模擬申請重設
+              </BaseButton>
+            </form>
+            <BaseAlert
+              id="recovery-result"
+              className="mb-4 bg-secondary p-4 text-sm leading-[1.8]"
+              role="status"
+              tabIndex={-1}
+              hidden={!s.recoverySent}
+            >
+              展示申請流程已完成。正式服務會在資料符合院內規則時提供重設指引；本次未查詢帳號、寄送郵件或變更密碼。
+            </BaseAlert>
+            <BaseButton
+              variant="outline"
+              id="back-to-login"
+              type="button"
+              className="text-button"
+              onClick={() => {
+                setEmail("");
+                dispatch(
+                  executeDemoCommand({
+                    type: "update",
+                    update: (d) => {
+                      d.recovery = false;
+                      d.recoverySent = false;
+                    },
+                  }),
+                );
+              }}
+            >
+              ← 返回登入
+            </BaseButton>
+          </BaseCard>
+        </section>
+      )}
       <div className="workspace-content min-w-0" hidden={!s.loggedIn}>
         <main
           ref={content}
@@ -732,78 +759,92 @@ export function DemoPage() {
               setVendorOptions(false);
           }}
         >
-          <div className="page-heading">
-            <div>
-              <p className="eyebrow">
-                庫存管理系統 / {s.activeModule === "his" ? "HIS" : "DEMO"}
-              </p>
-              <h2>{module.label}</h2>
-              <p>{subtitles[s.activeModule]}</p>
-            </div>
-            {["vendors", "products", "requisitions"].includes(
-              s.activeModule,
-            ) ? (
-              <Button variant="default" className="primary" data-action="add">
-                ＋ 新增資料
-              </Button>
-            ) : (
-              <div className="page-heading-actions">
-                {s.activeModule === "overview" && (
-                  <Button
-                    variant="outline"
-                    type="button"
-                    className="low-stock-bell"
-                    data-action="show-low-stock"
-                    aria-controls="low-stock-panel"
-                    aria-label={`低庫存提醒，共 ${low.length} 個品項，點擊查看`}
-                    title="查看低庫存提醒"
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      width="22"
-                      height="22"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-                      <path d="M10 21h4M12 2V1" />
-                    </svg>
-                    <span className="low-stock-count">{low.length}</span>
-                    <span>低庫存提醒</span>
-                  </Button>
-                )}
-                <Badge variant="secondary" className="tag">
-                  展示模式・假資料
-                </Badge>
+          {!["items", "purchases", "base-data", "consumptions", "pos", "sales", "stocktakes"].includes(s.activeModule) && (
+            <div className="page-heading">
+              <div>
+                <p className="eyebrow">
+                  庫存管理系統 / {s.activeModule === "his" ? "HIS" : "DEMO"}
+                </p>
+                <h2>{module.label}</h2>
+                <p>{subtitles[s.activeModule]}</p>
               </div>
-            )}
-          </div>
+              {["vendors", "products", "requisitions"].includes(
+                s.activeModule,
+              ) ? (
+                <BaseButton variant="default" className="primary" data-action="add">
+                  ＋ 新增資料
+                </BaseButton>
+              ) : (
+                <div className="page-heading-actions">
+                  {s.activeModule === "overview" && (
+                    <BaseButton
+                      variant="outline"
+                      type="button"
+                      className="low-stock-bell"
+                      data-action="show-low-stock"
+                      aria-controls="low-stock-panel"
+                      aria-label={`低庫存提醒，共 ${low.length} 個品項，點擊查看`}
+                      title="查看低庫存提醒"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        width="22"
+                        height="22"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                        <path d="M10 21h4M12 2V1" />
+                      </svg>
+                      <span className="low-stock-count">{low.length}</span>
+                      <span>低庫存提醒</span>
+                    </BaseButton>
+                  )}
+                  <BaseBadge variant="secondary" className="tag">
+                    展示模式・假資料
+                  </BaseBadge>
+                </div>
+              )}
+            </div>
+          )}
           {s.activeModule === "his" && (
-            <Alert role="note" className="callout">
+            <BaseAlert role="note" className="callout">
               日常扣庫由 HIS
               執行。本頁僅模擬藥品檔維護與回寫；藥品編輯不修改庫存。
-            </Alert>
+            </BaseAlert>
           )}
           {s.activeModule === "requisitions" && (
-            <Alert role="note" className="callout assumption">
+            <BaseAlert role="note" className="callout assumption">
               展示假設，正式規則待確認：領用立即扣庫，修改依差額調整，刪除回復庫存；不重複產生耗用扣庫。
-            </Alert>
+            </BaseAlert>
           )}
           {["stocktake", "stocktake-history"].includes(s.activeModule) && (
-            <Alert role="note" className="callout assumption">
+            <BaseAlert role="note" className="callout assumption">
               展示假設，正式規則待確認：HIS 與 OTC
               盤點確認後直接調整假庫存。此操作不會連線或修改 HIS 資料庫。
-            </Alert>
+            </BaseAlert>
           )}
           <Fragment key={s.activeModule}>
-            {s.activeModule === "overview" ? (
+            {s.activeModule === "stocktakes" ? (
+              <StocktakesPage />
+            ) : ["pos", "sales"].includes(s.activeModule) ? (
+              <PosPage />
+            ) : s.activeModule === "consumptions" ? (
+              <ConsumptionsPage />
+            ) : s.activeModule === "base-data" ? (
+              <BaseDataPage />
+            ) : s.activeModule === "purchases" ? (
+              <PurchasesPage />
+            ) : s.activeModule === "items" ? (
+              <ItemsPage />
+            ) : s.activeModule === "overview" ? (
               <>
                 {<OverviewMovements />}
-                <Card id="low-stock-panel" className="panel" tabIndex={-1}>
+                <BaseCard id="low-stock-panel" className="panel" tabIndex={-1}>
                   <h3>OTC 低庫存提醒</h3>
                   <BaseDataTable
                     tableKey="overview-low-stock"
@@ -816,14 +857,14 @@ export function DemoPage() {
                       product.filledBy ?? "未記錄",
                     ])}
                   />
-                  <Button
+                  <BaseButton
                     variant="outline"
                     data-module="receipt"
                     className="mt-4"
                   >
                     前往掃碼入庫 →
-                  </Button>
-                </Card>
+                  </BaseButton>
+                </BaseCard>
               </>
             ) : s.activeModule === "historical-cost" ? (
               <HistoricalCostsPage />
@@ -841,7 +882,7 @@ export function DemoPage() {
           {["vendors", "his", "products", "requisitions"].includes(
             s.activeModule,
           ) && (
-            <Card className="panel">
+            <BaseCard className="panel">
               <h3>資料修改歷程</h3>
               <BaseDataTable
                 tableKey={`data-changes-${s.activeModule}`}
@@ -890,7 +931,7 @@ export function DemoPage() {
                     c.filledBy,
                   ])}
               />
-            </Card>
+            </BaseCard>
           )}
           {s.errors.page && (
             <p className="error" role="alert">
@@ -900,7 +941,7 @@ export function DemoPage() {
         </main>
         <EditorPage />
       </div>
-      <Alert
+      <BaseAlert
         id="notice"
         role="status"
         aria-live="polite"
@@ -908,7 +949,7 @@ export function DemoPage() {
         className="pointer-events-none fixed right-6 bottom-6 z-[5] w-auto max-w-[calc(100%_-_48px)] rounded-[10px] border-0 bg-[#17364a] px-[22px] py-[14px] text-base leading-[1.6] text-white shadow-[0_8px_30px_#17364a33]"
       >
         {s.notice}
-      </Alert>
+      </BaseAlert>
       <BaseModal
         id="confirmation"
         title="確認操作"
@@ -934,12 +975,12 @@ export function DemoPage() {
               <h2>確認操作</h2>
               <p id="confirmation-text">{s.confirmation?.message}</p>
               <div className="dialog-actions">
-                <Button variant="outline" value="cancel">
+                <BaseButton variant="outline" value="cancel">
                   取消
-                </Button>
-                <Button variant="default" value="confirm" className="primary">
+                </BaseButton>
+                <BaseButton variant="default" value="confirm" className="primary">
                   確認
-                </Button>
+                </BaseButton>
               </div>
             </form>
           </>
@@ -974,9 +1015,9 @@ export function DemoPage() {
                 Demo 尚未串接 LDAP。
               </p>
               <div className="dialog-actions">
-                <Button variant="default" className="primary" value="close">
+                <BaseButton variant="default" className="primary" value="close">
                   了解
-                </Button>
+                </BaseButton>
               </div>
             </form>
           </>

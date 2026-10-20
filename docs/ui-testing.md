@@ -1,12 +1,14 @@
+> 日常指令與最新測試目錄請見 [瀏覽器測試指南](../frontend/tests/README.md)。
+
 # 畫面案例驗證
 
 ## 側欄緊湊帳號列（2026-10-20）
 
 帳號及權限改為上下兩行，右側使用透明背景的 ghost 登出按鈕；底部白色背景融入側欄、上方細分隔線、左右 16px／上下 12px，點擊區至少 44×44px。最窄 180px 桌面側欄的一般帳號保持單行，長帳號可換行且不擠壓登出。沿用既有登出與編輯阻擋行為。
 
-以 `PLAYWRIGHT_PORT=4198 npm run test:ui:capture -- rwd.spec.js --grep '帳號固定|長帳號|帳號列編輯'` 擷取 Windows Chromium 的 320／390／768／1440px，12 個案例通過。檢視 24 張畫面（固定底部、縮窄、長帳號、編輯阻擋、hover、鍵盤焦點）後才接受基準；總覽位於 `frontend/ui-review/sidebar-account-review.png`，原圖位於 `frontend/ui-review/rwd.spec.js/sidebar-account-*.png`。觸控模擬不要求滑鼠 hover，桌面 hover 及四尺寸鍵盤焦點均已檢視。
+以 `PLAYWRIGHT_PORT=4198 npm run test:ui:capture -- rwd.test.js --grep '帳號固定|長帳號|帳號列編輯'` 擷取 Windows Chromium 的 320／390／768／1440px，12 個案例通過。檢視 24 張畫面（固定底部、縮窄、長帳號、編輯阻擋、hover、鍵盤焦點）後才接受基準；總覽位於 `frontend/ui-review/sidebar-account-review.png`，原圖位於 `frontend/ui-review/rwd.test.js/sidebar-account-*.png`。觸控模擬不要求滑鼠 hover，桌面 hover 及四尺寸鍵盤焦點均已檢視。
 
-以同一 grep 執行 `PLAYWRIGHT_PORT=4198 npm run test:ui -- rwd.spec.js`，一般截圖比對模式 12／12 通過，包含 24 張已檢視基準的比對。`npm run build`（包含 TypeScript typecheck）通過。本次僅驗證帳號列受影響案例，並非全站回歸；實機手機、NAS／正式身分服務與正式部署未驗收。
+以同一 grep 執行 `PLAYWRIGHT_PORT=4198 npm run test:ui -- rwd.test.js`，一般截圖比對模式 12／12 通過，包含 24 張已檢視基準的比對。`npm run build`（包含 TypeScript typecheck）通過。本次僅驗證帳號列受影響案例，並非全站回歸；實機手機、NAS／正式身分服務與正式部署未驗收。
 
 ## ChatGPT Sites deployment verification (2026-10-20)
 
@@ -30,7 +32,7 @@ Live Chromium checks at 320/390/768/1440px passed for `/`, `/architecture`, `/bo
 
 檢視過程修正出入庫選取分類、載入失敗重試按鈕的文字／底色衝突；改用 Button variant 管理狀態。320px 的播放器底部按鈕需要換行，footer 改用三欄自適應高度，播放器內容採可收縮的 flex 區域，避免按鈕溢出或壓住 iframe。受影響案例重新擷取後再檢視。
 
-`shadcn.spec.js` 實際測試確認視窗的 Tab、Esc、取消及焦點回復，並在播放器內新增廠商，關閉重開後以查詢畫面驗證資料仍在。`rwd.spec.js` 新增四尺寸 Accordion 鍵盤、錨點、表單／選擇欄／資料表、Dialog 與選取分類畫面，原有完整模組與表單測試繼續執行。
+`shadcn.test.js` 實際測試確認視窗的 Tab、Esc、取消及焦點回復，並在播放器內新增廠商，關閉重開後以查詢畫面驗證資料仍在。`rwd.test.js` 新增四尺寸 Accordion 鍵盤、錨點、表單／選擇欄／資料表、Dialog 與選取分類畫面，原有完整模組與表單測試繼續執行。
 
 預設測試 port 為 4173；若該 port 已有使用者服務，使用 `PLAYWRIGHT_PORT` 指定獨立 port，不停掉既有服務。例如：
 
@@ -52,7 +54,7 @@ npm run test:ui:build
 
 「RWD Layout 外框與 Home 登入流程及切頁保護」涵蓋四種尺寸的登入／重設／工作區／切頁阻擋／登出，驗證同一路由收合選單、上一頁／下一頁及登入欄位跨模組保留，並附上實際畫面。「RWD Demo Layout 承載子頁並保留工作區」保留既有側欄／頁首節點與畫面基準比對。附件截圖需另行檢視，不能將操作通過視為舊基準比對通過。
 
-2026-10-17 本次責任調整：`npm run build`（含 TypeScript）通過；`npx playwright test rwd.spec.js spa.spec.js react-flows.spec.js --ignore-snapshots` 共 232 次通過（7.5 分鐘），此輪僅代表操作與響應式斷言通過。四尺寸登入、重設、工作區、阻擋切頁及登出另擷取 20 張畫面並檢視，保存在 `frontend/ui-review/layout-home/`。舊基準比對與正式 dist 結果另列，不以此數量宣稱全站截圖回歸通過。相機／掃碼槍仍為模擬，NAS LDAP、HIS 與後端正式整合未驗收。
+2026-10-17 本次責任調整：`npm run build`（含 TypeScript）通過；`npx playwright test rwd.test.js spa.test.js react-flows.test.js --ignore-snapshots` 共 232 次通過（7.5 分鐘），此輪僅代表操作與響應式斷言通過。四尺寸登入、重設、工作區、阻擋切頁及登出另擷取 20 張畫面並檢視，保存在 `frontend/ui-review/layout-home/`。舊基準比對與正式 dist 結果另列，不以此數量宣稱全站截圖回歸通過。相機／掃碼槍仍為模擬，NAS LDAP、HIS 與後端正式整合未驗收。
 
 後續截圖擷取發現側欄同時使用 sticky／fixed 的定位衝突，已改成互斥 class；通知改為點擊穿透，手機案例先收合選單再回到表單。追加驗證期間工作樹又導入 shadcn／Radix（BaseModal、Tailwind、套件與其他 UI 元件），新 BaseModal 出現 `Cannot read properties of null (reading 'open')`，這輪擷取未全部通過；已停止測試，未更新截圖基準。上述 232 次結果屬於此批 UI 改寫前，不能視為目前工作樹的完整驗收。最新樣式整合後的基準比對、浮動側欄重驗及正式 dist 瀏覽器檢查仍待完成。
 
@@ -82,7 +84,7 @@ Tailwind CSS 4.3.3 由官方 Vite plugin 編譯，Tailwind utilities 與 `@apply
 
 全站使用單一 `frontend/index.html`，由 React Router 管理 `/`、`/architecture`、`/board` 與 `/demo` 子路由。舊 HTML 網址僅為前端轉向相容路由，不另產生 HTML。正式主機必須對非既存檔案／目錄回退 index.html；dev／preview 的通過結果不代表正式主機已設定完成。
 
-`spa.spec.js` 驗證跨頁沒有主視窗 document 請求、登入／新增資料保留、深層路由重新整理、舊網址與 query、文件錨點與表格分頁、找不到頁面，以及模組下載失敗後重試。`react-flows.spec.js` 的盤點案例以瀏覽器上一頁驗證未完成表單路由保護；`rwd.spec.js` 新增四種尺寸的 SPA 導覽與找不到頁面案例。`build-smoke.spec.js` 另確認 dist 遞迴只有一份 index.html。
+`spa.test.js` 驗證跨頁沒有主視窗 document 請求、登入／新增資料保留、深層路由重新整理、舊網址與 query、文件錨點與表格分頁、找不到頁面，以及模組下載失敗後重試。`react-flows.test.js` 的盤點案例以瀏覽器上一頁驗證未完成表單路由保護；`rwd.test.js` 新增四種尺寸的 SPA 導覽與找不到頁面案例。`build-smoke.test.js` 另確認 dist 遞迴只有一份 index.html。
 
 新增及變更畫面先執行 capture 並檢視實際 Chromium 截圖，再只接受對應基準；不改動截圖容許值。頁面測試必須先等可見標題／登入表單，不能以延遲載入中的空白畫面作為基準。相機／掃碼槍仍採模擬，正式 NAS／HIS、資料庫及設備整合仍待驗收。
 
@@ -104,7 +106,7 @@ React 版本的測試會自動啟動 Vite `test` 模式。頁面就緒以可見�
 
 正式產物另行驗證：先執行 `npm run build`，再執行 `npm run test:ui:build`。此套件自動啟動 preview，確認單一 HTML、四個主要路由、文件錨點、盤點深連結、流程 iframe 通訊、實際 XLSX 下載及本機掃碼資源，並確認正式頁面沒有測試入口。
 
-`react-flows.spec.js` 補上展示登入必填、密碼申請、廠商新增／重複代碼／補填與高權限修改、刪除限制／取消、領用不足／刪除回復、盤點草稿／取消確認／送出鎖定／歷史更正與路由等畫面案例。
+`react-flows.test.js` 補上展示登入必填、密碼申請、廠商新增／重複代碼／補填與高權限修改、刪除限制／取消、領用不足／刪除回復、盤點草稿／取消確認／送出鎖定／歷史更正與路由等畫面案例。
 
 之後每個新增／修改的畫面 case 都需要實際瀏覽器測試及截圖檢查。測試必須操作使用者的流程、確認可見結果與錯誤提示，再比較畫面；不可只驗證內部函式或以 jsdom 代替畫面驗收。
 
@@ -138,7 +140,7 @@ npm run test:ui:report
 
 補查清單與設備驗證範圍見 [畫面案例清單](ui-case-matrix.md)。目前掃碼套件已擴充到 80 次電腦／手機執行，包含交易、驗證、相機成功、取消、資源釋放及錯誤重試；其他模組與實機的未覆蓋範圍必須保留在清單中。
 
-全站 RWD 測試：`npm run test:ui -- rwd.spec.js`。涵蓋小手機、手機、平板及桌面，詳細範圍見案例清單。正常執行會比對已檢視的基準圖，不自動更新。
+全站 RWD 測試：`npm run test:ui -- rwd.test.js`。涵蓋小手機、手機、平板及桌面，詳細範圍見案例清單。正常執行會比對已檢視的基準圖，不自動更新。
 
 左側導覽測試另確認四個大分類保留本機 SVG 圖示，十個功能細項僅顯示文字；圖示不影響導覽的無障礙名稱；四種尺寸均保留選單截圖。
 
@@ -146,11 +148,11 @@ npm run test:ui:report
 
 帳號與登出固定在側欄底部，手機須展開選單才能操作。測試檢查選單捲動不移動帳號區、縮窄後仍可登出，以及長帳號和高權限文字不溢出；相機登出案例也從側欄操作並驗證資源釋放。
 
-出入庫傳票測試見 `vouchers.spec.js`：多筆草稿整批送出、編號跨日與 999 上限、取消與鎖定、庫存重新核對、防重複提交、分頁及實際下載 XLSX 檢查。側欄另測暫時縮窄視窗後恢復偏好寬度，及恢復後用方向鍵調整；未建檔品項表單截圖也驗證側欄寬度未被截圖過程改寫。
+出入庫傳票測試見 `vouchers.test.js`：多筆草稿整批送出、編號跨日與 999 上限、取消與鎖定、庫存重新核對、防重複提交、分頁及實際下載 XLSX 檢查。側欄另測暫時縮窄視窗後恢復偏好寬度，及恢復後用方向鍵調整；未建檔品項表單截圖也驗證側欄寬度未被截圖過程改寫。
 
-批次查詢見 `batch-filters.spec.js`：總覽／入庫／出庫以傳票批次為主要條件，驗證歷史跨日、多料號、日期前綴、交集與清除、無符合結果、獨立條件、分頁與篩選後 XLSX。盤點另驗證以品項核對帳面數量且無出入庫批次欄位；三頁的批次查詢也在 `rwd.spec.js` 驗證四種尺寸。
+批次查詢見 `batch-filters.test.js`：總覽／入庫／出庫以傳票批次為主要條件，驗證歷史跨日、多料號、日期前綴、交集與清除、無符合結果、獨立條件、分頁與篩選後 XLSX。盤點另驗證以品項核對帳面數量且無出入庫批次欄位；三頁的批次查詢也在 `rwd.test.js` 驗證四種尺寸。
 
-歷史成本驗證：`npm run test:ui -- historical-cost.spec.js`；四個案例在電腦／手機執行，涵蓋成本快照、數量加權、排除非已送出入庫、缺價／零元、篩選、分頁、Excel 與錯誤重試。RWD 另含新頁與兩個料號成本表，截圖更新仍需人工檢視後一般模式比對。
+歷史成本驗證：`npm run test:ui -- historical-cost.test.js`；四個案例在電腦／手機執行，涵蓋成本快照、數量加權、排除非已送出入庫、缺價／零元、篩選、分頁、Excel 與錯誤重試。RWD 另含新頁與兩個料號成本表，截圖更新仍需人工檢視後一般模式比對。
 
 2026-10-15 歷史成本變更驗證：Windows Chromium，全套 296 次流程／RWD 檢查以更新截圖模式通過，新增及變更畫面已逐組檢視；再以一般截圖比對模式執行 126 個受影響案例，全部通過。這不是正式 NAS／資料庫、其他成本規則或實機相機／掃碼槍驗收。
 

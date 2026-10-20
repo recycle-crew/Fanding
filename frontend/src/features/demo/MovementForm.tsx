@@ -1,9 +1,9 @@
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { BaseLabel } from "@/components/ui/BaseLabel";
+import { BaseInput } from "@/components/ui/BaseInput";
+import { BaseButton } from "@/components/ui/BaseButton";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { executeDemoCommand } from "@/store/demo";
-import type { Product } from "@/types/demo";
+import type { Product } from "@/features/demo/types";
 export function MovementForm({ product }: { product: Product }) {
   const s = useAppSelector((root) => root.demo);
   const dispatch = useAppDispatch();
@@ -25,9 +25,9 @@ export function MovementForm({ product }: { product: Product }) {
   return (
     <form id="movement-form" className="inline-form">
       <div className="form-grid grid grid-cols-1 gap-[18px] sm:grid-cols-2">
-        <Label>
+        <BaseLabel>
           數量（{product.unit}）
-          <Input
+          <BaseInput
             name="quantity"
             type="number"
             min="1"
@@ -36,11 +36,11 @@ export function MovementForm({ product }: { product: Product }) {
             required
             {...control("quantity")}
           />
-        </Label>
+        </BaseLabel>
         {s.activeModule === "receipt" && (
-          <Label>
+          <BaseLabel>
             本次入庫單價
-            <Input
+            <BaseInput
               name="unitCost"
               type="number"
               min="0"
@@ -56,21 +56,21 @@ export function MovementForm({ product }: { product: Product }) {
             <span className="field-hint">
               本次傳票獨立記錄，不修改品項成本價；留空時沿用品項成本價，仍無值則記為未填。
             </span>
-          </Label>
+          </BaseLabel>
         )}
-        <Label>
+        <BaseLabel>
           {s.activeModule === "issue" ? "用途" : "備註"}
-          <Input
+          <BaseInput
             name="note"
             required={s.activeModule === "issue"}
             {...control("note")}
           />
-        </Label>
+        </BaseLabel>
       </div>
-      <Button variant="default" className="primary" type="submit">
+      <BaseButton variant="default" className="primary" type="submit">
         加入傳票明細
-      </Button>{" "}
-      <Button
+      </BaseButton>{" "}
+      <BaseButton
         variant="outline"
         type="button"
         data-action="cancel-scan"
@@ -81,7 +81,7 @@ export function MovementForm({ product }: { product: Product }) {
         }
       >
         取消
-      </Button>
+      </BaseButton>
       <p id="movement-error" className="error" role="alert">
         {s.errors.movement}
       </p>

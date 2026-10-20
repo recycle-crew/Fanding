@@ -1,6 +1,18 @@
-import type { ModuleKey } from "@/types/demo";
+import type { ModuleKey } from "@/features/demo/types";
+
+export const itemGroupPaths = {
+  HIS_MEDICINE: "/demo/items/his",
+  GENERAL: "/demo/items/general",
+} as const;
 
 export const demoModulePaths: Record<ModuleKey, string> = {
+  "base-data": "/demo/base-data",
+  consumptions: "/demo/consumptions",
+  pos: "/demo/pos",
+  sales: "/demo/sales",
+  stocktakes: "/demo/stocktakes",
+  purchases: "/demo/purchases",
+  items: "/demo/items",
   overview: "/demo",
   vendors: "/demo/vendors",
   his: "/demo/his",

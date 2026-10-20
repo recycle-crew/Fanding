@@ -1,5 +1,6 @@
-import { Button } from "@/components/ui/button";
+import { BaseButton } from "@/components/ui/BaseButton";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { store } from "@/store";
 import { Component, Suspense, useEffect, useLayoutEffect } from "react";
 import type { ReactNode } from "react";
 import { Outlet, useBlocker, useLocation } from "react-router";
@@ -25,9 +26,12 @@ class PageErrorBoundary extends Component<
         <main className="shell route-status">
           <h1>畫面載入失敗</h1>
           <p>請重新載入後重試；展示資料將重置。</p>
-          <Button variant="default" onClick={() => window.location.reload()}>
+          <BaseButton
+            variant="default"
+            onClick={() => window.location.reload()}
+          >
             重新載入
-          </Button>
+          </BaseButton>
         </main>
       );
     return this.props.children;
@@ -39,11 +43,17 @@ export function App() {
   const pathname = location.pathname.replace(/\/+$/, "") || "/";
   const state = useAppSelector((root) => root.demo);
   const dispatch = useAppDispatch();
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      Boolean(state.editor || state.confirmation) &&
-      currentLocation.pathname !== nextLocation.pathname,
-  );
+  const blocker = useBlocker(({ currentLocation, nextLocation }) => {
+    // A save can clear dirty state and navigate in one event, before React re-renders.
+    const current = store.getState();
+    return (
+      Boolean(
+        current.demo.editor ||
+        current.demo.confirmation ||
+        current.moduleUi.dirty,
+      ) && currentLocation.pathname !== nextLocation.pathname
+    );
+  });
   const page =
     pathname === "/architecture"
       ? "architecture"

@@ -3,7 +3,8 @@
 /.claude
 /.codex
 /.agents
-/.github
+/.github/*
+!/.github/workflows/
 /CLAUDE.md
 /AGENTS.md
 /node_modules/
@@ -20,3 +21,7 @@
 /ui-review/
 .vercel
 .env*
+**/.vitest/
+**/coverage/
+/frontend/.artifacts/
+/frontend/test-results*/

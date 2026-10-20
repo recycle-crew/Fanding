@@ -1,7 +1,8 @@
-import { Button } from "@/components/ui/button";
+import { BaseButton } from "@/components/ui/BaseButton";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { Link, useLocation, useNavigate } from "react-router";
 import { demoModulePaths } from "@/constants/demoRoutes";
+import { DEMO_LOGIN_ENABLED } from "@/constants/demoAccess";
 import { executeDemoCommand } from "@/store/demo";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
@@ -132,7 +133,33 @@ export function BaseSidebar(props: BaseSidebarProps) {
         >
           庫存管理工作區
         </p>
-        <Button
+        <BaseButton
+          variant="outline"
+          className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === "items" ? "bg-blue-50 text-blue-700" : ""}`}
+          aria-current={s.activeModule === "items" ? "page" : undefined}
+          onClick={() => navigate(`/demo/items${location.search}`)}
+        >
+          品項與庫存管理（新版）
+        </BaseButton>
+        <BaseButton
+          variant="outline"
+          className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === "purchases" ? "bg-blue-50 text-blue-700" : ""}`}
+          aria-current={s.activeModule === "purchases" ? "page" : undefined}
+          onClick={() => navigate(`/demo/purchases${location.search}`)}
+        >
+          進貨管理（新版）
+        </BaseButton>
+        <BaseButton
+          variant="outline"
+          className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === "base-data" ? "bg-blue-50 text-blue-700" : ""}`}
+          aria-current={s.activeModule === "base-data" ? "page" : undefined}
+          onClick={() => navigate(`/demo/base-data${location.search}`)}
+        >基礎資料管理（新版）</BaseButton>
+        <BaseButton variant="outline" className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === "consumptions" ? "bg-blue-50 text-blue-700" : ""}`}
+          aria-current={s.activeModule === "consumptions" ? "page" : undefined} onClick={() => navigate(`/demo/consumptions${location.search}`)}>耗用查詢（新版）</BaseButton>
+        {(["pos", "sales", "stocktakes"] as const).map((key) => <BaseButton key={key} variant="outline" className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === key ? "bg-blue-50 text-blue-700" : ""}`}
+          aria-current={s.activeModule === key ? "page" : undefined} onClick={() => navigate(`${demoModulePaths[key]}${location.search}`)}>{key === "pos" ? "POS 銷售（新版）" : key === "sales" ? "銷售紀錄（新版）" : "盤點管理（新版）"}</BaseButton>)}
+        <BaseButton
           variant="ghost"
           id="legacy-pages-toggle"
           className="h-auto min-h-11 w-full justify-between gap-2 whitespace-normal px-3 py-2 text-left text-[14px] font-semibold"
@@ -152,7 +179,7 @@ export function BaseSidebar(props: BaseSidebarProps) {
           >
             <path d="m6 9 6 6 6-6" />
           </svg>
-        </Button>
+        </BaseButton>
         <p
           id="legacy-pages-description"
           className="mx-3 mb-2 mt-1 text-[12px] leading-5 text-[var(--muted)]"
@@ -165,43 +192,45 @@ export function BaseSidebar(props: BaseSidebarProps) {
           className={legacyPagesExpanded ? "grid gap-[5px]" : "hidden"}
           aria-label="舊頁面功能選單"
         >
-          {s.modules.map((module) => (
-            <Fragment key={module.key}>
-              {module.group && (
-                <div className="nav-group m-[20px_12px_5px] flex items-center gap-2 text-[11px] tracking-[1px] text-[var(--muted)]">
-                  <svg
-                    className="navigation-icon block flex-[0_0_18px]"
-                    viewBox="0 0 24 24"
-                    width="18"
-                    height="18"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    {icons[module.key]}
-                  </svg>
-                  <span>{module.group}</span>
-                </div>
-              )}
-              <Button
-                variant="outline"
-                data-module={module.key}
-                className={`flex h-auto w-full min-w-0 items-center justify-start gap-[10px] whitespace-normal rounded-[7px] border-transparent bg-transparent p-3 text-left font-semibold${s.activeModule === module.key ? " active border-[#d3e0e9] bg-[#eaf1f6] text-[#245e7d] shadow-[inset_3px_0_var(--primary)]" : ""}`}
-                aria-current={
-                  s.activeModule === module.key ? "page" : undefined
-                }
-                onClick={() =>
-                  navigate(`${demoModulePaths[module.key]}${location.search}`)
-                }
-              >
-                <span>{module.label}</span>
-              </Button>
-            </Fragment>
-          ))}
+          {s.modules
+            .filter((module) => !["items", "purchases", "base-data", "consumptions", "pos", "sales", "stocktakes"].includes(module.key))
+            .map((module) => (
+              <Fragment key={module.key}>
+                {module.group && (
+                  <div className="nav-group m-[20px_12px_5px] flex items-center gap-2 text-[11px] tracking-[1px] text-[var(--muted)]">
+                    <svg
+                      className="navigation-icon block flex-[0_0_18px]"
+                      viewBox="0 0 24 24"
+                      width="18"
+                      height="18"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      {icons[module.key]}
+                    </svg>
+                    <span>{module.group}</span>
+                  </div>
+                )}
+                <BaseButton
+                  variant="outline"
+                  data-module={module.key}
+                  className={`flex h-auto w-full min-w-0 items-center justify-start gap-[10px] whitespace-normal rounded-[7px] border-transparent bg-transparent p-3 text-left font-semibold${s.activeModule === module.key ? " active border-[#d3e0e9] bg-[#eaf1f6] text-[#245e7d] shadow-[inset_3px_0_var(--primary)]" : ""}`}
+                  aria-current={
+                    s.activeModule === module.key ? "page" : undefined
+                  }
+                  onClick={() =>
+                    navigate(`${demoModulePaths[module.key]}${location.search}`)
+                  }
+                >
+                  <span>{module.label}</span>
+                </BaseButton>
+              </Fragment>
+            ))}
         </nav>
         <Link
           className={`planning-link m-[36px_12px_12px] block text-[13px]${embedded ? " hidden" : ""}`}
@@ -232,9 +261,10 @@ export function BaseSidebar(props: BaseSidebarProps) {
             {s.canEditExistingData ? "高權限（展示）" : "一般權限"}
           </span>
         </span>
-        <Button
+        <BaseButton
           variant="ghost"
           id="logout"
+          hidden={!DEMO_LOGIN_ENABLED}
           className="h-11 min-w-11 shrink-0 border-0 bg-transparent px-2 py-0 text-[12px] font-medium text-[var(--muted)] shadow-none"
           onClick={() => {
             if (s.editor) {
@@ -260,7 +290,7 @@ export function BaseSidebar(props: BaseSidebarProps) {
           }}
         >
           登出
-        </Button>
+        </BaseButton>
       </div>
       <div
         id="sidebar-resize"

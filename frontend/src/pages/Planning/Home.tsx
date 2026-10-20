@@ -1,14 +1,14 @@
-import { Card } from "@/components/ui/card";
-import { TableRow, TableHead, TableCell } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { BaseCard } from "@/components/ui/BaseCard";
+import { BaseTableRow, BaseTableHead, BaseTableCell } from "@/components/ui/BaseTable";
+import { BaseBadge } from "@/components/ui/BaseBadge";
 import {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "@/components/ui/accordion";
+  BaseAccordion,
+  BaseAccordionItem,
+  BaseAccordionTrigger,
+  BaseAccordionContent,
+} from "@/components/ui/BaseAccordion";
 import { Link } from "react-router";
-import { Button } from "@/components/ui/button";
+import { BaseButton } from "@/components/ui/BaseButton";
 import React from "react";
 import { BaseTableFrame } from "@/components/ui/BaseDataTable";
 export function PlanningPage() {
@@ -33,13 +33,13 @@ export function PlanningPage() {
             }
           </p>
           {"\n          "}
-          <Button asChild>
+          <BaseButton asChild>
             <a href={"#features"}>{"查看目前功能需求 ↗"}</a>
-          </Button>
+          </BaseButton>
           {"\n        "}
         </div>
         {"\n        "}
-        <Card asChild>
+        <BaseCard asChild>
           <aside className={"brief"} aria-label={"規劃概要"}>
             {"\n          "}
             <div className={"eyebrow"}>{"系統概要"}</div>
@@ -79,7 +79,7 @@ export function PlanningPage() {
             </dl>
             {"\n        "}
           </aside>
-        </Card>
+        </BaseCard>
         {"\n      "}
       </div>
       {"\n      "}
@@ -100,39 +100,39 @@ export function PlanningPage() {
           tableKey="document-table-1"
           headers={
             <>
-              <TableRow>
-                <TableHead scope={"col"}>{"工作區"}</TableHead>
-                <TableHead scope={"col"}>{"資料來源"}</TableHead>
-                <TableHead scope={"col"}>{"本系統責任"}</TableHead>
-                <TableHead scope={"col"}>{"庫存處理"}</TableHead>
-              </TableRow>
+              <BaseTableRow>
+                <BaseTableHead scope={"col"}>{"工作區"}</BaseTableHead>
+                <BaseTableHead scope={"col"}>{"資料來源"}</BaseTableHead>
+                <BaseTableHead scope={"col"}>{"本系統責任"}</BaseTableHead>
+                <BaseTableHead scope={"col"}>{"庫存處理"}</BaseTableHead>
+              </BaseTableRow>
             </>
           }
           rows={[
-            <TableRow>
-              <TableHead scope={"row"}>{"HIS"}</TableHead>
-              <TableCell>{"既有 HIS 資料庫，包含「藥品檔」。"}</TableCell>
-              <TableCell>
+            <BaseTableRow>
+              <BaseTableHead scope={"row"}>{"HIS"}</BaseTableHead>
+              <BaseTableCell>{"既有 HIS 資料庫，包含「藥品檔」。"}</BaseTableCell>
+              <BaseTableCell>
                 {"即時查詢、藥品檔修改與回寫，以及盤點資訊輸入。"}
-              </TableCell>
-              <TableCell>
+              </BaseTableCell>
+              <BaseTableCell>
                 {"扣庫由 HIS 執行；盤點調整如何交由 HIS 執行仍待確認。"}
-              </TableCell>
-            </TableRow>,
-            <TableRow>
-              <TableHead scope={"row"}>{"OTC"}</TableHead>
-              <TableCell>
+              </BaseTableCell>
+            </BaseTableRow>,
+            <BaseTableRow>
+              <BaseTableHead scope={"row"}>{"OTC"}</BaseTableHead>
+              <BaseTableCell>
                 {
                   "內部資料，原規劃透過 localhost 服務存取；儲存與部署方式待確認。"
                 }
-              </TableCell>
-              <TableCell>
+              </BaseTableCell>
+              <BaseTableCell>
                 {"資料維護、入庫、出庫／耗用、領用與盤點。"}
-              </TableCell>
-              <TableCell>
+              </BaseTableCell>
+              <BaseTableCell>
                 {"規劃支援庫存調整；領用與耗用的扣庫規則、調整流程待確認。"}
-              </TableCell>
-            </TableRow>,
+              </BaseTableCell>
+            </BaseTableRow>,
           ]}
           columns={4}
           caption={<>{"目前規劃的系統分工"}</>}
@@ -359,121 +359,121 @@ export function PlanningPage() {
           tableKey="document-table-2"
           headers={
             <>
-              <TableRow>
-                <TableHead scope={"col"}>{"項目"}</TableHead>
-                <TableHead scope={"col"}>{"要確認的重點"}</TableHead>
-                <TableHead scope={"col"}>{"確認後產出"}</TableHead>
-                <TableHead scope={"col"}>{"目前狀態"}</TableHead>
-              </TableRow>
+              <BaseTableRow>
+                <BaseTableHead scope={"col"}>{"項目"}</BaseTableHead>
+                <BaseTableHead scope={"col"}>{"要確認的重點"}</BaseTableHead>
+                <BaseTableHead scope={"col"}>{"確認後產出"}</BaseTableHead>
+                <BaseTableHead scope={"col"}>{"目前狀態"}</BaseTableHead>
+              </BaseTableRow>
             </>
           }
           rows={[
-            <TableRow id={"confirmation-scope"}>
-              <TableHead scope={"row"}>{"01 · 第一版範圍"}</TableHead>
-              <TableCell>
+            <BaseTableRow id={"confirmation-scope"}>
+              <BaseTableHead scope={"row"}>{"01 · 第一版範圍"}</BaseTableHead>
+              <BaseTableCell>
                 {"必做、延後、不包含的功能。"}
                 <br />
                 <a href={"#features"}>{"查看相關需求"}</a>
-              </TableCell>
-              <TableCell>
+              </BaseTableCell>
+              <BaseTableCell>
                 <Link to={"/architecture#prep-scope"}>
                   {"第一版交付清單 ↗"}
                 </Link>
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={"status"}>
+              </BaseTableCell>
+              <BaseTableCell>
+                <BaseBadge variant="secondary" className={"status"}>
                   {"待確認"}
-                </Badge>
-              </TableCell>
-            </TableRow>,
-            <TableRow id={"confirmation-fields"}>
-              <TableHead scope={"row"}>{"02 · 欄位與資料來源"}</TableHead>
-              <TableCell>
+                </BaseBadge>
+              </BaseTableCell>
+            </BaseTableRow>,
+            <BaseTableRow id={"confirmation-fields"}>
+              <BaseTableHead scope={"row"}>{"02 · 欄位與資料來源"}</BaseTableHead>
+              <BaseTableCell>
                 {"必填、單位、可修改欄位與資料來源。"}
                 <br />
                 <a href={"#question-barcode"}>{"查看相關需求"}</a>
-              </TableCell>
-              <TableCell>
+              </BaseTableCell>
+              <BaseTableCell>
                 <Link to={"/architecture#prep-fields"}>{"欄位規格表 ↗"}</Link>
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={"status"}>
+              </BaseTableCell>
+              <BaseTableCell>
+                <BaseBadge variant="secondary" className={"status"}>
                   {"待確認"}
-                </Badge>
-              </TableCell>
-            </TableRow>,
-            <TableRow id={"confirmation-permissions"}>
-              <TableHead scope={"row"}>{"03 · 角色與權限"}</TableHead>
-              <TableCell>
+                </BaseBadge>
+              </BaseTableCell>
+            </BaseTableRow>,
+            <BaseTableRow id={"confirmation-permissions"}>
+              <BaseTableHead scope={"row"}>{"03 · 角色與權限"}</BaseTableHead>
+              <BaseTableCell>
                 {"誰能查詢、維護、撤銷、審核及調整。"}
                 <br />
                 <a href={"#question-login"}>{"查看相關需求"}</a>
-              </TableCell>
-              <TableCell>
+              </BaseTableCell>
+              <BaseTableCell>
                 <Link to={"/architecture#prep-permissions"}>
                   {"操作權限表 ↗"}
                 </Link>
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={"status"}>
+              </BaseTableCell>
+              <BaseTableCell>
+                <BaseBadge variant="secondary" className={"status"}>
                   {"待確認"}
-                </Badge>
-              </TableCell>
-            </TableRow>,
-            <TableRow id={"confirmation-rules"}>
-              <TableHead scope={"row"}>{"04 · 庫存與作業規則"}</TableHead>
-              <TableCell>
+                </BaseBadge>
+              </BaseTableCell>
+            </BaseTableRow>,
+            <BaseTableRow id={"confirmation-rules"}>
+              <BaseTableHead scope={"row"}>{"04 · 庫存與作業規則"}</BaseTableHead>
+              <BaseTableCell>
                 {"扣庫時點、領用與耗用關係、盤點基準、退回與更正。"}
                 <br />
                 <a href={"#question-requisition"}>{"查看相關需求"}</a>
-              </TableCell>
-              <TableCell>
+              </BaseTableCell>
+              <BaseTableCell>
                 <Link to={"/architecture#prep-rules"}>
                   {"作業規則與狀態流程 ↗"}
                 </Link>
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={"status"}>
+              </BaseTableCell>
+              <BaseTableCell>
+                <BaseBadge variant="secondary" className={"status"}>
                   {"待確認"}
-                </Badge>
-              </TableCell>
-            </TableRow>,
-            <TableRow id={"confirmation-failures"}>
-              <TableHead scope={"row"}>{"05 · 異常處理"}</TableHead>
-              <TableCell>
+                </BaseBadge>
+              </BaseTableCell>
+            </BaseTableRow>,
+            <BaseTableRow id={"confirmation-failures"}>
+              <BaseTableHead scope={"row"}>{"05 · 異常處理"}</BaseTableHead>
+              <BaseTableCell>
                 {"未知條碼、庫存不足、連線失敗、重複提交與多人修改。"}
                 <br />
                 <a href={"#question-his"}>{"查看相關需求"}</a>
-              </TableCell>
-              <TableCell>
+              </BaseTableCell>
+              <BaseTableCell>
                 <Link to={"/architecture#prep-failures"}>
                   {"異常情境清單 ↗"}
                 </Link>
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={"status"}>
+              </BaseTableCell>
+              <BaseTableCell>
+                <BaseBadge variant="secondary" className={"status"}>
                   {"待確認"}
-                </Badge>
-              </TableCell>
-            </TableRow>,
-            <TableRow id={"confirmation-acceptance"}>
-              <TableHead scope={"row"}>{"06 · 驗收條件"}</TableHead>
-              <TableCell>
+                </BaseBadge>
+              </BaseTableCell>
+            </BaseTableRow>,
+            <BaseTableRow id={"confirmation-acceptance"}>
+              <BaseTableHead scope={"row"}>{"06 · 驗收條件"}</BaseTableHead>
+              <BaseTableCell>
                 {"操作前提、操作步驟與預期結果。"}
                 <br />
                 <a href={"#workflow"}>{"查看相關需求"}</a>
-              </TableCell>
-              <TableCell>
+              </BaseTableCell>
+              <BaseTableCell>
                 <Link to={"/architecture#prep-acceptance"}>
                   {"客戶驗收案例 ↗"}
                 </Link>
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={"status"}>
+              </BaseTableCell>
+              <BaseTableCell>
+                <BaseBadge variant="secondary" className={"status"}>
                   {"待確認"}
-                </Badge>
-              </TableCell>
-            </TableRow>,
+                </BaseBadge>
+              </BaseTableCell>
+            </BaseTableRow>,
           ]}
           columns={4}
           caption={<>{"客戶需求確認摘要 · 確認狀態由文件維護"}</>}
@@ -509,12 +509,12 @@ export function PlanningPage() {
           {"以下問題用於後續需求訪談；尚未回答的項目不視為確定功能或技術決策。"}
         </p>
         {"\n        "}
-        <Accordion type="single" collapsible defaultValue="content">
-          <AccordionItem value="content" id={"question-login"}>
-            <AccordionTrigger>
+        <BaseAccordion type="single" collapsible defaultValue="content">
+          <BaseAccordionItem value="content" id={"question-login"}>
+            <BaseAccordionTrigger>
               {"SSO 是同一個系統內共用登入，還是跨不同系統？"}
-            </AccordionTrigger>
-            <AccordionContent>
+            </BaseAccordionTrigger>
+            <BaseAccordionContent>
               <p>
                 {"跨系統登入的建議做法已整理在 "}
                 <Link to={"/architecture#oidc-login"}>
@@ -537,16 +537,16 @@ export function PlanningPage() {
                   "另需確認使用者角色：誰能維護廠商、修改 HIS 藥品檔、操作 OTC 庫存或執行盤點調整？"
                 }
               </p>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            </BaseAccordionContent>
+          </BaseAccordionItem>
+        </BaseAccordion>
         {"\n        "}
-        <Accordion type="single" collapsible>
-          <AccordionItem value="content" id={"question-activation"}>
-            <AccordionTrigger>
+        <BaseAccordion type="single" collapsible>
+          <BaseAccordionItem value="content" id={"question-activation"}>
+            <BaseAccordionTrigger>
               {"LDAP 群組如何對應操作與料號啟用權限？"}
-            </AccordionTrigger>
-            <AccordionContent>
+            </BaseAccordionTrigger>
+            <BaseAccordionContent>
               <p>
                 {
                   "已確認此處 LDAP 指 NAS 的權限管理。需與使用者確認群組對應角色、哪些欄位可修改、誰可啟用／停用料號，以及各庫存作業限制。忘記密碼需確認院內重設服務或管理員處理方式。"
@@ -557,177 +557,177 @@ export function PlanningPage() {
                   {"查看 LDAP 權限與忘記密碼規格"}
                 </Link>
               </p>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            </BaseAccordionContent>
+          </BaseAccordionItem>
+        </BaseAccordion>
         {"\n        "}
-        <Accordion type="single" collapsible>
-          <AccordionItem value="content" id={"question-suppliers"}>
-            <AccordionTrigger>
+        <BaseAccordion type="single" collapsible>
+          <BaseAccordionItem value="content" id={"question-suppliers"}>
+            <BaseAccordionTrigger>
               {"廠商資料由哪裡維護，兩個工作區是否共用？"}
-            </AccordionTrigger>
-            <AccordionContent>
+            </BaseAccordionTrigger>
+            <BaseAccordionContent>
               <p>
                 {
                   "廠商需要哪些欄位？既有資料來源為何？HIS 與 OTC 是否共用廠商？已有入庫或其他紀錄的廠商，刪除與停用應如何處理？"
                 }
               </p>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            </BaseAccordionContent>
+          </BaseAccordionItem>
+        </BaseAccordion>
         {"\n        "}
-        <Accordion type="single" collapsible>
-          <AccordionItem value="content" id={"question-his"}>
-            <AccordionTrigger>
+        <BaseAccordion type="single" collapsible>
+          <BaseAccordionItem value="content" id={"question-his"}>
+            <BaseAccordionTrigger>
               {"HIS 藥品檔如何即時讀取與回寫？"}
-            </AccordionTrigger>
-            <AccordionContent>
+            </BaseAccordionTrigger>
+            <BaseAccordionContent>
               <p>
                 {
                   "允許修改哪些欄位？使用何種讀寫介面？「即時」需要多快更新？是否保留本地副本？需記錄哪些修改資訊？來源無法連線、回寫失敗或多人同時修改時，如何處理？扣庫責任已明確由 HIS 承擔。"
                 }
               </p>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            </BaseAccordionContent>
+          </BaseAccordionItem>
+        </BaseAccordion>
         {"\n        "}
-        <Accordion type="single" collapsible>
-          <AccordionItem value="content" id={"question-requisition"}>
-            <AccordionTrigger>
+        <BaseAccordion type="single" collapsible>
+          <BaseAccordionItem value="content" id={"question-requisition"}>
+            <BaseAccordionTrigger>
               {"OTC 領用與出庫／耗用有什麼關係？"}
-            </AccordionTrigger>
-            <AccordionContent>
+            </BaseAccordionTrigger>
+            <BaseAccordionContent>
               <p>
                 {
                   "領用是申請、實際領取，還是另一種出庫用途？在哪個步驟扣庫？如何避免領用與耗用重複扣庫？修改、刪除或取消紀錄是否需回復庫存？"
                 }
               </p>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            </BaseAccordionContent>
+          </BaseAccordionItem>
+        </BaseAccordion>
         {"\n        "}
-        <Accordion type="single" collapsible>
-          <AccordionItem value="content" id={"question-barcode"}>
-            <AccordionTrigger>
+        <BaseAccordion type="single" collapsible>
+          <BaseAccordionItem value="content" id={"question-barcode"}>
+            <BaseAccordionTrigger>
               {"條碼作業需要哪些資訊與設備？"}
-            </AccordionTrigger>
-            <AccordionContent>
+            </BaseAccordionTrigger>
+            <BaseAccordionContent>
               <p>
                 {
                   "國際條碼使用哪種格式與掃描設備？同一品項不同包裝是否使用不同條碼？入庫與出庫需要哪些欄位？未知條碼出庫、重複掃描及庫存不足時如何處理？"
                 }
               </p>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            </BaseAccordionContent>
+          </BaseAccordionItem>
+        </BaseAccordion>
         {"\n        "}
-        <Accordion type="single" collapsible>
-          <AccordionItem value="content" id={"question-stocktake"}>
-            <AccordionTrigger>
+        <BaseAccordion type="single" collapsible>
+          <BaseAccordionItem value="content" id={"question-stocktake"}>
+            <BaseAccordionTrigger>
               {"HIS 與 OTC 的盤點差異如何調整？"}
-            </AccordionTrigger>
-            <AccordionContent>
+            </BaseAccordionTrigger>
+            <BaseAccordionContent>
               <p>
                 {
                   "以哪個時間點的帳面庫存作為基準？盤點期間是否仍可入出庫？HIS 盤點調整如何交由 HIS 執行？OTC 如何調整？是否需要審核、調整原因與操作紀錄？"
                 }
               </p>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            </BaseAccordionContent>
+          </BaseAccordionItem>
+        </BaseAccordion>
         {"\n        "}
         <BaseTableFrame
           tableKey="document-table-3"
           className="mt-[30px]"
           headers={
             <>
-              <TableRow>
-                <TableHead scope={"col"}>{"項目"}</TableHead>
-                <TableHead scope={"col"}>{"需要釐清的內容"}</TableHead>
-                <TableHead scope={"col"}>{"狀態"}</TableHead>
-              </TableRow>
+              <BaseTableRow>
+                <BaseTableHead scope={"col"}>{"項目"}</BaseTableHead>
+                <BaseTableHead scope={"col"}>{"需要釐清的內容"}</BaseTableHead>
+                <BaseTableHead scope={"col"}>{"狀態"}</BaseTableHead>
+              </BaseTableRow>
             </>
           }
           rows={[
-            <TableRow>
-              <TableHead scope={"row"}>{"批號與效期"}</TableHead>
-              <TableCell>
+            <BaseTableRow>
+              <BaseTableHead scope={"row"}>{"批號與效期"}</BaseTableHead>
+              <BaseTableCell>
                 {"哪些品項需追蹤批號、效期？是否需要效期提醒與批次選擇規則？"}
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={"status"}>
+              </BaseTableCell>
+              <BaseTableCell>
+                <BaseBadge variant="secondary" className={"status"}>
                   {"待確認"}
-                </Badge>
-              </TableCell>
-            </TableRow>,
-            <TableRow>
-              <TableHead scope={"row"}>{"單位換算"}</TableHead>
-              <TableCell>
+                </BaseBadge>
+              </BaseTableCell>
+            </BaseTableRow>,
+            <BaseTableRow>
+              <BaseTableHead scope={"row"}>{"單位換算"}</BaseTableHead>
+              <BaseTableCell>
                 {"採購、入庫、領用與耗用單位是否不同？包裝與基本單位如何換算？"}
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={"status"}>
+              </BaseTableCell>
+              <BaseTableCell>
+                <BaseBadge variant="secondary" className={"status"}>
                   {"待確認"}
-                </Badge>
-              </TableCell>
-            </TableRow>,
-            <TableRow>
-              <TableHead scope={"row"}>{"倉庫與儲位"}</TableHead>
-              <TableCell>
+                </BaseBadge>
+              </BaseTableCell>
+            </BaseTableRow>,
+            <BaseTableRow>
+              <BaseTableHead scope={"row"}>{"倉庫與儲位"}</BaseTableHead>
+              <BaseTableCell>
                 {"是否有多院區、多倉庫、部門庫存或儲位？是否需要庫存移轉？"}
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={"status"}>
+              </BaseTableCell>
+              <BaseTableCell>
+                <BaseBadge variant="secondary" className={"status"}>
                   {"待確認"}
-                </Badge>
-              </TableCell>
-            </TableRow>,
-            <TableRow>
-              <TableHead scope={"row"}>{"退貨與退回"}</TableHead>
-              <TableCell>
+                </BaseBadge>
+              </BaseTableCell>
+            </BaseTableRow>,
+            <BaseTableRow>
+              <BaseTableHead scope={"row"}>{"退貨與退回"}</BaseTableHead>
+              <BaseTableCell>
                 {"是否需要廠商退貨、領用退回或耗用取消？庫存與紀錄如何回復？"}
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={"status"}>
+              </BaseTableCell>
+              <BaseTableCell>
+                <BaseBadge variant="secondary" className={"status"}>
                   {"待確認"}
-                </Badge>
-              </TableCell>
-            </TableRow>,
-            <TableRow>
-              <TableHead scope={"row"}>{"報表與操作紀錄"}</TableHead>
-              <TableCell>
+                </BaseBadge>
+              </BaseTableCell>
+            </BaseTableRow>,
+            <BaseTableRow>
+              <BaseTableHead scope={"row"}>{"報表與操作紀錄"}</BaseTableHead>
+              <BaseTableCell>
                 {"需要哪些庫存、效期、異動與盤點報表？哪些操作需保留歷程？"}
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={"status"}>
+              </BaseTableCell>
+              <BaseTableCell>
+                <BaseBadge variant="secondary" className={"status"}>
                   {"待確認"}
-                </Badge>
-              </TableCell>
-            </TableRow>,
-            <TableRow>
-              <TableHead scope={"row"}>{"採購與成本"}</TableHead>
-              <TableCell>
+                </BaseBadge>
+              </BaseTableCell>
+            </BaseTableRow>,
+            <BaseTableRow>
+              <BaseTableHead scope={"row"}>{"採購與成本"}</BaseTableHead>
+              <BaseTableCell>
                 {"是否包含採購單、成本計算或會計銜接？第一版是否需要？"}
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={"status"}>
+              </BaseTableCell>
+              <BaseTableCell>
+                <BaseBadge variant="secondary" className={"status"}>
                   {"待確認"}
-                </Badge>
-              </TableCell>
-            </TableRow>,
-            <TableRow>
-              <TableHead scope={"row"}>{"部署與既有資料"}</TableHead>
-              <TableCell>
+                </BaseBadge>
+              </BaseTableCell>
+            </BaseTableRow>,
+            <BaseTableRow>
+              <BaseTableHead scope={"row"}>{"部署與既有資料"}</BaseTableHead>
+              <BaseTableCell>
                 {
                   "OTC 服務如何部署？是否多人共用？既有資料是否需匯入？是否有特殊藥品或儲存條件？"
                 }
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={"status"}>
+              </BaseTableCell>
+              <BaseTableCell>
+                <BaseBadge variant="secondary" className={"status"}>
                   {"待確認"}
-                </Badge>
-              </TableCell>
-            </TableRow>,
+                </BaseBadge>
+              </BaseTableCell>
+            </BaseTableRow>,
           ]}
           columns={3}
           caption={<>{"保留的補充討論項目，尚未列為確定需求"}</>}

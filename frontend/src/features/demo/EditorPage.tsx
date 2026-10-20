@@ -1,11 +1,11 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { BaseButton } from "@/components/ui/BaseButton";
+import { BaseCard } from "@/components/ui/BaseCard";
+import { BaseLabel } from "@/components/ui/BaseLabel";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@/components/ui/native-select";
-import { Input } from "@/components/ui/input";
+  BaseNativeSelect,
+  BaseNativeSelectOption,
+} from "@/components/ui/BaseNativeSelect";
+import { BaseInput } from "@/components/ui/BaseInput";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { useEffect, useRef } from "react";
 import { editorFields, executeDemoCommand } from "@/store/demo";
@@ -69,7 +69,7 @@ export function EditorPage() {
   const close = () => dispatch(executeDemoCommand({ type: "close-editor" }));
   return (
     <main ref={root} id="editor" className="editor-page" tabIndex={-1}>
-      <Button
+      <BaseButton
         variant="outline"
         type="button"
         data-close
@@ -77,7 +77,7 @@ export function EditorPage() {
         onClick={close}
       >
         ← 返回列表
-      </Button>
+      </BaseButton>
       <div className="page-heading">
         <div>
           <p className="eyebrow">資料維護</p>
@@ -92,7 +92,7 @@ export function EditorPage() {
                   : "補填空白欄位後按儲存；已有值的欄位無法修改。"}
           </p>
         </div>
-        <Button
+        <BaseButton
           variant="outline"
           type="button"
           id="editor-status"
@@ -102,9 +102,9 @@ export function EditorPage() {
           onClick={() => readonly(true)}
         >
           {enabled ? "啟用" : "未啟用"}
-        </Button>
+        </BaseButton>
       </div>
-      <Card asChild>
+      <BaseCard asChild>
         <form
           id="editor-form"
           className="panel editor-panel"
@@ -176,7 +176,7 @@ export function EditorPage() {
                 },
               };
               return (
-                <Label key={field.name}>
+                <BaseLabel key={field.name}>
                   <span className="field-label">
                     <span>{field.label}</span>
                     {field.required && (
@@ -197,17 +197,17 @@ export function EditorPage() {
                   {field.options ? (
                     locked ? (
                       <div className="locked-select-control">
-                        <NativeSelect {...control} disabled>
-                          <NativeSelectOption value="">
+                        <BaseNativeSelect {...control} disabled>
+                          <BaseNativeSelectOption value="">
                             請選擇
-                          </NativeSelectOption>
+                          </BaseNativeSelectOption>
                           {field.options.map(([value, label]) => (
-                            <NativeSelectOption key={value} value={value}>
+                            <BaseNativeSelectOption key={value} value={value}>
                               {label}
-                            </NativeSelectOption>
+                            </BaseNativeSelectOption>
                           ))}
-                        </NativeSelect>
-                        <Button
+                        </BaseNativeSelect>
+                        <BaseButton
                           variant="outline"
                           type="button"
                           className="readonly-select-trigger"
@@ -217,17 +217,17 @@ export function EditorPage() {
                         />
                       </div>
                     ) : (
-                      <NativeSelect {...control}>
-                        <NativeSelectOption value="">請選擇</NativeSelectOption>
+                      <BaseNativeSelect {...control}>
+                        <BaseNativeSelectOption value="">請選擇</BaseNativeSelectOption>
                         {field.options.map(([value, label]) => (
-                          <NativeSelectOption key={value} value={value}>
+                          <BaseNativeSelectOption key={value} value={value}>
                             {label}
-                          </NativeSelectOption>
+                          </BaseNativeSelectOption>
                         ))}
-                      </NativeSelect>
+                      </BaseNativeSelect>
                     )
                   ) : (
-                    <Input
+                    <BaseInput
                       {...control}
                       type={field.type ?? "text"}
                       readOnly={locked}
@@ -272,7 +272,7 @@ export function EditorPage() {
                       }
                     />
                   )}
-                </Label>
+                </BaseLabel>
               );
             })}
             {kind === "requisitions" && (
@@ -287,7 +287,7 @@ export function EditorPage() {
                     "展示技術人員",
                   ]),
                 ].map((person) => (
-                  <option key={person} value={person} />
+                  <BaseNativeSelectOption key={person} value={person} />
                 ))}
               </datalist>
             )}
@@ -307,19 +307,19 @@ export function EditorPage() {
             {s.errors.editor}
           </p>
           <div className="dialog-actions">
-            <Button variant="outline" type="button" data-close onClick={close}>
+            <BaseButton variant="outline" type="button" data-close onClick={close}>
               取消
-            </Button>
-            <Button variant="default" type="submit" className="primary">
+            </BaseButton>
+            <BaseButton variant="default" type="submit" className="primary">
               {correction
                 ? "儲存歷史更正"
                 : kind === "stocktake"
                   ? "儲存草稿並返回"
                   : "儲存並返回"}
-            </Button>
+            </BaseButton>
           </div>
         </form>
-      </Card>
+      </BaseCard>
     </main>
   );
 }

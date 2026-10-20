@@ -1,8 +1,26 @@
 import { configureStore } from "@reduxjs/toolkit";
 import type { ThunkAction, UnknownAction } from "@reduxjs/toolkit";
 import demoReducer from "./demo";
+import itemsReducer from "./items";
+import purchasesReducer from "./purchases";
+import baseDataReducer from "./baseData";
+import moduleUiReducer from "./moduleUi";
+import posReducer from "./pos";
+import stocktakesReducer from "./stocktakes";
 
-export const store = configureStore({ reducer: { demo: demoReducer } });
+// Redux only owns data shared across modules and the cross-route navigation guard.
+// Keep module-only data in features/<module>; keep UI drafts in component state.
+export const store = configureStore({
+  reducer: {
+    demo: demoReducer,
+    items: itemsReducer,
+    purchases: purchasesReducer,
+    baseData: baseDataReducer,
+    moduleUi: moduleUiReducer,
+    pos: posReducer,
+    stocktakes: stocktakesReducer,
+  },
+});
 
 export type AppStore = typeof store;
 export type RootState = ReturnType<AppStore["getState"]>;

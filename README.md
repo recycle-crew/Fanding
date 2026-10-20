@@ -2,7 +2,11 @@
 
 React＋TypeScript 的庫存管理展示網站，包含 HIS／OTC 功能規劃、假資料操作 Demo，以及畫面規劃與流程示範。共用樣式位於 `frontend/src/styles/`，使用系統字型及本機套件資源。
 
+2026/10/20 更新：新版模組 1 位於 `/demo/items`，原 HIS／OTC 頁面保留。展示期間暫停登入頁，直接以 `demo.pharmacy` 進入工作區；登入程式保留，恢復方式見 `frontend/src/constants/demoAccess.ts`。目前也移除工作區標題 bar，手機仍可用功能選單開啟側欄。新版功能、無障礙驗證與待辦見 [本次交接](docs/20261020.md)。
+
 ## 開啟方式
+
+新版模組 2 進貨管理位於 `/demo/purchases`。本階段提供進貨單、核對、沖銷、退貨、更正及歷史的前端展示，依使用者確認不連動模組一庫存；原有掃碼入庫頁保留。
 
 在根目錄執行（Node.js 24、npm）：
 
@@ -27,7 +31,7 @@ Nginx 可使用 `try_files $uri $uri/ /index.html;`；IIS 使用 URL Rewrite，�
 
 前端依 IA_Map 的 IA.Client 目錄分層，使用 React／TypeScript 實作。`frontend/package.json` 管理前端依賴與指令，根目錄透過 npm workspace 轉送原有指令，依賴由根目錄 package-lock.json 鎖定。`@/` 對應 `frontend/src/`。
 
-`frontend` 同時集中 `index.html`、Vite／TypeScript／Playwright 設定、`public`、`scripts`、`tests` 與建置輸出 `dist`。也可進入 frontend 執行同名 npm 指令。瀏覽器報告位於 `frontend/playwright-report/`，失敗產物位於 `frontend/test-results/`。
+`frontend` 同時集中 `index.html`、Vite／TypeScript／Playwright 設定、`public`、`scripts`、`tests` 與建置輸出 `dist`。也可進入 frontend 執行同名 npm 指令。瀏覽器報告與失敗產物集中在 `frontend/.artifacts/`。現行測試結構與指令請見 [測試指南](frontend/tests/README.md)。
 
 ```text
 frontend/src/
@@ -50,7 +54,7 @@ frontend/src/
 ├─ constants/                # 模組路徑契約
 ├─ helpers/                  # 庫存篩選、Excel 匯出
 ├─ styles/                   # layout 頁面樣式、themes 共用樣式
-└─ types/                    # demo／inventory／suppliers／otc／stocktaking 型別
+└─ types/                    # 舊 import 相容轉接；業務型別位於所屬 features
 ```
 
 路由模組沿用 IA_Map 的 Layout／Home 慣例：父路由載入 `Layout.tsx`，透過 `<Outlet />` 呈現 Home 或其他子頁。Layout 負責模組外殼；Home 負責頁面操作流程，功能元件與業務規則由 `features` 擁有。Demo 的登入與共用對話框由 Home 持有，側欄及頂部導覽由 BaseLayout 組合，模組切換沿用同一個工作區外殼；Error Layout 僅承載錯誤子頁。狀態與型別分別歸入 `store`、`types`。正式 API 串接時沿用 IA_Map 的 `api/server` 分層，目前尚未建立 API 或正式資料連線。
@@ -198,3 +202,5 @@ After deployment, check `/`, `/architecture`, `/board`, and `/demo`; log into th
 2026-10-16 Layout／Tailwind 驗證：TypeScript、build、格式檢查通過；完整 348 次執行中 346 次通過，2 次相機切頁檢查補上非同步釋放等待後，相關 12 次重跑全部通過。196 次 RWD 與正式 dist 另 8 次全部通過。新增及有差異截圖已先檢視，容許值不變；完整執行與重跑分開記錄於 [驗證紀錄](docs/ui-testing.md)。案例與實機待驗證範圍見 [案例清單](docs/ui-case-matrix.md)。
 
 先前 SPA 階段紀錄：完整 334 次通過，之後補上延遲載入 2 次，以及正式 dist 8 次；此為 Layout／Tailwind 遷移前的分次執行結果。
+
+新版模組 4 耗用查詢位於 /demo/consumptions，含 HIS 對照、同步異常及同步紀錄，所有同步皆為前端模擬。模組 5 基礎資料管理位於 /demo/base-data，提供倉別／供應商維護；新增主檔可供新進貨單選擇，歷史單據快照保留。

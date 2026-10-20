@@ -16,6 +16,14 @@
     "dev:test": "npm run dev:test --workspace frontend --",
     "test:ui:build": "npm run test:ui:build --workspace frontend --",
     "test:ui:capture": "npm run test:ui:capture --workspace frontend --",
-    "test:ui:build:report": "npm run test:ui:build:report --workspace frontend --"
+    "test:ui:build:report": "npm run test:ui:build:report --workspace frontend --",
+    "test:e2e:critical": "npm run test:e2e:critical --workspace frontend --",
+    "test:visual": "npm run test:visual --workspace frontend --",
+    "test:smoke:build": "npm run test:smoke:build --workspace frontend --",
+    "test:e2e": "npm run test:e2e --workspace frontend --",
+    "test:unit": "npm run test:unit --workspace frontend --",
+    "test:unit:watch": "npm run test:unit:watch --workspace frontend --",
+    "test:unit:ui": "npm run test:unit:ui --workspace frontend --",
+    "test:e2e:ui": "npm run test:e2e:ui --workspace frontend --"
   }
 }

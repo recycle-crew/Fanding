@@ -3,17 +3,25 @@
   "private": true,
   "scripts": {
     "test:ui": "playwright test",
-    "test:ui:report": "playwright show-report playwright-report/ui",
+    "test:ui:report": "playwright show-report .artifacts/reports/ui",
     "test:ui:update": "playwright test --update-snapshots",
-    "test:ui:rwd": "playwright test rwd.spec.js",
+    "test:ui:rwd": "node scripts/test-ui.cjs --rwd",
     "dev": "vite",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json",
     "dev:test": "vite --mode test --host 127.0.0.1 --port 4173 --strictPort",
-    "test:ui:build": "node scripts/test-build.cjs",
-    "test:ui:capture": "node scripts/capture-ui.cjs",
-    "test:ui:build:report": "playwright show-report playwright-report/build"
+    "test:ui:build": "node scripts/test-ui.cjs --build",
+    "test:ui:capture": "node scripts/test-ui.cjs --capture",
+    "test:ui:build:report": "playwright show-report .artifacts/reports/build",
+    "test:e2e:critical": "playwright test --grep @critical --ignore-snapshots",
+    "test:visual": "playwright test",
+    "test:smoke:build": "npm run build && npm run test:ui:build",
+    "test:e2e": "playwright test --ignore-snapshots",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest --watch",
+    "test:unit:ui": "vitest --ui --watch",
+    "test:e2e:ui": "playwright test --ignore-snapshots --ui"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1",
@@ -22,10 +30,13 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
+    "@vitest/ui": "5.0.5",
+    "axe-core": "^4.14.0",
     "prettier": "3.9.10",
     "tailwindcss": "4.3.3",
     "typescript": "7.0.2",
-    "vite": "8.3.4"
+    "vite": "8.3.4",
+    "vitest": "5.0.5"
   },
   "dependencies": {
     "@reduxjs/toolkit": "2.13.0",
