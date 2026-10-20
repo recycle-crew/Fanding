@@ -1,7 +1,15 @@
-import { BaseDropdownMenu, BaseDropdownMenuTrigger, BaseDropdownMenuPortal, BaseDropdownMenuContent, BaseDropdownMenuLabel, BaseDropdownMenuItem, BaseDropdownMenuSeparator } from "@/components/ui/BaseDropdownMenu";
+import {
+  BaseDropdownMenu,
+  BaseDropdownMenuTrigger,
+  BaseDropdownMenuPortal,
+  BaseDropdownMenuContent,
+  BaseDropdownMenuLabel,
+  BaseDropdownMenuItem,
+  BaseDropdownMenuSeparator,
+} from "@/components/ui/BaseDropdownMenu";
 import { ChevronDown } from "lucide-react";
 import { BaseButton } from "@/components/ui/BaseButton";
-import type { Purchase } from "./model";
+import type { Purchase } from "@/types/purchases";
 export type OrderAction =
   "view" | "settle" | "reversal" | "return" | "correction";
 export function OrderActions({

@@ -1,3 +1,4 @@
+import type { CheckoutInput, ReturnInput } from "@/types/store/pos";
 import {
   createSlice,
   type PayloadAction,
@@ -16,13 +17,15 @@ import {
   qty,
   returnAmount,
   returnedQuantity,
-  type CartLine,
-  type Customer,
-  type PaymentMethod,
-  type PosPolicy,
-  type Sale,
-  type SaleReturn,
 } from "@/features/pos/model";
+import type {
+  CartLine,
+  Customer,
+  PaymentMethod,
+  PosPolicy,
+  Sale,
+  SaleReturn,
+} from "@/types/pos";
 import { available, taipeiToday } from "@/features/items/model";
 type Result = { error: string; saleId?: string };
 type PosThunk = ThunkAction<Result, RootState, unknown, UnknownAction>;
@@ -172,24 +175,7 @@ const slice = createSlice({
 });
 export const { savePosPolicy } = slice.actions;
 export default slice.reducer;
-export interface CheckoutInput {
-  requestId: string;
-  cart: CartLine[];
-  orderDiscount: number;
-  warehouse: string;
-  customer: Customer;
-  seller: string;
-  receiptType: string;
-  remark: string;
-  method: PaymentMethod;
-  received: number;
-  reference: string;
-  paymentConfirmed: boolean;
-  professional: boolean;
-  prescription: boolean;
-  sellerConfirmed: boolean;
-  authorized: boolean;
-}
+
 export const checkoutPos =
   (input: CheckoutInput): PosThunk =>
   (dispatch, getState) => {
@@ -199,6 +185,8 @@ export const checkoutPos =
       );
     if (existing) return { error: "", saleId: existing.id };
     const priced = priceCart(input.cart, input.orderDiscount);
+    if (input.sellerTaxId?.trim() && !/^\d{8}$/.test(input.sellerTaxId.trim()))
+      return { error: "銷售主體統一編號須為 8 位數字。" };
     if (priced.error) return { error: priced.error };
     if (!input.warehouse || !input.seller || !input.sellerConfirmed)
       return { error: "請選擇倉別與銷售主體，並確認銷售資格（展示）。" };
@@ -269,6 +257,7 @@ export const checkoutPos =
         date: nowTaipei(),
         warehouse: input.warehouse,
         seller: input.seller,
+        sellerTaxId: input.sellerTaxId?.trim() || "",
         customer: { ...input.customer },
         cashier: "王小明",
         lines,
@@ -303,17 +292,7 @@ export const checkoutPos =
             "庫存重新驗證失敗；尚未建立本地交易。外部已收款者請保留交易識別碼對帳，勿重收。",
         };
   };
-export interface ReturnInput {
-  saleId: string;
-  requestId: string;
-  date: string;
-  reason: string;
-  method: PaymentMethod;
-  quantities: Record<string, number>;
-  disposition: "可售回庫" | "不可售";
-  professional: boolean;
-  confirmed: boolean;
-}
+
 export const returnPos =
   (input: ReturnInput): PosThunk =>
   (dispatch, getState) => {

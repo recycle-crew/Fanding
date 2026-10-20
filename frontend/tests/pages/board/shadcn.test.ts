@@ -1,13 +1,13 @@
-import type { Page, Locator } from "@playwright/test";
 import {
   test as base,
   expect,
   enterWorkspace,
   loginEnabled,
+  checkPageEntry,
 } from "../../helpers/test";
-import { checkPageEntry } from "../../helpers/test";
 
-const test = base.extend<{ componentErrors: void }>({ componentErrors: [
+const test = base.extend<{ componentErrors: void }>({
+  componentErrors: [
     async ({ page }, use) => {
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
@@ -58,7 +58,6 @@ test("shadcn 規劃板關閉重開仍保留 iframe 中新增的廠商", async ({
     "shadcn-player-retained.png",
   );
 });
-
 
 test(
   "/board 直接進入與重新整理",

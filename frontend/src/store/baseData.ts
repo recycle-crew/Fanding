@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { suppliers } from "@/features/items/model";
-import type { BaseDataKind, BaseDataRecord } from "@/features/base-data/types";
-export type { BaseDataKind, BaseDataRecord } from "@/features/base-data/types";
+import type { BaseDataKind, BaseDataRecord } from "@/types/base-data";
+export type { BaseDataKind, BaseDataRecord } from "@/types/base-data";
 export function blankBaseData(): BaseDataRecord {
   return {
     id: "",

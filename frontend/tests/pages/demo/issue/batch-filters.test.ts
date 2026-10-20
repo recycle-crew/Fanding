@@ -1,16 +1,16 @@
-import type { Page, Locator } from "@playwright/test";
 import {
   test as base,
   expect,
   enterWorkspace,
   loginEnabled,
 } from "../../../helpers/test";
+import type { Page } from "@playwright/test";
+
 import XLSX from "../../../helpers/xlsx";
 import * as fs from "node:fs";
 
-
-
-const test = base.extend<{ browserErrors: string[] }>({ browserErrors: [
+const test = base.extend<{ browserErrors: string[] }>({
+  browserErrors: [
     async ({ page }, use) => {
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
@@ -90,7 +90,9 @@ for (const module of ["issue"] as Array<keyof typeof queryForms>) {
     );
     const suggestions = await form
       .locator('datalist[id$="-batches"] option')
-      .evaluateAll((options) => options.map((option) => (option as HTMLOptionElement).value));
+      .evaluateAll((options) =>
+        options.map((option) => (option as HTMLOptionElement).value),
+      );
     expect(suggestions).toEqual(["20261015002", "20261015001", "20261014001"]);
     await form.locator('[name="voucherId"]').fill(" 20261014001 ");
     if (module === "overview")

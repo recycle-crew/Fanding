@@ -1,12 +1,11 @@
 import { produce, type Draft } from "immer";
 type PayloadAction<T> = { payload: T };
 type State = ReturnType<typeof seedConsumptions>;
-import {
-  seedConsumptions,
-  timestamp,
-  type ConsumptionMapping,
-  type ConsumptionRecord,
-} from "@/features/consumptions/model";
+import { seedConsumptions, timestamp } from "@/features/consumptions/model";
+import type {
+  ConsumptionMapping,
+  ConsumptionRecord,
+} from "@/types/consumptions";
 const handlers = {
   saveConsumptionMapping(
     state: Draft<State>,

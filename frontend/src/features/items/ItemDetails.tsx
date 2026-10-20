@@ -15,8 +15,8 @@ import {
   expiryStatus,
   usageStatus,
   warehouses,
-  type Item,
 } from "./model";
+import type { Item } from "@/types/items";
 
 export function ItemDetails({ item }: { item: Item }) {
   const state = useAppSelector((s) => s.items);

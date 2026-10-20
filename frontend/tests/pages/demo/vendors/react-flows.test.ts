@@ -1,11 +1,11 @@
-import type { Page, Locator } from "@playwright/test";
 import {
   test,
   expect,
   enterWorkspace,
   loginEnabled,
+  checkPageEntry,
 } from "../../../helpers/test";
-import { checkPageEntry } from "../../../helpers/test";
+import type { Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
   ).toBeVisible();
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
 });
-async function login(page: Page,  privileged = false) {
+async function login(page: Page, privileged = false) {
   await enterWorkspace(page, privileged);
 }
 async function navigate(page: Page, module: string) {
@@ -121,7 +121,9 @@ test("React 高權限編輯、取消與刪除保護", async ({ page }) => {
   await expect(page.locator("#notice")).toHaveScreenshot(
     "react-vendor-in-use-warning.png",
   );
-  await warningStyle.evaluate((element) => element.remove());
+  await warningStyle.evaluate((element) =>
+    element.parentNode?.removeChild(element),
+  );
   await page.locator("[data-action=delete][data-id=V005]").click();
   await expect(page.locator("#confirmation")).toBeVisible();
   await page.locator("#confirmation button[value=cancel]").click();
@@ -137,7 +139,6 @@ test("React 高權限編輯、取消與刪除保護", async ({ page }) => {
     "react-vendor-changes.png",
   );
 });
-
 
 test(
   "/demo/vendors 直接進入與重新整理",

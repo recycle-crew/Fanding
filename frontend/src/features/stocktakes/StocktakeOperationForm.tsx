@@ -17,13 +17,8 @@ import {
   invalidateCount,
   requestRecount,
 } from "@/store/stocktakes";
-import {
-  countFor,
-  expectedFor,
-  stocktakePeople,
-  varianceFor,
-  type Stocktake,
-} from "./model";
+import { countFor, expectedFor, stocktakePeople, varianceFor } from "./model";
+import type { Stocktake } from "@/types/stocktakes";
 export type StocktakeOperation =
   | "close"
   | "cancel"

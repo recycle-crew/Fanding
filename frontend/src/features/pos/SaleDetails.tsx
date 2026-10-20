@@ -1,6 +1,7 @@
 import { BaseButton } from "@/components/ui/BaseButton";
 import { useAppSelector } from "@/store/hooks";
-import { money, refunded, saleStatus, type Sale } from "./model";
+import { money, refunded, saleStatus } from "./model";
+import type { Sale } from "@/types/pos";
 export function SaleDetails({
   sale,
   onClose,
@@ -22,6 +23,7 @@ export function SaleDetails({
     <>
       <div className="items-modal-scroll pos-receipt" id="pos-receipt">
         <h3>{sale.seller} · 展示交易憑證</h3>
+        <p>銷售主體統一編號：{sale.sellerTaxId || "未提供／不適用"}</p>
         <p>
           {sale.number} ／ {saleStatus(sale)} ／ {sale.date}
         </p>

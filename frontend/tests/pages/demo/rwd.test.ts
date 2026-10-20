@@ -1,12 +1,13 @@
-import type { Page, Locator } from "@playwright/test";
 import {
   test as base,
   expect,
   enterWorkspace,
   loginEnabled,
 } from "../../helpers/test";
+import type { Page, Locator } from "@playwright/test";
 
-const test = base.extend<{ browserErrors: string[] }>({ browserErrors: [
+const test = base.extend<{ browserErrors: string[] }>({
+  browserErrors: [
     async ({ page }, use) => {
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
@@ -523,7 +524,7 @@ async function checkResponsiveLayout(page: Page) {
     });
   }
 }
-async function enterDemoModule(page: Page, module: string,  privileged = false) {
+async function enterDemoModule(page: Page, module: string, privileged = false) {
   await page.goto("/demo");
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
@@ -1205,7 +1206,11 @@ test("RWD 未建檔入庫與相機提示", async ({ page }) => {
   await enterDemoModule(page, "receipt");
   await page.evaluate(() => {
     window.ZXingBrowser = {
-      BrowserMultiFormatReader: class {},
+      BrowserMultiFormatReader: class {
+        async decodeFromStream() {
+          return { stop() {} };
+        }
+      },
     };
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,

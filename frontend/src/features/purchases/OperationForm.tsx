@@ -23,12 +23,14 @@ import {
   operationLabels,
   originalAmount,
   rounded,
-  type CorrectionType,
-  type OperationLine,
-  type Purchase,
-  type PurchaseOperation,
-  type PurchaseRecord,
 } from "./model";
+import type {
+  CorrectionType,
+  OperationLine,
+  Purchase,
+  PurchaseOperation,
+  PurchaseRecord,
+} from "@/types/purchases";
 export type OperationInput = Omit<
   PurchaseRecord,
   "id" | "number" | "operator" | "createdAt"

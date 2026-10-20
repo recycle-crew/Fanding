@@ -10,15 +10,8 @@ import { BaseCheckField } from "@/components/ui/BaseCheckField";
 import { useAppDispatch } from "@/store/hooks";
 import { returnPos, refundPos, voidPos } from "@/store/pos";
 import { taipeiToday } from "@/features/items/model";
-import {
-  money,
-  paymentMethods,
-  returnAmount,
-  returnedQuantity,
-  type PaymentMethod,
-  type Sale,
-  type SaleRefund,
-} from "./model";
+import { money, paymentMethods, returnAmount, returnedQuantity } from "./model";
+import type { PaymentMethod, Sale, SaleRefund } from "@/types/pos";
 type Callbacks = {
   sale: Sale;
   onCancel: () => void;

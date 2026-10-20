@@ -6,7 +6,8 @@ import { BaseCheckField } from "@/components/ui/BaseCheckField";
 import { BaseDataTable } from "@/components/ui/BaseDataTable";
 import { useAppDispatch } from "@/store/hooks";
 import { addCount, finishCounting, submitRecount } from "@/store/stocktakes";
-import { countFor, countableRound, supervisor, type Stocktake } from "./model";
+import { countFor, countableRound, supervisor } from "./model";
+import type { Stocktake } from "@/types/stocktakes";
 export function StocktakeCountPanel({
   order,
   person,

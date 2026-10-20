@@ -9,8 +9,8 @@ import {
   taipeiToday,
   usageStatus,
   validateItem,
-  type InventoryBatch,
 } from "./model";
+import type { InventoryBatch } from "@/types/items";
 
 const batch = (
   expiryDate: string,

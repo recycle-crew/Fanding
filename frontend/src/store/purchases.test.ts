@@ -5,11 +5,8 @@ import reducer, {
   resolvePurchaseRecord,
   settlePurchase,
 } from "./purchases";
-import {
-  createPurchasesSeed,
-  type PurchaseRecord,
-  type Settlement,
-} from "@/features/purchases/model";
+import { createPurchasesSeed } from "@/features/purchases/model";
+import type { PurchaseRecord, Settlement } from "@/types/purchases";
 
 describe("進貨入帳與更正防重複", () => {
   it("同一張進貨單重複送出只保存一次，原資料不變", () => {

@@ -9,7 +9,8 @@ import {
   BaseNativeSelectOption,
 } from "@/components/ui/BaseNativeSelect";
 import { useAppSelector } from "@/store/hooks";
-import { categories, units, validateItem, type Item } from "./model";
+import { categories, units, validateItem } from "./model";
+import type { Item } from "@/types/items";
 import { useBaseDataOptions } from "@/features/base-data/useBaseDataOptions";
 
 export function ItemEditor({

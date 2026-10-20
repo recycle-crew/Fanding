@@ -1,10 +1,5 @@
-import type { Page, Locator } from "@playwright/test";
-import { test, expect } from "../../../helpers/test";
-import { checkPageEntry } from "../../../helpers/test";
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
+import { test, expect, checkPageEntry } from "../../../helpers/test";
 
-const axe = require.resolve("axe-core/axe.min.js");
 test.beforeEach(async ({ page }) => {
   await page.goto("/demo/consumptions");
   await expect(
@@ -35,7 +30,6 @@ test("@critical 耗用唯讀查詢、日期、單位、明細與匯出", async (
   await page.getByRole("button", { name: /匯出 Excel/ }).click();
   expect((await downloading).suggestedFilename()).toMatch(/\.xlsx$/);
 });
-
 
 test(
   "/demo/consumptions 直接進入與重新整理",

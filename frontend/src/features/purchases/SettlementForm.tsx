@@ -7,13 +7,8 @@ import {
 } from "@/components/ui/BaseNativeSelect";
 import { taipeiToday } from "@/features/items/model";
 import { Field, PurchaseForm } from "./FormParts";
-import {
-  currency,
-  originalAmount,
-  rounded,
-  type Purchase,
-  type Settlement,
-} from "./model";
+import { currency, originalAmount, rounded } from "./model";
+import type { Purchase, Settlement } from "@/types/purchases";
 export function SettlementForm({
   order,
   onCancel,

@@ -1,6 +1,6 @@
 import { produceWithPatches } from "immer";
 import { flushSync } from "react-dom";
-import type { DemoState } from "@/features/demo/types";
+import type { DemoState } from "@/types/demo";
 import type { AppStore } from "@/store";
 import { statePatched } from "@/store/demo";
 import * as domain from "@/features/demo/domain";

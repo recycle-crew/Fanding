@@ -1,10 +1,7 @@
-import type { Page, Locator } from "@playwright/test";
-import { test, expect } from "../../../helpers/test";
-import { checkPageEntry } from "../../../helpers/test";
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
+import axe from "axe-core";
+import { test, expect, checkPageEntry } from "../../../helpers/test";
+import type { Page } from "@playwright/test";
 
-const axe = require.resolve("axe-core/axe.min.js");
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
   await page.goto("/demo/pos");
@@ -20,9 +17,10 @@ async function scan(page: Page, code: string) {
   await input.fill(code);
   await input.press("Enter");
 }
-async function checkout(page: Page,  { medicine = false } = {}) {
+async function checkout(page: Page, { medicine = false } = {}) {
   await page.getByRole("button", { name: "前往結帳", exact: true }).click();
   const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("銷售主體統一編號", { exact: true }).fill("12345678");
   await dialog.getByLabel("實收金額", { exact: true }).fill("10000");
   await dialog
     .getByRole("checkbox", {
@@ -85,6 +83,7 @@ test("@critical 折扣、多批次結帳、歷史與部分退貨待退款／確�
   await page.getByLabel("葉黃素膠囊單品折扣", { exact: true }).fill("10");
   await page.getByLabel("整單折扣金額", { exact: true }).fill("3.01");
   const dialog = await checkout(page);
+  await expect(dialog).toContainText("銷售主體統一編號：12345678");
   await expect(dialog).toContainText("整單分攤 $3.01");
   await expect(dialog).toContainText("A081-B");
   await dialog.getByRole("button", { name: "銷售退貨", exact: true }).click();
@@ -210,7 +209,7 @@ test("@critical 作廢與退款分離、紀錄篩選匯出", async ({ page }) =>
 });
 test("無障礙、取消保留購物車與桌面／手機畫面", async ({ page }, testInfo) => {
   async function audit() {
-    await page.addScriptTag({ path: axe });
+    await page.addScriptTag({ content: axe.source });
     expect(
       await page.evaluate(
         async () =>
@@ -254,7 +253,6 @@ test("無障礙、取消保留購物車與桌面／手機畫面", async ({ page 
     ),
   ).toBeTruthy();
 });
-
 
 test(
   "/demo/pos 直接進入與重新整理",

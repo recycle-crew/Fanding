@@ -22,12 +22,11 @@ import {
 } from "./reducer";
 import { useWorkspaceDirty } from "@/features/workspace/useWorkspaceDirty";
 import { available, relativeDate, taipeiToday } from "@/features/items/model";
-import {
-  exceptionTypes,
-  timestamp,
-  type ConsumptionMapping,
-  type ConsumptionRecord,
-} from "./model";
+import { exceptionTypes, timestamp } from "./model";
+import type {
+  ConsumptionMapping,
+  ConsumptionRecord,
+} from "@/types/consumptions";
 import "@/features/items/items.css";
 import "@/features/purchases/purchases.css";
 import "./consumptions.css";

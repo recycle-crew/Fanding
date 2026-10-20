@@ -20,7 +20,7 @@ import {
   deleteBaseData,
   toggleBaseData,
 } from "@/store/baseData";
-import type { BaseDataKind, BaseDataRecord } from "./types";
+import type { BaseDataKind, BaseDataRecord } from "@/types/base-data";
 import { useWorkspaceDirty } from "@/features/workspace/useWorkspaceDirty";
 import "@/features/items/items.css";
 import "@/features/purchases/purchases.css";

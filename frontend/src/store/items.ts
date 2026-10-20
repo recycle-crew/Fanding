@@ -1,9 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import {
-  createItemsSeed,
-  validateItem,
-  type Item,
-} from "@/features/items/model";
+import { createItemsSeed, validateItem } from "@/features/items/model";
+import type { Item } from "@/types/items";
 const slice = createSlice({
   name: "items",
   initialState: createItemsSeed(),

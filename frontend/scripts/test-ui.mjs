@@ -1,4 +1,5 @@
-const { spawnSync } = require("node:child_process");
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 const flags = new Set(["--build", "--capture", "--rwd"]);
 const args = process.argv.slice(2);
 if (args.includes("--build") && args.includes("--rwd"))
@@ -6,7 +7,7 @@ if (args.includes("--build") && args.includes("--rwd"))
 const result = spawnSync(
   process.execPath,
   [
-    require.resolve("@playwright/test/cli"),
+    fileURLToPath(import.meta.resolve("@playwright/test/cli")),
     "test",
     ...args.filter((arg) => !flags.has(arg)),
   ],

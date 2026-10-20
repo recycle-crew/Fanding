@@ -1,3 +1,4 @@
+import type { NewPurchaseInput } from "@/types/purchases/form";
 import { useRef, useState } from "react";
 import { Plus, Search, Trash2 } from "lucide-react";
 import { useAppSelector } from "@/store/hooks";
@@ -15,21 +16,12 @@ import {
   BaseTableCell,
   BaseTableRow,
 } from "@/components/ui/BaseTable";
-import {
-  taipeiToday,
-  usageStatus,
-} from "@/features/items/model";
+import { taipeiToday, usageStatus } from "@/features/items/model";
 import { Field, PurchaseForm } from "./FormParts";
-import { currency, rounded, snapshot, type PurchaseLine } from "./model";
+import { currency, rounded, snapshot } from "./model";
+import type { PurchaseLine } from "@/types/purchases";
 import { useBaseDataOptions } from "@/features/base-data/useBaseDataOptions";
-export interface NewPurchaseInput {
-  date: string;
-  supplier: string;
-  warehouse: string;
-  remark: string;
-  lines: PurchaseLine[];
-  relatedReturn: string;
-}
+
 export function NewPurchaseForm({
   onCancel,
   onDirty,

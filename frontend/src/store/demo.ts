@@ -1,3 +1,4 @@
+import type { Field } from "@/types/store/demo";
 import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { applyPatches, enablePatches, produceWithPatches } from "immer";
@@ -11,7 +12,7 @@ import {
   startStocktakeBatch,
   submitMovementVoucher,
 } from "@/features/demo/domain";
-import type { DemoState, EditorKind, ModuleKey, Workspace } from "@/features/demo/types";
+import type { DemoState, EditorKind, ModuleKey, Workspace } from "@/types/demo";
 
 enablePatches();
 export type Command =
@@ -510,13 +511,7 @@ function deleteConfirmed(s: DemoState, id: string) {
     s.otcProducts = s.otcProducts.filter((entry) => entry.id !== id);
   s.notice = "資料已刪除";
 }
-export interface Field {
-  name: string;
-  label: string;
-  type?: string;
-  required?: boolean;
-  options?: [string, string][];
-}
+
 // 表單欄位與儲存邏輯由各業務模組明確擁有。
 export function editorFields(
   s: DemoState,

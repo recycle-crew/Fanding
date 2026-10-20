@@ -1,10 +1,11 @@
-import type { Page, Locator } from "@playwright/test";
 import {
   test,
   expect,
   enterWorkspace,
   loginEnabled,
 } from "../../../helpers/test";
+import type { Page } from "@playwright/test";
+
 import XLSX from "../../../helpers/xlsx";
 import * as fs from "node:fs";
 
@@ -24,7 +25,12 @@ async function openVoucherPage(page: Page, direction: string) {
     await page.locator("#menu-toggle").click();
   await page.locator(`#module-nav [data-module="${direction}"]`).click();
 }
-async function addVoucherLine(page: Page, barcode: string, quantity: number,  note = "測試傳票") {
+async function addVoucherLine(
+  page: Page,
+  barcode: string,
+  quantity: number,
+  note = "測試傳票",
+) {
   await page.locator("#barcode").fill(barcode);
   await page.locator("#barcode").press("Enter");
   await page.locator('#movement-form [name="quantity"]').fill(String(quantity));
@@ -248,8 +254,6 @@ test("送出重新驗證停用品項與明細數量", async ({ page }) => {
 test("傳票明細分頁與 XLSX 匯出所有明細，異動匯出保留傳票編號", async ({
   page,
 }) => {
-  
-  
   await openVoucherPage(page, "receipt");
   for (let index = 0; index < 6; index++)
     await addVoucherLine(page, "9902000000001", 1, `傳票明細 ${index + 1}`);

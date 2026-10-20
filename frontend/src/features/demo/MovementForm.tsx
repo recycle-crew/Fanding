@@ -3,7 +3,7 @@ import { BaseInput } from "@/components/ui/BaseInput";
 import { BaseButton } from "@/components/ui/BaseButton";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { executeDemoCommand } from "@/store/demo";
-import type { Product } from "@/features/demo/types";
+import type { Product } from "@/types/demo";
 export function MovementForm({ product }: { product: Product }) {
   const s = useAppSelector((root) => root.demo);
   const dispatch = useAppDispatch();

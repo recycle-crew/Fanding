@@ -1,28 +1,8 @@
-interface SpreadsheetCell {
-  t: string;
-  z?: string;
-}
-interface Worksheet {
-  [cell: string]: SpreadsheetCell | unknown;
-}
-interface SpreadsheetLibrary {
-  utils: {
-    aoa_to_sheet(rows: (string | number)[][]): Worksheet;
-    encode_cell(cell: { r: number; c: number }): string;
-    book_new(): unknown;
-    book_append_sheet(book: unknown, sheet: Worksheet, name: string): void;
-  };
-  writeFile(
-    book: unknown,
-    name: string,
-    options: { bookType: string; compression: boolean },
-  ): void;
-}
-declare global {
-  interface Window {
-    XLSX?: SpreadsheetLibrary;
-  }
-}
+import type {
+  SpreadsheetCell,
+  SpreadsheetLibrary,
+} from "@/types/helpers/excel";
+
 let libraryPromise: Promise<SpreadsheetLibrary> | null = null;
 const numericColumns = new Set([
   "已盤品項", "我已盤品項", "帳面快照", "期間異動", "預期數量", "採用輪次", "實盤數量", "差異數量",

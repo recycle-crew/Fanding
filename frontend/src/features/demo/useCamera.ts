@@ -1,31 +1,6 @@
+import type { CameraControls, DecoderLibrary } from "@/types/demo/camera";
 import { useEffect, useRef, useState } from "react";
-interface CameraControls {
-  stop(): void;
-}
-interface DecoderLibrary {
-  BrowserMultiFormatReader: new (
-    hints: undefined,
-    options: {
-      delayBetweenScanAttempts: number;
-      delayBetweenScanSuccess: number;
-    },
-  ) => {
-    decodeFromStream(
-      stream: MediaStream,
-      video: HTMLVideoElement,
-      callback: (
-        result: { getText(): string } | null,
-        error: unknown,
-        controls: CameraControls,
-      ) => void,
-    ): Promise<CameraControls>;
-  };
-}
-declare global {
-  interface Window {
-    ZXingBrowser?: DecoderLibrary;
-  }
-}
+
 let decoderPromise: Promise<DecoderLibrary> | null = null;
 async function loadDecoder() {
   if (window.ZXingBrowser) return window.ZXingBrowser;

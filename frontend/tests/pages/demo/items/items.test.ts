@@ -1,15 +1,14 @@
-import type { Page, Locator } from "@playwright/test";
 import {
   test,
   expect,
   enterWorkspace,
   loginEnabled,
+  checkPageEntry,
 } from "../../../helpers/test";
-import { checkPageEntry } from "../../../helpers/test";
+import type { Page } from "@playwright/test";
+
 import * as fs from "node:fs/promises";
 import XLSX from "../../../helpers/xlsx";
-
-
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
@@ -222,7 +221,9 @@ test("Excel 匯出全部分頁、保留條碼文字及數值型別", async ({ pa
   expect(download.suggestedFilename()).toMatch(/\.xlsx$/);
   const buffer = await fs.readFile(await download.path());
   const workbook = XLSX.read(buffer.toString("base64"), { type: "base64" });
-const data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+  const data = XLSX.utils.sheet_to_json(
+    workbook.Sheets[workbook.SheetNames[0]],
+  );
   expect(data).toHaveLength(6);
   expect(data[0]["國際條碼"]).toBe("4711234560000");
   expect(data[0]["庫存數量"]).toBe(35);
@@ -266,7 +267,6 @@ test("新舊入口並存及桌面／手機基本版面", async ({ page }, testIn
   await page.getByRole("button", { name: "品項資料維護", exact: true }).click();
   await expect(page).toHaveURL(/\/demo\/products/);
 });
-
 
 test(
   "/demo/items 直接進入與重新整理",

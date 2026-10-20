@@ -1,4 +1,4 @@
-import type { ModuleKey } from "@/features/demo/types";
+import type { ModuleKey } from "@/types/demo";
 
 export const itemGroupPaths = {
   HIS_MEDICINE: "/demo/items/his",

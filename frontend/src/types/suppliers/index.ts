@@ -1,2 +1,11 @@
-// Compatibility export; the demo feature owns these contracts.
-export * from "@/features/demo/types/suppliers";
+export interface Vendor {
+  id: string;
+  code?: string;
+  name: string;
+  shortName?: string;
+  contact: string;
+  phone: string;
+  email: string;
+  status: string;
+  filledBy?: string;
+}

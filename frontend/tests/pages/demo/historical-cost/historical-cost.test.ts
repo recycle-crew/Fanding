@@ -1,11 +1,12 @@
-import type { Page, Locator } from "@playwright/test";
 import {
   test,
   expect,
   enterWorkspace,
   loginEnabled,
+  checkPageEntry,
 } from "../../../helpers/test";
-import { checkPageEntry } from "../../../helpers/test";
+import type { Page } from "@playwright/test";
+
 import XLSX from "../../../helpers/xlsx";
 import * as fs from "node:fs";
 
@@ -112,8 +113,6 @@ test("草稿取消出庫不納入，缺單價不當零，零元合法", async ({
   );
 });
 test("成本篩選交集、跨頁 XLSX、無結果與錯誤重試", async ({ page }) => {
-  
-  
   await page.evaluate(() =>
     window.__demoTest.run((state, domain) => {
       const voucher = domain.createMovementVoucher(state, "receipt");
@@ -261,7 +260,6 @@ test("入庫單價輸入、沿用主檔及送出重新驗證，不回寫主檔",
     "receipt-invalid-cost.png",
   );
 });
-
 
 test(
   "/demo/historical-cost 直接進入與重新整理",

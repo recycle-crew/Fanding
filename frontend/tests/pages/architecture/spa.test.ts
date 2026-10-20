@@ -1,12 +1,10 @@
-import type { Page, Locator } from "@playwright/test";
 import {
   test,
   expect,
   enterWorkspace,
   loginEnabled,
+  checkPageEntry,
 } from "../../helpers/test";
-import { checkPageEntry } from "../../helpers/test";
-
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
@@ -55,7 +53,6 @@ test("SPA 延遲載入顯示狀態並恢復頁面", async ({ page }) => {
     page.getByRole("status").filter({ hasText: "正在載入畫面…" }),
   ).toHaveCount(0);
 });
-
 
 test(
   "/architecture 直接進入與重新整理",

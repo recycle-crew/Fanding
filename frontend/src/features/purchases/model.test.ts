@@ -7,8 +7,8 @@ import {
   snapshot,
   returnStatus,
   correctionStatus,
-  type PurchaseRecord,
 } from "./model";
+import type { PurchaseRecord } from "@/types/purchases";
 import { createItemsSeed } from "@/features/items/model";
 
 describe("進貨金額、快照與可退數量", () => {

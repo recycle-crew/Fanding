@@ -1,13 +1,12 @@
-import type { Page, Locator } from "@playwright/test";
-import { test as base, expect } from "../../../helpers/test";
-import { checkPageEntry } from "../../../helpers/test";
+import axe from "axe-core";
+import { test as base, expect, checkPageEntry } from "../../../helpers/test";
+import type { Page } from "@playwright/test";
+
 import * as fs from "node:fs/promises";
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
 import XLSX from "../../../helpers/xlsx";
 
-
-const test = base.extend<{ runtimeErrors: void }>({ runtimeErrors: [
+const test = base.extend<{ runtimeErrors: void }>({
+  runtimeErrors: [
     async ({ page }, use) => {
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
@@ -70,7 +69,9 @@ test(
     const download = await downloadPromise;
     const buffer = await fs.readFile(await download.path());
     const workbook = XLSX.read(buffer.toString("base64"), { type: "base64" });
-const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+    const rows = XLSX.utils.sheet_to_json(
+      workbook.Sheets[workbook.SheetNames[0]],
+    );
     expect(rows).toHaveLength(9);
     expect(typeof rows[0]["原始進貨金額"]).toBe("number");
     expect(rows[0]).not.toHaveProperty("操作");
@@ -346,7 +347,7 @@ test("數量、成本、品項與批號更正均保留原始明細", async ({ pa
 
 test("a11y 進貨列表、選單及所有主要視窗", async ({ page }) => {
   async function audit() {
-    await page.addScriptTag({ path: require.resolve("axe-core/axe.min.js") });
+    await page.addScriptTag({ content: axe.source });
     const errors = await page.evaluate(async () => {
       const result = await window.axe.run(document, {
         runOnly: {
@@ -380,7 +381,6 @@ test("a11y 進貨列表、選單及所有主要視窗", async ({ page }) => {
   await action(page, "PO20261018007", "結帳後更正");
   await audit();
 });
-
 
 test(
   "/demo/purchases 直接進入與重新整理",

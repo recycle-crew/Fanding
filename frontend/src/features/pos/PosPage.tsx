@@ -13,7 +13,8 @@ import { BaseWorkspaceModal } from "@/components/ui/BaseWorkspaceModal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { savePosPolicy } from "@/store/pos";
 import { useWorkspaceDirty } from "@/features/workspace/useWorkspaceDirty";
-import { available, taipeiToday, type Item } from "@/features/items/model";
+import { available, taipeiToday } from "@/features/items/model";
+import type { Item } from "@/types/items";
 import { useBaseDataOptions } from "@/features/base-data/useBaseDataOptions";
 import { CheckoutForm } from "./CheckoutForm";
 import { PosPolicyForm } from "./PosPolicyForm";
@@ -27,9 +28,8 @@ import {
   money,
   policyFor,
   priceCart,
-  type CartLine,
-  type Customer,
 } from "./model";
+import type { CartLine, Customer } from "@/types/pos";
 import "@/features/items/items.css";
 import "@/features/purchases/purchases.css";
 import "./pos.css";

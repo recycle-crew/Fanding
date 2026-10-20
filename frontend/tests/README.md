@@ -19,17 +19,20 @@ tests/
 │     ├─ items/              /demo/items 與其子路由
 │     └─ …                   其他現有 route
 ├─ helpers/                  真正被重複使用的工具
-│  ├─ test.cjs               共用 test、日期、Redux 檢查與頁面初始化
-│  ├─ xlsx.cjs               解析真實下載檔案
-│  └─ capture.cjs            截圖檢視模式
+│  ├─ test.ts               共用 test、日期、Redux 檢查與頁面初始化
+│  ├─ xlsx.ts               解析真實下載檔案
+│  └─ capture.ts            截圖檢視模式
 ├─ setup.ts                  Vitest 日期與 mock 清理
-├─ package.json              讓既有 JS 測試使用 CommonJS
+├─ tsconfig.json             瀏覽器測試的型別檢查設定
+├─ types/                    測試型別，依用途與來源資料夾分類
+│  ├─ browser.d.ts           測試環境的瀏覽器型別
+│  └─ helpers/xlsx.ts        Excel 讀取工具型別
 └─ README.md
 ```
 
 不再按 fixtures、flows、journeys、smoke、visual 建立目錄。跨頁操作歸到起始頁。RWD 與正式產物檢查是執行模式，目前共用工作區檢查放在 `pages/demo/`。
 
-每頁入口檢查併入該頁的既有測試；尚無其他行為案例的 route 使用 `page.test.js`。頁內依查詢、新增、修改等行為分組，需要時才拆檔。
+每頁入口檢查併入該頁的既有測試；尚無其他行為案例的 route 使用 `page.test.ts`。頁內依查詢、新增、修改等行為分組，需要時才拆檔。
 
 ## 執行方式
 
@@ -52,7 +55,7 @@ npm run test:unit
 npm run test:e2e
 ```
 
-Vitest 只收集 `src/**/*.test.ts`，使用 Node 環境。Playwright 只收集 `tests/pages/**/*.test.js`。不以 `.test`／`.spec` 區分兩套工具。
+Vitest 只收集 `src/**/*.test.ts`，使用 Node 環境。Playwright 只收集 `tests/pages/**/*.test.ts`。不以 `.test`／`.spec` 區分兩套工具。
 
 `test:e2e` 驗證操作與資料結果，明確略過舊的像素比對。`test:ui`／`test:visual` 包含頁面截圖比對；`test:ui:rwd` 使用四種寬度跑既有 RWD 檢查。既有基準是 Windows Chromium，Linux CI 不比較這些基準。
 
@@ -70,7 +73,7 @@ Playwright 自動啟動伺服器。port 已被占用時，先設定 `$env:PLAYWR
 
 - Page 的表單、子元件互動、鍵盤、畫面、錯誤與取消行為寫在所屬 route 的 Playwright 測試。
 - 計算、store、驗證、資料轉換與未來的 request 邏輯，將 `.test.ts` 放在受測 `.ts` 旁。
-- 元件私有 Props 留在元件。業務型別由功能模組擁有；Demo 型別位於 `src/features/demo/types`，基礎資料型別位於 `src/features/base-data/types.ts`。`src/types` 保留既有 import 的相容轉接。
+- `interface` 統一放在 `src/types`，依領域或來源資料夾分類（例如 `types/items`、`types/demo`、`types/store`、`types/helpers`），實作檔使用 `import type` 引用。測試專用型別放在 `tests/types`，同樣依來源資料夾分類；不在元件、model、store 或 helper 內宣告 `interface`。
 - 子元件與必要的 store 使用真實實作；需要模擬時從網路邊界處理。現有 Demo 沒有正式 HTTP client，不建立空的 request 模組。
 - 每個瀏覽器情境使用獨立 context，測試資料留在記憶體。日期預設固定為台北 2026-10-20；特定歷史情境可自行設定。Vitest 每次清理 mock 與假計時器。
 - 依頁面功能涵蓋成功、載入、空資料、驗證、失敗、重試、取消、權限及重複送出。重要流程加 `@critical`；route 對應測試會檢查頁面入口案例是否存在。
@@ -83,3 +86,5 @@ Playwright 自動啟動伺服器。port 已被占用時，先設定 `$env:PLAYWR
 上線前可先 `npm run build`，再 `npm run test:ui:build -- --ignore-snapshots`。這不代表部署後主機、真實資料庫、HIS 或實體設備已驗證。
 
 本次目錄收斂不會更新舊截圖，也不把未完成重跑的舊 RWD 情境視為通過。
+
+所有頁面測試與共用工具均使用 TypeScript 和 ESM import。`npm run typecheck` 依序檢查應用程式與 `tests/tsconfig.json`，CI 沿用同一指令。Playwright 執行 TS 本身不代表型別檢查通過。

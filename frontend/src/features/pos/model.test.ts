@@ -7,8 +7,8 @@ import posReducer, {
   returnPos,
   refundPos,
   voidPos,
-  type CheckoutInput,
 } from "@/store/pos";
+import type { CheckoutInput } from "@/types/store/pos";
 import itemsReducer, { saveItem } from "@/store/items";
 import {
   allocate,

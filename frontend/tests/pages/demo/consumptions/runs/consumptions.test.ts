@@ -1,10 +1,5 @@
-import type { Page, Locator } from "@playwright/test";
-import { test, expect } from "../../../../helpers/test";
-import { checkPageEntry } from "../../../../helpers/test";
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
+import { test, expect, checkPageEntry } from "../../../../helpers/test";
 
-const axe = require.resolve("axe-core/axe.min.js");
 test.beforeEach(async ({ page }) => {
   await page.goto("/demo/consumptions/runs");
   await expect(
@@ -41,14 +36,24 @@ test("@critical 重複同步略過、部分成功與失敗留存、待人工核�
     "FAILED",
   );
   // Module-owned data survives unmounting the consumption page.
-  if (!await page.getByRole("button", { name: "品項與庫存管理（新版）", exact: true }).isVisible())
-    await page.getByRole("button", { name: "☰ 功能選單", exact: true }).click();
+  if (
+    !(await page
+      .getByRole("button", { name: "品項與庫存管理（新版）", exact: true })
+      .isVisible())
+  )
+    await page
+      .getByRole("button", { name: "☰ 功能選單", exact: true })
+      .click();
   await page
     .getByRole("button", { name: "品項與庫存管理（新版）", exact: true })
     .click();
-  await expect(page).toHaveURL(/\/demo\/items/);
-  if (!await page.getByRole("button", { name: "耗用查詢（新版）", exact: true }).isVisible())
-    await page.getByRole("button", { name: "☰ 功能選單", exact: true }).click();
+  await expect(page).toHaveURL(/\/demo\/items\/his$/);
+  const menu = page.getByRole("button", { name: "☰ 功能選單", exact: true });
+  if (await menu.isVisible()) {
+    await expect(menu).toHaveAttribute("aria-expanded", "false");
+    await menu.click();
+    await expect(menu).toHaveAttribute("aria-expanded", "true");
+  }
   await page
     .getByRole("button", { name: "耗用查詢（新版）", exact: true })
     .click();
@@ -66,7 +71,6 @@ test("@critical 重複同步略過、部分成功與失敗留存、待人工核�
   await dialog.getByRole("button", { name: "重新處理", exact: true }).click();
   await expect(dialog).toContainText("未新增耗用");
 });
-
 
 test(
   "/demo/consumptions/runs 直接進入與重新整理",

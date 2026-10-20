@@ -2,8 +2,8 @@ import { useState } from "react";
 import { BaseForm, BaseField as Field } from "@/components/ui/BaseForm";
 import { BaseInput } from "@/components/ui/BaseInput";
 import { BaseCheckField } from "@/components/ui/BaseCheckField";
-import { type Item } from "@/features/items/model";
-import { type PosPolicy } from "./model";
+import type { Item } from "@/types/items";
+import type { PosPolicy } from "@/types/pos";
 export function PosPolicyForm({
   item,
   initial,

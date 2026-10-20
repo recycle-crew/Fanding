@@ -21,7 +21,7 @@ import type {
   Product,
   Vendor,
   Requisition,
-} from "@/features/demo/types";
+} from "@/types/demo";
 
 type DisplayRecord = {
   id: string | number;

@@ -7,9 +7,8 @@ import {
   lineBalance,
   originalAmount,
   operationLabels,
-  type Purchase,
-  type PurchaseRecord,
 } from "./model";
+import type { Purchase, PurchaseRecord } from "@/types/purchases";
 export function PurchaseDetails({
   order,
   onResolve,

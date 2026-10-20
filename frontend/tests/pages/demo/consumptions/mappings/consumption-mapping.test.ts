@@ -1,10 +1,5 @@
-import type { Page, Locator } from "@playwright/test";
-import { test, expect } from "../../../../helpers/test";
-import { checkPageEntry } from "../../../../helpers/test";
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
+import { test, expect, checkPageEntry } from "../../../../helpers/test";
 
-const axe = require.resolve("axe-core/axe.min.js");
 test.beforeEach(async ({ page }) => {
   await page.goto("/demo/consumptions");
   await expect(
@@ -63,7 +58,6 @@ test("@critical 對照驗證、歷史快照、未儲存提醒、異常重試防�
   await expect(dialog).toContainText("× 比例 1");
   await expect(dialog).not.toContainText("× 比例 7");
 });
-
 
 test(
   "/demo/consumptions/mappings 直接進入與重新整理",

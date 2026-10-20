@@ -1,10 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import {
-  createPurchasesSeed,
-  type Purchase,
-  type PurchaseRecord,
-  type Settlement,
-} from "@/features/purchases/model";
+import { createPurchasesSeed } from "@/features/purchases/model";
+import type { Purchase, PurchaseRecord, Settlement } from "@/types/purchases";
 const slice = createSlice({
   name: "purchases",
   initialState: createPurchasesSeed(),

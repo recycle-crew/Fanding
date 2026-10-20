@@ -16,7 +16,7 @@ import { executeDemoCommand } from "@/store/demo";
 import { BaseDataTable } from "@/components/ui/BaseDataTable";
 import { MovementsTable, MovementVoucher } from "@/features/demo/render";
 import { useCamera } from "@/features/demo/useCamera";
-import type { Workspace } from "@/features/demo/types";
+import type { Workspace } from "@/types/demo";
 export function ScanPage() {
   const s = useAppSelector((root) => root.demo);
   const dispatch = useAppDispatch();
@@ -815,7 +815,7 @@ export function ScanPage() {
   );
 }
 import { appendBatchOperation } from "@/features/demo/domain";
-import type { DemoState } from "@/features/demo/types";
+import type { DemoState } from "@/types/demo";
 function appendConfirmation(s: DemoState, id: number, confirmed: boolean) {
   const count = s.stocktakes.find((c) => c.id === id);
   const batch = s.stocktakeBatches.find((b) => b.id === count.batchId);

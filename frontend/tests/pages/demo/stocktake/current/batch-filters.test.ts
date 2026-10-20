@@ -1,17 +1,17 @@
-import type { Page, Locator } from "@playwright/test";
 import {
   test as base,
   expect,
   enterWorkspace,
   loginEnabled,
+  checkPageEntry,
 } from "../../../../helpers/test";
-import { checkPageEntry } from "../../../../helpers/test";
+import type { Page } from "@playwright/test";
+
 import XLSX from "../../../../helpers/xlsx";
 import * as fs from "node:fs";
 
-
-
-const test = base.extend<{ browserErrors: string[] }>({ browserErrors: [
+const test = base.extend<{ browserErrors: string[] }>({
+  browserErrors: [
     async ({ page }, use) => {
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
@@ -97,7 +97,6 @@ test("盤點按品項核對庫存，不套用出入庫傳票批次", async ({ pa
   });
   await expect(counts).toHaveScreenshot("stocktake-by-item.png");
 });
-
 
 test(
   "/demo/stocktake/current 直接進入與重新整理",

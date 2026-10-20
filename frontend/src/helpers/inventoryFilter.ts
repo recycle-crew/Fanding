@@ -1,4 +1,4 @@
-import type { InventoryFilter } from "@/features/demo/types";
+import type { InventoryFilter } from "@/types/demo";
 // 共用篩選契約：料號、人員為不分大小寫的包含搜尋，日期採本地日曆。
 // 出入庫以傳票批次為主要查詢單位；批次可輸入完整編號或日期前綴，盤點不套用此條件。
 export function compileInventoryFilter(filters: InventoryFilter) {

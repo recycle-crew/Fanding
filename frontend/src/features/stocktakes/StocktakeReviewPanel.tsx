@@ -1,6 +1,7 @@
 import { BaseButton } from "@/components/ui/BaseButton";
 import { BaseDataTable } from "@/components/ui/BaseDataTable";
-import { countFor, expectedFor, varianceFor, type Stocktake } from "./model";
+import { countFor, expectedFor, varianceFor } from "./model";
+import type { Stocktake } from "@/types/stocktakes";
 export function StocktakeReviewPanel({
   order,
   onAction,

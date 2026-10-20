@@ -1,9 +1,5 @@
-import type { Page, Locator } from "@playwright/test";
 import { test, expect } from "../../../helpers/test";
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
 
-const axe = require.resolve("axe-core/axe.min.js");
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
   await page.goto("/demo/base-data");

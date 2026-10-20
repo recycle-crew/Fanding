@@ -32,7 +32,7 @@ describe("route 與頁面測試對應", () => {
       `新增 route 時也需要建立 ${fileURLToPath(directory)}`,
     ).toBe(true);
     const covered = readdirSync(directory)
-      .filter((file) => file.endsWith(".test.js"))
+      .filter((file) => file.endsWith(".test.ts"))
       .some((file) => {
         const content = readFileSync(new URL(file, directory), "utf8");
         return (

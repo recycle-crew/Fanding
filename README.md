@@ -204,3 +204,5 @@ After deployment, check `/`, `/architecture`, `/board`, and `/demo`; log into th
 先前 SPA 階段紀錄：完整 334 次通過，之後補上延遲載入 2 次，以及正式 dist 8 次；此為 Layout／Tailwind 遷移前的分次執行結果。
 
 新版模組 4 耗用查詢位於 /demo/consumptions，含 HIS 對照、同步異常及同步紀錄，所有同步皆為前端模擬。模組 5 基礎資料管理位於 /demo/base-data，提供倉別／供應商維護；新增主檔可供新進貨單選擇，歷史單據快照保留。
+
+新版模組 3 POS 位於 /demo/pos，銷售紀錄為 /demo/sales；提供搜尋、購物車、結帳、退貨、退款與作廢的前端情境。模組 6 盤點管理位於 /demo/stocktakes，提供人員指派、盲盤、主管核對、複盤與展示調整。六個新版模組皆可從側欄進入；客戶展示操作與假設詳見 docs/20261020.md。

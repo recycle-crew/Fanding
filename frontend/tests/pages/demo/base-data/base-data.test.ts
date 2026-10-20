@@ -1,10 +1,6 @@
-import type { Page, Locator } from "@playwright/test";
-import { test, expect } from "../../../helpers/test";
-import { checkPageEntry } from "../../../helpers/test";
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
+import axe from "axe-core";
+import { test, expect, checkPageEntry } from "../../../helpers/test";
 
-const axe = require.resolve("axe-core/axe.min.js");
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
   await page.goto("/demo/base-data");
@@ -95,7 +91,7 @@ test("@critical 供應商驗證、搜尋、狀態、頁籤鍵盤及匯出", asyn
 
 test("無障礙與桌面／手機版面", async ({ page }, testInfo) => {
   async function audit() {
-    await page.addScriptTag({ path: axe });
+    await page.addScriptTag({ content: axe.source });
     const violations = await page.evaluate(
       async () =>
         (
@@ -133,7 +129,6 @@ test("無障礙與桌面／手機版面", async ({ page }, testInfo) => {
     ),
   ).toBeTruthy();
 });
-
 
 test(
   "/demo/base-data 直接進入與重新整理",

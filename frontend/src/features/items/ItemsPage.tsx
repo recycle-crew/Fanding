@@ -55,9 +55,8 @@ import {
   taipeiToday,
   usageStatus,
   warehouses,
-  type Item,
-  type ItemGroup,
 } from "./model";
+import type { Item, ItemGroup } from "@/types/items";
 import "./items.css";
 import { moveTabFocus } from "./tabKeyboard";
 

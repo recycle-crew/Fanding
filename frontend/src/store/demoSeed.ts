@@ -1,6 +1,6 @@
 import { demoModulePaths } from "@/constants/demoRoutes";
 import { DEMO_LOGIN_ENABLED } from "@/constants/demoAccess";
-import type { DemoState, Workspace } from "@/features/demo/types";
+import type { DemoState, Workspace } from "@/types/demo";
 export function createDemoState(): DemoState {
   // 展示資料只留在記憶體；重新整理重新建立，不接觸正式系統。
   const vendors: DemoState["vendors"] = [
@@ -80,7 +80,7 @@ export function createDemoState(): DemoState {
     ["電子體溫計", "標準型", "支", 35],
     ["冷敷袋", "小型", "個", 28],
     ["舊版護具", "展示停用品", "個", 0],
-  ].map((product, index): import("@/features/demo/types").Product => ({
+  ].map((product, index): import("@/types/demo").Product => ({
     id: `O${String(index + 1).padStart(3, "0")}`,
     barcode: `990200000${String(index + 1).padStart(4, "0")}`,
     name: String(product[0]),

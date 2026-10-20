@@ -1,9 +1,6 @@
-import type { Page, Locator } from "@playwright/test";
+import axe from "axe-core";
 import { test, expect } from "../../../helpers/test";
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
 
-const axe = require.resolve("axe-core/axe.min.js");
 test.beforeEach(async ({ page }) => {
   await page.goto("/demo/consumptions");
   await expect(
@@ -12,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 });
 test("耗用各入口無障礙與小螢幕", async ({ page }, testInfo) => {
   async function audit() {
-    await page.addScriptTag({ path: axe });
+    await page.addScriptTag({ content: axe.source });
     const violations = await page.evaluate(
       async () =>
         (

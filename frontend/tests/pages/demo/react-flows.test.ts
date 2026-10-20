@@ -1,10 +1,5 @@
-import type { Page, Locator } from "@playwright/test";
-import {
-  test,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-} from "../../helpers/test";
+import { test, expect, enterWorkspace, loginEnabled } from "../../helpers/test";
+import type { Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
@@ -14,7 +9,7 @@ test.beforeEach(async ({ page }) => {
   ).toBeVisible();
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
 });
-async function login(page: Page,  privileged = false) {
+async function login(page: Page, privileged = false) {
   await enterWorkspace(page, privileged);
 }
 async function navigate(page: Page, module: string) {

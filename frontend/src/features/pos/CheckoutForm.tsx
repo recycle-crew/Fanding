@@ -11,14 +11,14 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { checkoutPos } from "@/store/pos";
 import {
   allocate,
+  cents,
   money,
   paymentMethods,
   policyFor,
   priceCart,
-  type CartLine,
-  type Customer,
-  type PaymentMethod,
+  qty,
 } from "./model";
+import type { CartLine, Customer, PaymentMethod } from "@/types/pos";
 
 export function CheckoutForm({
   cart,
@@ -47,6 +47,7 @@ export function CheckoutForm({
     [received, setReceived] = useState(String(priced.total));
   const [reference, setReference] = useState(""),
     [seller, setSeller] = useState("示範商行"),
+    [sellerTaxId, setSellerTaxId] = useState(""),
     [receiptType, setReceiptType] = useState("一般銷售憑證"),
     [remark, setRemark] = useState("");
   const [paymentConfirmed, setPaymentConfirmed] = useState(false),
@@ -61,6 +62,17 @@ export function CheckoutForm({
     const item = items.find((row) => row.id === line.itemId)!;
     return state.policies[item.id] || policyFor(item);
   });
+  const quantities = cart.reduce<Record<string, number>>((totals, line) => {
+    const unit = items.find((item) => item.id === line.itemId)!.unit;
+    totals[unit] = qty((totals[unit] || 0) + line.quantity);
+    return totals;
+  }, {});
+  const originalTotal =
+    cart.reduce(
+      (total, line, index) =>
+        total + cents(line.quantity * policies[index].price),
+      0,
+    ) / 100;
   return (
     <BaseForm
       submitText={awaitingRetry ? "以相同交易識別碼重試" : "確認完成結帳"}
@@ -82,6 +94,7 @@ export function CheckoutForm({
             customer,
             warehouse,
             seller,
+            sellerTaxId,
             receiptType,
             remark,
             method,
@@ -109,6 +122,17 @@ export function CheckoutForm({
           {money(orderDiscount)}
         </p>
         <strong className="pos-total">應收 {money(priced.total)}</strong>
+        <p>
+          商品數量：
+          {Object.entries(quantities)
+            .map(([unit, count]) => `${count} ${unit}`)
+            .join(" ／ ")}
+          （依單位分列）
+        </p>
+        <p>
+          商品原價總額 {money(originalTotal)}；成交價調整與單品折扣後小計{" "}
+          {money(priced.subtotal)}
+        </p>
         <details>
           <summary>出庫批次與明細折扣分攤</summary>
           {priced.priced.map((line) => {
@@ -212,6 +236,18 @@ export function CheckoutForm({
           </Field>
         </div>
         <p>目前僅列印展示交易憑證，發票狀態為未開立；未串接發票服務。</p>
+        <Field
+          name="checkout-seller-tax"
+          label="銷售主體統一編號"
+          hint="如適用請輸入 8 位數字；展示資料不開立正式發票。"
+        >
+          <BaseInput
+            value={sellerTaxId}
+            maxLength={8}
+            inputMode="numeric"
+            onChange={(event) => setSellerTaxId(event.target.value)}
+          />
+        </Field>
         <BaseCheckField
           label="已確認銷售主體具備該品項及單據資格（展示）"
           checked={sellerConfirmed}

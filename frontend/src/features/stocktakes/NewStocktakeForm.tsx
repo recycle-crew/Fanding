@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/BaseNativeSelect";
 import { BaseCheckField } from "@/components/ui/BaseCheckField";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { createStocktake, type NewStocktakeInput } from "@/store/stocktakes";
+import { createStocktake } from "@/store/stocktakes";
+import type { NewStocktakeInput } from "@/types/store/stocktakes";
 import { useBaseDataOptions } from "@/features/base-data/useBaseDataOptions";
 import { taipeiToday } from "@/features/items/model";
 import { stocktakePeople } from "./model";

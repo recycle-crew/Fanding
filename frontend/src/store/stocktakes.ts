@@ -1,3 +1,4 @@
+import type { NewStocktakeInput } from "@/types/store/stocktakes";
 import {
   createSlice,
   type PayloadAction,
@@ -16,9 +17,8 @@ import {
   stocktakeNow,
   supervisor,
   varianceFor,
-  type CountRecord,
-  type Stocktake,
 } from "@/features/stocktakes/model";
+import type { CountRecord, Stocktake } from "@/types/stocktakes";
 import { taipeiToday } from "@/features/items/model";
 type Result = { error: string; id?: string };
 type StocktakeThunk = ThunkAction<Result, RootState, unknown, UnknownAction>;
@@ -231,15 +231,7 @@ function editable(state: RootState, id: string, manager = true) {
     return { error: "已完成或已作廢盤點單唯讀。" };
   return { error: "", order };
 }
-export interface NewStocktakeInput {
-  name: string;
-  date: string;
-  warehouse: string;
-  type: "全盤" | "部分盤點";
-  itemIds: string[];
-  people: string[];
-  remark: string;
-}
+
 export const createStocktake =
   (input: NewStocktakeInput): StocktakeThunk =>
   (dispatch, getState) => {

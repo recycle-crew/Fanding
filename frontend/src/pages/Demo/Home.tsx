@@ -41,7 +41,7 @@ import type {
   EditorKind,
   InventoryFilter,
   ModuleKey,
-} from "@/features/demo/types";
+} from "@/types/demo";
 const subtitles: Record<ModuleKey, string> = {
   "base-data": "維護倉別與供應商基本資料。",
   consumptions: "查閱 HIS 來源耗用與同步異常。",

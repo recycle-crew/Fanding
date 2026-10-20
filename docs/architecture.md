@@ -53,7 +53,7 @@ Fanding/
 │  ├─ package.json
 │  ├─ index.html               # SPA 唯一 HTML 入口
 │  ├─ vite.config.ts
-│  ├─ playwright.config.js
+│  ├─ playwright.config.ts
 │  ├─ tests/                   # 瀏覽器案例與截圖基準
 │  ├─ scripts/                 # 畫面擷取與正式產物驗證
 │  ├─ tsconfig.json
@@ -75,7 +75,7 @@ Fanding/
 │     ├─ constants/            # 模組路徑契約
 │     ├─ helpers/              # 庫存篩選與 Excel 匯出
 │     ├─ styles/               # tailwind.css、layout、themes；全站 Tailwind CSS
-│     ├─ types/                # demo、inventory、suppliers、otc、stocktaking
+│     ├─ types/                # 依領域與來源資料夾分類的 interface／型別（含 store、helpers）
 │     └─ api/server/           # 正式串接時新增，目前未建立
 ├─ backend/
 │  ├─ pyproject.toml

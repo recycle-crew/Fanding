@@ -1,11 +1,11 @@
-import type { Page, Locator } from "@playwright/test";
 import {
   test,
   expect,
   enterWorkspace,
   loginEnabled,
+  checkPageEntry,
 } from "../../../helpers/test";
-import { checkPageEntry } from "../../../helpers/test";
+import type { Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
   ).toBeVisible();
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
 });
-async function login(page: Page,  privileged = false) {
+async function login(page: Page, privileged = false) {
   await enterWorkspace(page, privileged);
 }
 async function navigate(page: Page, module: string) {
@@ -73,7 +73,6 @@ test("React 品項新增、重複料號條碼、日期驗證與高權限編輯",
   await page.locator("#confirmation button[value=confirm]").click();
   await expect(page.locator("#list-table")).toContainText("目前沒有符合的資料");
 });
-
 
 test(
   "/demo/products 直接進入與重新整理",

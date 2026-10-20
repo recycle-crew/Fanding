@@ -5,7 +5,8 @@ import {
   BaseNativeSelectOption as Option,
 } from "@/components/ui/BaseNativeSelect";
 import { Field, PurchaseForm } from "./FormParts";
-import { currency, type PurchaseRecord } from "./model";
+import { currency } from "./model";
+import type { PurchaseRecord } from "@/types/purchases";
 export function ResolutionForm({
   record,
   onCancel,

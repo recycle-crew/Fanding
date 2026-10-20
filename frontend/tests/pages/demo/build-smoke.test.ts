@@ -1,17 +1,11 @@
-import type { Page, Locator } from "@playwright/test";
-import {
-  test,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-} from "../../helpers/test";
+import { test, expect, enterWorkspace, loginEnabled } from "../../helpers/test";
+
 import { readdirSync } from "node:fs";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
 });
 test("build 單一 HTML、四個路由、錨點與正式版無測試入口", async ({ page }) => {
-  
   expect(
     readdirSync("dist", { recursive: true, encoding: "utf8" }).filter((name) =>
       name.endsWith(".html"),

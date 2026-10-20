@@ -1,15 +1,15 @@
-import type { Page, Locator } from "@playwright/test";
+import axe from "axe-core";
 import { test, expect, checkPageEntry } from "../../../helpers/test";
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
+import type { Page } from "@playwright/test";
 
-
-const axe = require.resolve("axe-core/axe.min.js");
-
-test("盤點作業與核對直接連結及重新整理", { tag: "@critical" }, async ({ page }, info) => {
-  await checkPageEntry(page, "/demo/stocktakes/ST1/count", info);
-  await checkPageEntry(page, "/demo/stocktakes/ST2/review", info);
-});
+test(
+  "盤點作業與核對直接連結及重新整理",
+  { tag: "@critical" },
+  async ({ page }, info) => {
+    await checkPageEntry(page, "/demo/stocktakes/ST1/count", info);
+    await checkPageEntry(page, "/demo/stocktakes/ST2/review", info);
+  },
+);
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
   await page.goto("/demo/stocktakes");
@@ -25,7 +25,7 @@ test(
     await checkPageEntry(page, "/demo/stocktakes", info);
   },
 );
-async function openOrder(page: Page,  number = "001") {
+async function openOrder(page: Page, number = "001") {
   await page
     .getByRole("button", { name: `開啟盤點 ST20261020-${number}`, exact: true })
     .click();
@@ -229,7 +229,7 @@ test("@critical 關閉未完成阻擋、作廢原因、搜尋與主管匯出", a
 });
 test("無障礙、未儲存提醒、桌面與手機版面", async ({ page }, testInfo) => {
   async function audit() {
-    await page.addScriptTag({ path: axe });
+    await page.addScriptTag({ content: axe.source });
     expect(
       await page.evaluate(
         async () =>
@@ -271,4 +271,3 @@ test("無障礙、未儲存提醒、桌面與手機版面", async ({ page }, tes
     ),
   ).toBeTruthy();
 });
-

@@ -1,13 +1,19 @@
-import type { DemoState } from "../src/features/demo/types";
-import type * as domain from "../src/features/demo/domain";
+import type { DemoState } from "../../src/types/demo";
+import type * as domain from "../../src/features/demo/domain";
 import type * as axe from "axe-core";
-import "../src/features/demo/useCamera";
+import "../../src/types/demo/camera";
 
 declare global {
-  type CameraDecodeCallback = Parameters<InstanceType<NonNullable<Window["ZXingBrowser"]>["BrowserMultiFormatReader"]>["decodeFromStream"]>[2];
+  type CameraDecodeCallback = Parameters<
+    InstanceType<
+      NonNullable<Window["ZXingBrowser"]>["BrowserMultiFormatReader"]
+    >["decodeFromStream"]
+  >[2];
   interface Window {
     __demoTest: {
-      run<T>(operation: (state: DemoState, domain: typeof domain) => T): Promise<T>;
+      run<T>(
+        operation: (state: DemoState, domain: typeof domain) => T,
+      ): Promise<T>;
     };
     __spaDocument: string;
     axe: typeof axe;

@@ -1,11 +1,9 @@
-import type { Page, Locator } from "@playwright/test";
+import axe from "axe-core";
 import { test, expect } from "../../../helpers/test";
-import { createRequire } from "node:module";
-const require = createRequire(import.meta.url);
-
+import type { Page } from "@playwright/test";
 
 async function audit(page: Page) {
-  await page.addScriptTag({ path: require.resolve("axe-core/axe.min.js") });
+  await page.addScriptTag({ content: axe.source });
   const results = await page.evaluate(async () => {
     const result = await window.axe.run(document, {
       runOnly: {

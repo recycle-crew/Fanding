@@ -1,13 +1,14 @@
-import type { Page, Locator } from "@playwright/test";
 import {
   test as base,
   expect,
   enterWorkspace,
   loginEnabled,
+  checkPageEntry,
 } from "../../../helpers/test";
-import { checkPageEntry } from "../../../helpers/test";
+import type { Page } from "@playwright/test";
 
-const test = base.extend<{ browserErrors: string[] }>({ browserErrors: [
+const test = base.extend<{ browserErrors: string[] }>({
+  browserErrors: [
     async ({ page }, use) => {
       const errors: string[] = [];
       page.on("pageerror", (error) => errors.push(error.message));
@@ -38,7 +39,7 @@ async function enterScanModule(page: Page, module: string, project: string) {
 }
 
 // 模擬串流只檢查應用程式生命週期；不宣稱已驗證真實鏡頭辨識。
-async function installCameraSimulation(page: Page,  pending = false) {
+async function installCameraSimulation(page: Page, pending = false) {
   await page.evaluate((pending) => {
     window.cameraTest = {
       tracksStopped: 0,
@@ -72,7 +73,11 @@ async function installCameraSimulation(page: Page,  pending = false) {
     });
     window.ZXingBrowser = {
       BrowserMultiFormatReader: class {
-        async decodeFromStream(stream: MediaStream, video: HTMLVideoElement, callback: CameraDecodeCallback) {
+        async decodeFromStream(
+          stream: MediaStream,
+          video: HTMLVideoElement,
+          callback: CameraDecodeCallback,
+        ) {
           const controls = {
             stop() {
               window.cameraTest.decoderStopped++;
@@ -157,9 +162,11 @@ for (const module of ["receipt"]) {
     for (const invalid of ["0", "-1", "1.5", "1000001"]) {
       await quantity.fill(invalid);
       await page.locator('#movement-form button[type="submit"]').click();
-      expect(await quantity.evaluate((input) => (input as HTMLInputElement).validity.valid)).toBe(
-        false,
-      );
+      expect(
+        await quantity.evaluate(
+          (input) => (input as HTMLInputElement).validity.valid,
+        ),
+      ).toBe(false);
       await expect(page.locator(".selection")).toContainText("帳面庫存 240");
     }
     await expect(page.locator("#content > .panel").first()).toHaveScreenshot(

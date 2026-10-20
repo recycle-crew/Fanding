@@ -1,15 +1,14 @@
 import { defineConfig, type Project } from "@playwright/test";
 
-import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const buildOnly = process.env.PLAYWRIGHT_BUILD === "1";
 const rwdOnly = process.env.PLAYWRIGHT_RWD === "1";
 const port = Number(process.env.PLAYWRIGHT_PORT || 4173);
 const baseURL = `http://127.0.0.1:${port}`;
-const require = createRequire(import.meta.url);
 const viteCli = join(
-  dirname(require.resolve("vite/package.json")),
+  dirname(fileURLToPath(import.meta.resolve("vite/package.json"))),
   "bin/vite.js",
 );
 const viteCommand = `"${process.execPath}" "${viteCli}"`;
