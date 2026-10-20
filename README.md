@@ -63,7 +63,7 @@ RWD 採 mobile-first 預設斷點：sm 640px、md 768px、lg 1024px、xl 1280px�
 
 全域狀態使用 Redux Toolkit 與 React Redux：store/index.ts 組合 store，store/hooks.ts 提供型別化存取，store/demo.ts 管理現有展示資料及跨元件流程。登入表單、選單、相機與版面等局部狀態維持由元件持有。業務操作及更新 callback 在 thunk 執行，送出可序列化的 Immer patches；reducer 只套用資料更新，Redux 的序列化與不可變檢查維持啟用。不建立尚無正式需求的 global／auth slice。
 
-Demo 左側導覽是一個可移動區塊：拖曳頂部「功能導覽」把手移動整條側欄，拖曳右側拉柄調整寬度，按「恢復位置」回到左側預設位置。把手也支援方向鍵移動，拉柄可用左右鍵調整寬度。版面調整只保留在當次頁面，不改動資料或權限。
+Demo 左側導覽固定於左側，頂端直接顯示系統名稱；右側拉柄可拖曳或用左右鍵調整寬度。寬度調整只保留在當次頁面，不改動資料或權限。
 
 - `/`：系統分工、功能需求與待確認問題。
 - `/architecture`：React／FastAPI 目錄結構、模組分工、資料流與待確認決策。
@@ -125,6 +125,69 @@ OTC 新增「歷史平均成本價」頁：依已送出的入庫傳票保存當�
 共用庫存篩選：`compileInventoryFilter` 編譯料號／人員／日期條件並驗證日期，`matchesInventoryFilter` 對明確的 materialNumber、person、timestamp 契約取交集；React `FilterForm` 管理各表的查詢草稿。料號與人員去除前後空白、不分大小寫、包含搜尋；空白表示所有。單日含本地 00:00 至下一日開始前，起訖時間含結束分鐘，可單邊填寫；有日期條件而缺少時間戳記的資料不納入。庫存總覽／出庫／入庫以填寫人員與 recordedAt 對應，領用表以領用人與 requisitionedAt 對應。四頁保存獨立條件，庫存總覽保留當日預設、動作／工作區條件，出庫保留分類及日期快捷；搜尋重設頁碼，XLSX 匯出篩選後全部分頁。
 
 入庫／出庫共用條碼查詢：電腦進頁、取消或完成後自動聚焦條碼欄，掃碼槍以鍵盤方式輸入完整條碼並送 Enter；保留前導零，手動輸入也按 Enter。觸控裝置不強制聚焦，以「開啟相機掃碼」授權啟用相機，指定後鏡頭（facingMode exact environment），無後鏡頭時提示，不回退前鏡頭；ZXing Browser 0.2.1 多格式辨識套件首次使用才從本機 vendor 載入，辨識成功停止相機並呼叫同一查詢流程。關閉、切換頁面、登出、背景化及延後授權完成時釋放影像串流。HTTPS／localhost 與瀏覽器相機權限為必要條件；不申請音訊、不上傳影像。已驗證 DOM 操作與模擬串流生命週期，仍需實際手機鏡頭、印製條碼及掃碼槍驗收。
+
+## Deployment decision: Vercel
+
+As confirmed on 2026-10-20, **Vercel remains the chosen demo host**, using manual CLI deployments from the local checkout. The live demo is https://fanding.vercel.app/demo.
+
+Manual deployment works on the current account. The plan limitation blocks connecting the private organization repository `recycle-crew/Fanding` for automatic Git deployments; it does not block uploading and deploying the local code manually. A GitHub push and a Vercel deployment are separate operations.
+
+For each demo update, run from the repository root:
+
+```powershell
+npm run build
+npx vercel --prod --scope zanes-projects-20eaa040
+```
+
+The checkout is already linked to the `fanding` Vercel project through the ignored `.vercel/` directory. Sign in with `npx vercel login` if needed. Deployment does not require committing or pushing to GitHub first. Follow the verification steps in the Vercel section below after publication.
+
+## GitHub automatic deployment limitations
+
+As of 2026-10-20, **neither the current Vercel setup nor ChatGPT Sites provides automatic deployment from this GitHub repository (`recycle-crew/Fanding`)**. Pushing to GitHub does not update either live demo; both currently require manual publication.
+
+| Hosting | Limitation for this project |
+| --- | --- |
+| Vercel | The Hobby plan blocks Git integration with this private organization repository. Enabling that integration requires a supported plan or a change to repository ownership/visibility; granting repository permission alone does not resolve it. |
+| ChatGPT Sites | No supported, persistent GitHub push-to-deploy or GitHub Actions deployment setup was verified. Updates currently require publication through ChatGPT/Sites. |
+
+These are the limitations of this project's current setup, not a claim that Vercel never supports automatic deployment. No GitHub deployment workflow has been configured.
+
+## ChatGPT Sites demo
+
+This was an alternative hosting trial; Vercel is the chosen deployment target. The existing private snapshot remains at https://fanding-inventory-demo.zanewnch.chatgpt.site and is not kept in sync with Vercel. Sign in with the owning ChatGPT account to view it. Site identity and SPA fallback are recorded in `.openai/hosting.json`.
+
+The first Sites publication uses a sanitized deployment copy at `ui-review/sites/fanding-demo/`, including the existing frontend source and verified production assets. Its top-level `dist/` is copied from `frontend/dist/` because Sites static packaging requires that directory name. When publishing an update, rebuild the frontend and refresh the deployment copy's source and `dist/` before using the Sites source/publishing helper. Do not include `.env*`, Vercel credentials, harness links, or local dependencies.
+
+This is a separate, manually published Sites deployment. GitHub pushes to `recycle-crew/Fanding` do not update it. See the automatic deployment limitations above.
+
+## Vercel demo deployment
+
+Live demo: https://fanding.vercel.app (Vercel project `zanes-projects-20eaa040/fanding`). The first production deployment was made manually from this local checkout on 2026-10-20. GitHub automatic deployment is blocked by the Hobby plan restriction described above; granting repository access alone is insufficient.
+
+Keep the Vercel project's **Root Directory** set to the repository root (`.`), not `frontend`. The root `vercel.json` configures:
+
+| Setting | Value |
+| --- | --- |
+| Framework Preset | Vite |
+| Install Command | `npm ci` |
+| Build Command | `npm run build` |
+| Output Directory | `frontend/dist` |
+| Node.js Version | 24.x (select in Vercel project settings) |
+
+No environment variables or backend services are required for this demo. The SPA rewrite supports direct links and refreshes on routes such as `/demo/stocktake/history`, while Vercel serves existing assets normally.
+
+To deploy the local checkout instead of importing Git, run these commands from the repository root:
+
+```powershell
+npx vercel login
+npx vercel
+# Publish to the project's production URL when ready:
+npx vercel --prod
+```
+
+CLI deployments use `.vercelignore` to exclude local harness links, dependencies, generated reports, tests, and build output; Vercel builds from source. The CLI creates a local `.vercel/` project link, which should remain untracked.
+
+After deployment, check `/`, `/architecture`, `/board`, and `/demo`; log into the demo, open `/demo/stocktake/history`, then refresh. Confirm that the board's embedded demo and XLSX downloads work. HTTPS enables browser camera access, but real phones and barcode scanners still require device testing. Demo changes remain in browser memory and reset on refresh; NAS LDAP, HIS, APIs, and databases are not connected.
 
 ## 畫面測試
 

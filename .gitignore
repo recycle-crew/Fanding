@@ -1,4 +1,4 @@
-
+﻿
 # Harness entrypoint symlinks
 /.claude
 /.codex
@@ -6,7 +6,6 @@
 /.github
 /CLAUDE.md
 /AGENTS.md
-/GEMINI.md
 /node_modules/
 /test-results/
 /playwright-report/
@@ -19,3 +18,5 @@
 /react-*.log
 /test-results-react.json
 /ui-review/
+.vercel
+.env*
