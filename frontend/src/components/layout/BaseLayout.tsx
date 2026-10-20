@@ -15,10 +15,7 @@ export function BaseLayout({ variant }: BaseLayoutProps) {
   const loggedIn = useAppSelector((root) => root.demo.loggedIn);
   const embedded = new URLSearchParams(location.search).get("embed") === "1";
   const [menuOpen, setMenuOpen] = useState(false);
-  const [sidebar, setSidebar] = useState({
-    width: embedded ? 195 : 228,
-    floating: false,
-  });
+  const [sidebarWidth, setSidebarWidth] = useState(embedded ? 195 : 228);
 
   // 路由切換完成或登出後收合手機選單；被阻擋的切頁仍保留目前畫面。
   useEffect(() => {
@@ -47,20 +44,14 @@ export function BaseLayout({ variant }: BaseLayoutProps) {
   return (
     <div
       id={loggedIn ? "workspace" : undefined}
-      className={`demo-frame${loggedIn ? " authenticated" : ""}${sidebar.floating ? " sidebar-detached" : ""}`}
-      style={{ "--sidebar-width": `${sidebar.width}px` } as CSSProperties}
+      className={`demo-frame${loggedIn ? " authenticated" : ""}`}
+      style={{ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties}
     >
       <BaseSidebar
         hidden={!loggedIn}
         open={menuOpen}
         embedded={embedded}
-        onWidth={(width, floating) =>
-          setSidebar((previous) =>
-            previous.width === width && previous.floating === floating
-              ? previous
-              : { width, floating },
-          )
-        }
+        onWidth={setSidebarWidth}
       />
       <div className="main-shell">
         <BaseHeader

@@ -1,5 +1,38 @@
 # 畫面測試案例清單
 
+## 舊頁面區（2026-10-20）
+
+| 需求 | 預期畫面／測試來源 | 驗證狀態／限制 |
+| --- | --- | --- |
+| 舊頁面標示與保留 | 十個既有功能保留原分組、順序、網址與選取狀態；顯示舊版說明；rwd.spec.js「舊頁面區」 | 待執行四尺寸 Chromium 與截圖檢視 |
+| 展開、收合與鍵盤 | 預設展開，Enter 收合、Space 展開；aria-expanded 同步，收合不切頁；規劃入口與帳號列留在區外 | 同上；不新增 API、載入錯誤或找不到資料狀態 |
+| 手機選單與直接網址 | 外層選單開關保留區塊收合狀態；全部舊網址登入後可直接開啟；重新載入預設展開 | 同上；真實手機與正式部署未驗收 |
+| 既有互動保留 | 側欄尺寸、固定帳號、一般／高權限、編輯阻擋與取消重試；沿用側欄、帳號及 Layout／SPA 案例 | 結果見 ui-testing.md；NAS／HIS 與後端不在本次範圍 |
+
+## 側欄緊湊帳號列（2026-10-20）
+
+| 需求 | 預期畫面／測試來源 | 驗證狀態／限制 |
+| --- | --- | --- |
+| 帳號與權限層次 | 帳號在上、較淡權限在下；登出置右、透明背景；rwd.spec.js「帳號固定」「長帳號」 | 320／390／768／1440px Chromium 截圖檢視及一般比對，結果見 ui-testing.md |
+| 固定底部與窄側欄 | 導覽捲動不移動帳號列；180px 桌面側欄一般帳號保持單行、長帳號換行且不遮擋登出 | 同上；手機採滿寬導覽，非真實手機驗收 |
+| 互動與權限 | 一般／高權限文字正確，登出至少 44×44px，hover／鍵盤焦點可見、Enter 登出 | rwd.spec.js「帳號固定」「長帳號」；正式身分服務未整合 |
+| 阻擋、取消、重試 | 編輯中登出顯示既有提示且保持登入；取消編輯後可成功登出 | rwd.spec.js「帳號列編輯中阻擋登出並可取消後重試」；無新增網路請求，無新增找不到或載入錯誤狀態 |
+
+## ChatGPT Sites deployment (2026-10-20)
+
+| Requirement | Evidence | Remaining scope |
+| --- | --- | --- |
+| Host the same demo privately | Native Sites deployment succeeded at https://fanding-inventory-demo.zanewnch.chatgpt.site | Normal ChatGPT owner sign-in and external sharing were not independently tested |
+| Serve routes and refresh deep links | Live Chromium service-access checks at 320/390/768/1440px passed four routes, login, history refresh; screenshots reviewed | Full functional regression and real devices were not rerun; GitHub push-to-deploy is not configured |
+
+## Vercel deployment (2026-10-20)
+
+| Requirement | Evidence | Remaining scope |
+| --- | --- | --- |
+| Build and serve the existing demo | Remote TypeScript/Vite build READY; existing local production-output suite 8/8 passed with screenshot comparisons | Full functional regression was not rerun |
+| Main routes and deep links | Live Chromium at 320/390/768/1440px: four routes, demo login, history refresh, SDK asset, no page errors; history screenshots reviewed in `ui-review/vercel/` | Other route combinations and real devices were not independently checked live |
+| Automatic deployments | Manual production deployment at https://fanding.vercel.app | GitHub repository access and Git connection are still required |
+
 ## shadcn/ui 全站遷移（2026-10-17）
 
 | 需求 | 預期畫面與來源 | 驗證狀態／限制 |

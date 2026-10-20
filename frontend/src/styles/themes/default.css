@@ -174,11 +174,10 @@
   }
   .sidebar-resize::after {
     content: "";
-    @apply absolute top-[45%] right-[4px] h-[40px] w-[3px] rounded-[3px] bg-[#9fb3c2];
+    @apply absolute top-[45%] right-[4px] h-[40px] w-[3px] rounded-[3px] bg-[var(--primary)] opacity-0;
   }
-  .sidebar-resize:hover::after,
-  .sidebar-resize:focus-visible::after {
-    @apply bg-[var(--primary)];
+  .sidebar.adjusting .sidebar-resize::after {
+    @apply opacity-100;
   }
   .demo-page main {
     @apply p-[30px_32px];

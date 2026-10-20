@@ -121,10 +121,6 @@
       grid-template-rows: auto auto 1fr;
       grid-template-areas: "banner banner" "sidebar header" "sidebar content";
     }
-    .demo-frame.authenticated.sidebar-detached {
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-areas: "banner" "header" "content";
-    }
   }
   .demo-banner {
     grid-area: banner;

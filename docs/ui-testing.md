@@ -1,5 +1,27 @@
 # 畫面案例驗證
 
+## 側欄緊湊帳號列（2026-10-20）
+
+帳號及權限改為上下兩行，右側使用透明背景的 ghost 登出按鈕；底部白色背景融入側欄、上方細分隔線、左右 16px／上下 12px，點擊區至少 44×44px。最窄 180px 桌面側欄的一般帳號保持單行，長帳號可換行且不擠壓登出。沿用既有登出與編輯阻擋行為。
+
+以 `PLAYWRIGHT_PORT=4198 npm run test:ui:capture -- rwd.spec.js --grep '帳號固定|長帳號|帳號列編輯'` 擷取 Windows Chromium 的 320／390／768／1440px，12 個案例通過。檢視 24 張畫面（固定底部、縮窄、長帳號、編輯阻擋、hover、鍵盤焦點）後才接受基準；總覽位於 `frontend/ui-review/sidebar-account-review.png`，原圖位於 `frontend/ui-review/rwd.spec.js/sidebar-account-*.png`。觸控模擬不要求滑鼠 hover，桌面 hover 及四尺寸鍵盤焦點均已檢視。
+
+以同一 grep 執行 `PLAYWRIGHT_PORT=4198 npm run test:ui -- rwd.spec.js`，一般截圖比對模式 12／12 通過，包含 24 張已檢視基準的比對。`npm run build`（包含 TypeScript typecheck）通過。本次僅驗證帳號列受影響案例，並非全站回歸；實機手機、NAS／正式身分服務與正式部署未驗收。
+
+## ChatGPT Sites deployment verification (2026-10-20)
+
+Private production URL: https://fanding-inventory-demo.zanewnch.chatgpt.site. Native Sites deployment `appgdep_6ad742a5458c81918489fa1ddb31ad2d` succeeded. The deployment uses the same previously built/tested frontend assets, with `single-page-application` fallback in `.openai/hosting.json`. Pushed Sites source commit: `0c1b717ad568c7c61f7a0de96c5a834980cbf6ff`.
+
+Live Chromium at 320/390/768/1440px passed the four main routes, demo login, and history deep-link refresh returning to login. History screenshots were captured and reviewed at `ui-review/sites/live-{width}.png`. Automated checks used the supported Site-only service-access header; normal owner sign-in and external visitor access were not independently tested. This is hosting smoke coverage, not a full RWD/functional regression. GitHub push-to-deploy is not configured for Sites.
+
+## Vercel deployment verification (2026-10-20)
+
+Production URL: https://fanding.vercel.app. Deployment `dpl_5FC2vqtACNuucT3pzc8mqjJ39Eoe` reached READY; the remote build passed TypeScript and Vite with Node.js 24.x. This change adds deployment configuration, without changing UI components or flows.
+
+Local production-output tests: `PLAYWRIGHT_PORT=4197 npm run test:ui:build`, 8/8 passed in Chromium, including existing desktop/mobile screenshot comparisons, main routes, document assets, deep links, iframe flow, XLSX downloads, barcode SDK, and simulated camera-permission denial.
+
+Live Chromium checks at 320/390/768/1440px passed for `/`, `/architecture`, `/board`, and `/demo/stocktake/history`; each width also passed demo login, deep-link refresh returning to login at the same URL, barcode SDK delivery, and no page errors. Four live history-page screenshots were captured and visually reviewed at `ui-review/vercel/history-{width}.png`. This is deployment smoke coverage, not a new full functional/RWD regression run. No screenshot baselines were updated. Real camera/scanner, NAS LDAP, HIS, backend integration, and automatic Git deployments remain unverified or unconnected.
+
 ## shadcn/ui 全站遷移（2026-10-17）
 
 本次沿用現有使用者流程，將全站共用 UI 遷移為 shadcn/ui：Button、Input、Label、NativeSelect、Table、Card、Badge、Alert、Checkbox、Accordion、Dialog。元件客製與應用責任見 [shadcn/ui 慣例](shadcn-ui.md)，需求逐項對照見 [案例清單](ui-case-matrix.md) 首節。
@@ -122,7 +144,7 @@ npm run test:ui:report
 
 導覽狀態測試會逐項以滑鼠點擊／鍵盤 Enter 切換，驗證 hover、focus、選取前後所有項目的字重、文字寬高與按鈕寬高保持一致；桌面另縮至 180px 側欄檢查換行。選取狀態僅改色彩與內側陰影，不改字重或邊框厚度。
 
-帳號與登出固定在側欄底部，手機須展開選單才能操作。測試檢查選單捲動不移動帳號區、浮動／縮窄後仍可登出，以及長帳號和高權限文字不溢出；相機登出案例也從側欄操作並驗證資源釋放。
+帳號與登出固定在側欄底部，手機須展開選單才能操作。測試檢查選單捲動不移動帳號區、縮窄後仍可登出，以及長帳號和高權限文字不溢出；相機登出案例也從側欄操作並驗證資源釋放。
 
 出入庫傳票測試見 `vouchers.spec.js`：多筆草稿整批送出、編號跨日與 999 上限、取消與鎖定、庫存重新核對、防重複提交、分頁及實際下載 XLSX 檢查。側欄另測暫時縮窄視窗後恢復偏好寬度，及恢復後用方向鍵調整；未建檔品項表單截圖也驗證側欄寬度未被截圖過程改寫。
 

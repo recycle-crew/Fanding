@@ -3,9 +3,9 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { Link, useLocation, useNavigate } from "react-router";
 import { demoModulePaths } from "@/constants/demoRoutes";
 import { executeDemoCommand } from "@/store/demo";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { useWindowSize } from "react-use";
+import { useWindowScroll, useWindowSize } from "react-use";
 
 // 導覽圖示使用本機 SVG 線條，沿用按鈕文字及作用中顏色。
 const icons: Record<string, React.ReactNode> = {
@@ -29,12 +29,12 @@ const icons: Record<string, React.ReactNode> = {
     </>
   ),
 };
-// 導覽區塊的移動與尺寸只影響目前頁面，不改動模組資料或登入權限。
+// 導覽區塊的寬度只影響目前頁面，不改動模組資料或登入權限。
 export type BaseSidebarProps = {
   open: boolean;
   hidden: boolean;
   embedded: boolean;
-  onWidth: (width: number, floating: boolean) => void;
+  onWidth: (width: number) => void;
 };
 
 export function BaseSidebar(props: BaseSidebarProps) {
@@ -44,55 +44,46 @@ export function BaseSidebar(props: BaseSidebarProps) {
   const dispatch = useAppDispatch();
   const s = useAppSelector((root) => root.demo);
   const defaultWidth = embedded ? 195 : 228;
-  const [layout, setLayout] = useState({
-    floating: false,
-    width: defaultWidth,
-    x: 8,
-    y: 48,
-  });
+  const [preferredWidth, setPreferredWidth] = useState(defaultWidth);
   const viewport = useWindowSize();
+  const { y: scrollY } = useWindowScroll();
+  const [availableHeight, setAvailableHeight] = useState(viewport.height);
   const [adjusting, setAdjusting] = useState(false);
   const [status, setStatus] = useState("");
+  const [legacyPagesExpanded, setLegacyPagesExpanded] = useState(true);
   const root = useRef<HTMLElement>(null);
   const gesture = useRef<{
-    kind: string;
     pointerId: number;
     startX: number;
-    startY: number;
-    x: number;
-    y: number;
     width: number;
   } | null>(null);
   const maximum = Math.min(480, Math.max(80, viewport.width - 16)),
     minimum = Math.min(180, maximum);
   // 視窗／截圖暫時縮窄時只限制顯示寬度，不覆寫使用者的偏好寬度。
-  const width = Math.max(minimum, Math.min(maximum, layout.width));
-  const x = Math.max(
-      8,
-      Math.min(Math.max(8, viewport.width - width - 8), layout.x),
-    ),
-    y = Math.max(8, Math.min(Math.max(8, viewport.height - 120), layout.y));
-  const sidebarClassName = `sidebar min-w-0 flex-col border-r border-[var(--line)] bg-white p-0${open ? " open flex h-[min(65dvh,_620px)] md:h-[calc(100dvh_-_35px)]" : " hidden md:flex h-[calc(100dvh_-_35px)]"}${layout.floating ? " floating fixed z-[6] w-[var(--sidebar-width)] rounded-[10px] border shadow-[0_8px_28px_#24384725]" : " sticky top-0 z-[3]"}${adjusting ? " adjusting select-none" : ""}`;
-  useEffect(() => onWidth(width, layout.floating), [width, layout.floating]);
-  function start(event: ReactPointerEvent<HTMLElement>, kind: string) {
+  const width = Math.max(minimum, Math.min(maximum, preferredWidth));
+  const sidebarClassName = `sidebar min-w-0 flex-col border-r border-[var(--line)] bg-white p-0${open ? " open flex h-[min(65dvh,_620px)] md:h-[var(--sidebar-height)]" : " hidden md:flex h-[var(--sidebar-height)]"} sticky top-0 z-[3]${adjusting ? " adjusting select-none" : ""}`;
+  // 依側欄實際頂端計算剩餘高度，頁面捲動後不再預留已離開畫面的橫幅空間。
+  useLayoutEffect(() => {
+    if (!hidden && root.current) {
+      setAvailableHeight(
+        Math.max(
+          0,
+          viewport.height -
+            Math.max(0, root.current.getBoundingClientRect().top),
+        ),
+      );
+    }
+  }, [viewport.height, viewport.width, scrollY, hidden, open]);
+  useEffect(() => onWidth(width), [width]);
+  function startResize(event: ReactPointerEvent<HTMLElement>) {
     if (event.button !== 0) return;
     const bounds = root.current.getBoundingClientRect();
     gesture.current = {
-      kind,
       pointerId: event.pointerId,
       startX: event.clientX,
-      startY: event.clientY,
-      x: bounds.left,
-      y: bounds.top,
       width: bounds.width,
     };
-    setLayout((l) => ({
-      ...l,
-      width: bounds.width,
-      ...(kind === "move"
-        ? { floating: true, x: bounds.left, y: bounds.top }
-        : {}),
-    }));
+    setPreferredWidth(bounds.width);
     event.currentTarget.setPointerCapture(event.pointerId);
     setAdjusting(true);
     event.preventDefault();
@@ -101,14 +92,7 @@ export function BaseSidebar(props: BaseSidebarProps) {
     onPointerMove: (event: ReactPointerEvent<HTMLElement>) => {
       const g = gesture.current;
       if (!g || g.pointerId !== event.pointerId) return;
-      if (g.kind === "move")
-        setLayout((l) => ({
-          ...l,
-          x: g.x + event.clientX - g.startX,
-          y: g.y + event.clientY - g.startY,
-        }));
-      else
-        setLayout((l) => ({ ...l, width: g.width + event.clientX - g.startX }));
+      setPreferredWidth(g.width + event.clientX - g.startX);
     },
     onPointerUp: (event: ReactPointerEvent<HTMLElement>) => {
       if (!gesture.current) return;
@@ -116,9 +100,7 @@ export function BaseSidebar(props: BaseSidebarProps) {
       setAdjusting(false);
       if (event.currentTarget.hasPointerCapture(event.pointerId))
         event.currentTarget.releasePointerCapture(event.pointerId);
-      setStatus(
-        `導覽區塊${layout.floating ? "已移動" : "位於左側"}，寬度 ${Math.round(width)} 像素。`,
-      );
+      setStatus(`導覽區塊位於左側，寬度 ${Math.round(width)} 像素。`);
     },
     onPointerCancel: () => {
       gesture.current = null;
@@ -136,69 +118,9 @@ export function BaseSidebar(props: BaseSidebarProps) {
       className={sidebarClassName}
       id="sidebar"
       style={
-        layout.floating
-          ? { left: x, top: y, height: Math.max(100, viewport.height - y - 8) }
-          : undefined
+        { "--sidebar-height": `${availableHeight}px` } as React.CSSProperties
       }
     >
-      <div
-        className={`sidebar-controls flex shrink-0 items-center gap-1 border-b border-[var(--line)] bg-[#f8fafc] p-[10px_8px]${layout.floating ? " rounded-t-[10px]" : ""}`}
-      >
-        <Button
-          variant="outline"
-          type="button"
-          id="sidebar-drag"
-          aria-label="拖動導覽區塊，也可使用方向鍵"
-          title="拖曳移動；方向鍵也可調整位置"
-          {...pointerHandlers}
-          onPointerDown={(e) => start(e, "move")}
-          className={`flex-1 touch-none border-transparent bg-transparent p-[6px] text-left text-[11px] whitespace-nowrap${adjusting ? " cursor-grabbing" : " cursor-grab"}`}
-          onKeyDown={(event) => {
-            if (
-              !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(
-                event.key,
-              )
-            )
-              return;
-            event.preventDefault();
-            const bounds = root.current.getBoundingClientRect(),
-              step = event.shiftKey ? 40 : 10;
-            setLayout((l) => ({
-              ...l,
-              floating: true,
-              x:
-                (l.floating ? x : bounds.left) +
-                (event.key === "ArrowRight"
-                  ? step
-                  : event.key === "ArrowLeft"
-                    ? -step
-                    : 0),
-              y:
-                (l.floating ? y : bounds.top) +
-                (event.key === "ArrowDown"
-                  ? step
-                  : event.key === "ArrowUp"
-                    ? -step
-                    : 0),
-            }));
-          }}
-        >
-          ⠿ 功能導覽
-        </Button>
-        <Button
-          variant="outline"
-          type="button"
-          id="sidebar-reset"
-          className="p-[6px] text-[11px] whitespace-nowrap"
-          title="恢復左側預設位置與寬度"
-          onClick={() => {
-            setLayout({ floating: false, width: defaultWidth, x: 8, y: 48 });
-            setStatus("導覽區塊已恢復左側預設位置與寬度。");
-          }}
-        >
-          恢復位置
-        </Button>
-      </div>
       <div
         className={`sidebar-body min-h-0 flex-1 overflow-x-hidden overflow-y-auto ${embedded ? "p-[18px_12px]" : "p-[24px_16px]"}`}
       >
@@ -210,7 +132,39 @@ export function BaseSidebar(props: BaseSidebarProps) {
         >
           庫存管理工作區
         </p>
-        <nav id="module-nav" className="grid gap-[5px]" aria-label="功能選單">
+        <Button
+          variant="ghost"
+          id="legacy-pages-toggle"
+          className="h-auto min-h-11 w-full justify-between gap-2 whitespace-normal px-3 py-2 text-left text-[14px] font-semibold"
+          aria-expanded={legacyPagesExpanded}
+          aria-controls="module-nav"
+          aria-describedby="legacy-pages-description"
+          onClick={() => setLegacyPagesExpanded(!legacyPagesExpanded)}
+        >
+          <span>舊頁面區</span>
+          <svg
+            className={`size-4 shrink-0 transition-transform motion-reduce:transition-none${legacyPagesExpanded ? " rotate-180" : ""}`}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden="true"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </Button>
+        <p
+          id="legacy-pages-description"
+          className="mx-3 mb-2 mt-1 text-[12px] leading-5 text-[var(--muted)]"
+        >
+          舊版頁面，保留供參考；後續依新規格開發。
+        </p>
+        <nav
+          id="module-nav"
+          hidden={!legacyPagesExpanded}
+          className={legacyPagesExpanded ? "grid gap-[5px]" : "hidden"}
+          aria-label="舊頁面功能選單"
+        >
           {s.modules.map((module) => (
             <Fragment key={module.key}>
               {module.group && (
@@ -264,20 +218,24 @@ export function BaseSidebar(props: BaseSidebarProps) {
         <p className="small muted mx-3 mb-[14px]">所有操作僅影響當次假資料</p>
       </div>
       <div
-        className="account sidebar-account flex flex-[0_0_auto] flex-col items-start gap-[10px] rounded-[0_0_10px_10px] border-t border-[var(--line)] bg-[#f8fafc] p-[14px_20px] text-[12px]"
+        className="account sidebar-account flex flex-[0_0_auto] items-center gap-3 rounded-[0_0_10px_10px] border-t border-[var(--line)] bg-white px-4 py-3 text-[12px]"
         aria-label="登入帳號"
       >
         <span
           id="account-label"
-          className="max-w-full [overflow-wrap:anywhere]"
+          className="flex min-w-0 flex-1 flex-col gap-0.5 [overflow-wrap:anywhere]"
         >
-          {s.currentAccount} ·{" "}
-          {s.canEditExistingData ? "高權限（展示）" : "一般權限"}
+          <span className="text-[12px] font-medium leading-5">
+            {s.currentAccount}
+          </span>
+          <span className="text-[11px] leading-4 text-[var(--muted)]">
+            {s.canEditExistingData ? "高權限（展示）" : "一般權限"}
+          </span>
         </span>
         <Button
-          variant="outline"
+          variant="ghost"
           id="logout"
-          className="p-[6px_12px] text-[12px]"
+          className="h-11 min-w-11 shrink-0 border-0 bg-transparent px-2 py-0 text-[12px] font-medium text-[var(--muted)] shadow-none"
           onClick={() => {
             if (s.editor) {
               dispatch(
@@ -316,20 +274,18 @@ export function BaseSidebar(props: BaseSidebarProps) {
         aria-valuemax={maximum}
         aria-valuenow={Math.round(width)}
         {...pointerHandlers}
-        onPointerDown={(e) => start(e, "resize")}
+        onPointerDown={(e) => startResize(e)}
         onKeyDown={(event) => {
           if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key))
             return;
           event.preventDefault();
-          setLayout((l) => ({
-            ...l,
-            width:
-              event.key === "Home"
-                ? 180
-                : event.key === "End"
-                  ? 480
-                  : width + (event.key === "ArrowLeft" ? -20 : 20),
-          }));
+          setPreferredWidth(
+            event.key === "Home"
+              ? 180
+              : event.key === "End"
+                ? 480
+                : width + (event.key === "ArrowLeft" ? -20 : 20),
+          );
         }}
       />
       <span

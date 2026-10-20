@@ -351,6 +351,102 @@ test("RWD SPA 跨頁切換、錨點與找不到頁面", async ({ page }) => {
   await checkResponsiveLayout(page);
   await expect(page).toHaveScreenshot("spa-not-found-rwd.png");
 });
+test("RWD 舊頁面區預設展開與鍵盤收合保留目前頁面", async ({ page }) => {
+  await enterDemoModule(page, "vendors");
+  const mobile = page.viewportSize().width < 768;
+  if (mobile) await page.locator("#menu-toggle").click();
+  const toggle = page.getByRole("button", { name: "舊頁面區", exact: true });
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator("#legacy-pages-description")).toHaveText(
+    "舊版頁面，保留供參考；後續依新規格開發。",
+  );
+  await expect(page.locator("#module-nav [data-module]")).toHaveCount(10);
+  await expect(page.locator("#module-nav .nav-group")).toHaveText([
+    "共同管理",
+    "HIS 工作區",
+    "OTC 工作區",
+    "HIS ／ OTC 庫存總覽",
+  ]);
+  await toggle.scrollIntoViewIfNeeded();
+  await checkResponsiveLayout(page);
+  await expect(page.locator("#sidebar")).toHaveScreenshot(
+    "legacy-pages-expanded.png",
+  );
+  await toggle.focus();
+  await page.keyboard.press("Enter");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(page.locator("#module-nav")).toBeHidden();
+  await expect(page).toHaveURL(/\/demo\/vendors$/);
+  await expect(page.locator("#content h2")).toHaveText("廠商資料維護");
+  await expect(page.locator("#logout")).toBeInViewport();
+  await expect(page.locator('.planning-link[href="/board"]')).toBeVisible();
+  await expect(page.locator('.planning-link[href="/"]')).toBeVisible();
+  await checkResponsiveLayout(page);
+  await expect(page.locator("#sidebar")).toHaveScreenshot(
+    "legacy-pages-collapsed.png",
+  );
+  // 手機外層選單的開關不重設舊頁面區狀態。
+  if (mobile) {
+    await page.locator("#menu-toggle").click();
+    await expect(page.locator("#sidebar")).toBeHidden();
+    await page.locator("#menu-toggle").click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await expect(page.locator("#module-nav")).toBeHidden();
+  }
+  await toggle.focus();
+  await page.keyboard.press("Space");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator('[data-module="vendors"]')).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await page.locator('[data-module="products"]').click();
+  await expect(page).toHaveURL(/\/demo\/products$/);
+  if (mobile) {
+    await expect(page.locator("#sidebar")).toBeHidden();
+    await page.locator("#menu-toggle").click();
+  }
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(page.locator('[data-module="products"]')).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await toggle.scrollIntoViewIfNeeded();
+  await expect(page.locator("#sidebar")).toHaveScreenshot(
+    "legacy-pages-reopened.png",
+  );
+});
+
+test("RWD 舊頁面區所有既有網址可直接開啟", async ({ page }) => {
+  for (const [module, path] of [
+    ["overview", "/demo"],
+    ["vendors", "/demo/vendors"],
+    ["his", "/demo/his"],
+    ["products", "/demo/products"],
+    ["historical-cost", "/demo/historical-cost"],
+    ["receipt", "/demo/receipt"],
+    ["issue", "/demo/issue"],
+    ["requisitions", "/demo/requisitions"],
+    ["stocktake", "/demo/stocktake/current"],
+    ["stocktake-history", "/demo/stocktake/history"],
+  ]) {
+    await page.goto(path);
+    await page.locator("#login-form button[type=submit]").click();
+    await expect(page.locator("#content h2")).toBeVisible();
+    expect(new URL(page.url()).pathname).toBe(path);
+    if (page.viewportSize().width < 768)
+      await page.locator("#menu-toggle").click();
+    await expect(page.locator("#legacy-pages-toggle")).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    await expect(
+      page.locator(`#module-nav [data-module="${module}"]`),
+    ).toHaveAttribute("aria-current", "page");
+    await checkResponsiveLayout(page);
+  }
+});
+
 async function checkResponsiveLayout(page) {
   const overflow = await page.evaluate(() => {
     const width = document.documentElement.clientWidth;
@@ -644,57 +740,83 @@ for (const direction of ["receipt", "issue"]) {
     );
   });
 }
+test("RWD 側欄移除功能導覽與恢復位置", async ({ page }) => {
+  await enterDemoModule(page, "overview");
+  if (page.viewportSize().width < 768)
+    await page.locator("#menu-toggle").click();
+  await expect(page.locator("#sidebar")).toBeVisible();
+  await expect(
+    page.locator("#sidebar-drag,#sidebar-reset,.sidebar-controls"),
+  ).toHaveCount(0);
+  await expect(page.locator("#sidebar .brand")).toBeVisible();
+  await expect(page.locator('[data-module="overview"]')).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(page.locator("#logout")).toBeInViewport();
+  await checkResponsiveLayout(page);
+  await expect(page.locator("#sidebar")).toHaveScreenshot(
+    "sidebar-without-position-controls.png",
+  );
+  await page.locator('[data-module="vendors"]').click();
+  await expect(page).toHaveURL(/vendors/);
+  if (page.viewportSize().width < 768)
+    await expect(page.locator("#sidebar")).toBeHidden();
+});
+
 test("RWD 暫時縮窄視窗後恢復側欄偏好寬度", async ({ page }) => {
   await enterDemoModule(page, "receipt");
   if (page.viewportSize().width < 768)
     await page.locator("#menu-toggle").click();
-  await page.locator("#sidebar-drag").press("ArrowRight");
   await page.locator("#sidebar-resize").press("End");
-  const viewport = page.viewportSize(),
-    width = await page
-      .locator("#sidebar")
-      .evaluate((element) => element.getBoundingClientRect().width);
-  await page.setViewportSize({
-    width: 160,
-    height: viewport.height,
-  });
-  await expect
-    .poll(() =>
-      page
-        .locator("#sidebar")
-        .evaluate((element) => element.getBoundingClientRect().width),
-    )
-    .toBeLessThan(width);
+  const viewport = page.viewportSize();
+  const preferredWidth = Number(
+    await page.locator("#sidebar-resize").getAttribute("aria-valuenow"),
+  );
+  await page.setViewportSize({ width: 160, height: viewport.height });
+  await expect(page.locator("#sidebar-resize")).toHaveAttribute(
+    "aria-valuenow",
+    "144",
+  );
   await page.setViewportSize(viewport);
-  await expect
-    .poll(() =>
-      page
-        .locator("#sidebar")
-        .evaluate((element) => element.getBoundingClientRect().width),
-    )
-    .toBe(width);
+  await expect(page.locator("#sidebar-resize")).toHaveAttribute(
+    "aria-valuenow",
+    String(preferredWidth),
+  );
   await page.locator("#sidebar-resize").press("ArrowLeft");
-  await expect
-    .poll(() =>
-      page
-        .locator("#sidebar")
-        .evaluate((element) => element.getBoundingClientRect().width),
-    )
-    .toBe(width - 20);
+  await expect(page.locator("#sidebar-resize")).toHaveAttribute(
+    "aria-valuenow",
+    String(preferredWidth - 20),
+  );
   await page.locator("#sidebar-resize").press("ArrowRight");
-  await expect
-    .poll(() =>
-      page
-        .locator("#sidebar")
-        .evaluate((element) => element.getBoundingClientRect().width),
-    )
-    .toBe(width);
+  await expect(page.locator("#sidebar-resize")).toHaveAttribute(
+    "aria-valuenow",
+    String(preferredWidth),
+  );
+  if (viewport.width >= 768) {
+    await expect
+      .poll(() =>
+        page
+          .locator("#sidebar")
+          .evaluate((element) => element.getBoundingClientRect().width),
+      )
+      .toBe(preferredWidth);
+  } else {
+    // 固定側欄在手機展開時使用整個畫面寬度，偏好寬度於桌面才套用。
+    await expect
+      .poll(() =>
+        page
+          .locator("#sidebar")
+          .evaluate((element) => element.getBoundingClientRect().width),
+      )
+      .toBe(viewport.width);
+  }
   await checkResponsiveLayout(page);
   await expect(page.locator("#sidebar")).toHaveScreenshot(
     "sidebar-preferred-width.png",
   );
 });
-test("RWD 帳號固定側欄底部且移動縮放後可登出", async ({ page }) => {
+test("RWD 帳號固定側欄底部且縮放後可登出", async ({ page }) => {
   await enterDemoModule(page, "his");
   if (page.viewportSize().width < 768)
     await page.locator("#menu-toggle").click();
@@ -703,6 +825,12 @@ test("RWD 帳號固定側欄底部且移動縮放後可登出", async ({ page })
     page.locator(".topbar #account-label,.topbar #logout"),
   ).toHaveCount(0);
   await expect(footer).toContainText("demo.pharmacy");
+  await expect(page.locator("#account-label")).toContainText("一般權限");
+  const logout = page.locator("#logout");
+  const logoutBounds = await logout.boundingBox();
+  expect(logoutBounds.width).toBeGreaterThanOrEqual(44);
+  expect(logoutBounds.height).toBeGreaterThanOrEqual(44);
+  expect((await footer.boundingBox()).height).toBeLessThanOrEqual(80);
   const beforeScroll = await footer.boundingBox();
   await page.locator(".sidebar-body").evaluate((element) => {
     element.scrollTop = element.scrollHeight;
@@ -715,7 +843,6 @@ test("RWD 帳號固定側欄底部且移動縮放後可登出", async ({ page })
   await expect(page.locator("#sidebar")).toHaveScreenshot(
     "sidebar-account-fixed.png",
   );
-  await page.locator("#sidebar-drag").press("ArrowRight");
   await page.locator("#sidebar-resize").press("Home");
   const sidebarBounds = await page.locator("#sidebar").boundingBox(),
     footerBounds = await footer.boundingBox();
@@ -730,9 +857,19 @@ test("RWD 帳號固定側欄底部且移動縮放後可登出", async ({ page })
   await expect(page.locator("#logout")).toBeInViewport();
   await checkResponsiveLayout(page);
   await expect(page.locator("#sidebar")).toHaveScreenshot(
-    "sidebar-account-floating.png",
+    "sidebar-account-resized.png",
   );
-  await page.locator("#logout").click();
+  expect(
+    (await page.locator("#account-label > span").first().boundingBox()).height,
+    "一般帳號在最窄側欄仍維持單行",
+  ).toBe(20);
+  await logout.hover();
+  await expect(footer).toHaveScreenshot("sidebar-account-hover.png");
+  await page.locator(".sidebar-body").hover();
+  await logout.focus();
+  await expect(logout).toBeFocused();
+  await expect(footer).toHaveScreenshot("sidebar-account-keyboard-focus.png");
+  await logout.press("Enter");
   await expect(page.locator("#login")).toBeVisible();
   await expect(page.locator("#workspace")).toBeHidden();
 });
@@ -753,12 +890,45 @@ test("RWD 長帳號與權限在側欄底部不溢出", async ({ page }) => {
   expect(accountBounds.x + accountBounds.width).toBeLessThanOrEqual(
     sidebarBounds.x + sidebarBounds.width,
   );
+  const logoutBounds = await page.locator("#logout").boundingBox();
+  expect(accountBounds.x + accountBounds.width).toBeLessThanOrEqual(
+    logoutBounds.x,
+  );
+  expect(logoutBounds.width).toBeGreaterThanOrEqual(44);
+  expect(logoutBounds.height).toBeGreaterThanOrEqual(44);
+  await expect(page.locator("#account-label > span").first()).toHaveText(
+    "pharmacy.inventory.supervisor.long.account",
+  );
   await expect(page.locator("#logout")).toBeInViewport();
   await checkResponsiveLayout(page);
   await expect(page.locator(".sidebar-account")).toHaveScreenshot(
     "sidebar-account-long-name.png",
   );
 });
+test("RWD 帳號列編輯中阻擋登出並可取消後重試", async ({ page }) => {
+  await enterDemoModule(page, "vendors");
+  await page.locator('[data-action="add"]').click();
+  if (page.viewportSize().width < 768)
+    await page.locator("#menu-toggle").click();
+  await page.locator("#logout").click();
+  await expect(page.locator("#editor")).toBeVisible();
+  await expect(page.locator("#notice")).toContainText(
+    "請先儲存或取消編輯，再登出。",
+  );
+  await expect(page.locator("#login")).toBeHidden();
+  await expect(page.locator("#sidebar")).toHaveScreenshot(
+    "sidebar-account-blocked-logout.png",
+  );
+  if (page.viewportSize().width < 768)
+    await page.locator("#menu-toggle").click();
+  await page.locator("#editor [data-close]").first().click();
+  if (page.viewportSize().width < 768)
+    await page.locator("#menu-toggle").click();
+  await page.locator("#logout").click();
+  await expect(page.locator("#login")).toBeVisible();
+  await expect(page.locator("#sidebar")).toBeHidden();
+});
+
 test("RWD 導覽點擊與聚焦不得改變文字或項目尺寸", async ({ page }) => {
   await enterDemoModule(page, "overview");
   if (page.viewportSize().width < 768)
