@@ -1,9 +1,5 @@
-import {
-  test,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-} from "../../../helpers/test";
+import { test, expect } from "@playwright/test";
+import { DEMO_LOGIN_ENABLED as loginEnabled } from "../../../../src/constants/demoAccess";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
@@ -21,7 +17,7 @@ test(
         reduxErrors.push(message.text());
     });
     await page.goto("/demo/vendors");
-    await enterWorkspace(page);
+    await expect(page.locator("#workspace")).toBeVisible();
     await expect(page.locator("#content h2")).toHaveText("廠商資料維護");
     await page.locator("[data-action=add]").click();
     await page.locator("#editor [name=name]").fill("SPA 保留資料測試");
@@ -67,7 +63,7 @@ test("SPA 直接開啟與重新整理盤點路徑及舊連結", async ({ page })
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
-  await enterWorkspace(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await expect(page.locator("#content h2")).toHaveText("歷史盤點紀錄");
   await page.reload();
   await expect(page).toHaveURL(/\/demo\/stocktake\/history$/);
@@ -79,7 +75,7 @@ test("SPA 直接開啟與重新整理盤點路徑及舊連結", async ({ page })
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
-  await enterWorkspace(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await expect(page.locator("#content h2")).toHaveText("現有盤點週期");
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
   await expect(page.locator("#content")).toHaveScreenshot(
@@ -104,6 +100,6 @@ test("SPA 直接開啟與重新整理盤點路徑及舊連結", async ({ page })
   await expect(page.locator("h1")).toBeVisible();
   await expect(page.locator("body")).toHaveClass("planning-page");
   await page.goto("/demo/stocktake/history/");
-  await enterWorkspace(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await expect(page.locator("#content h2")).toHaveText("歷史盤點紀錄");
 });

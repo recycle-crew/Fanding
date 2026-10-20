@@ -15,7 +15,6 @@
     "typecheck": "npm run typecheck --workspace frontend --",
     "dev:test": "npm run dev:test --workspace frontend --",
     "test:ui:build": "npm run test:ui:build --workspace frontend --",
-    "test:ui:capture": "npm run test:ui:capture --workspace frontend --",
     "test:ui:build:report": "npm run test:ui:build:report --workspace frontend --",
     "test:e2e:critical": "npm run test:e2e:critical --workspace frontend --",
     "test:visual": "npm run test:visual --workspace frontend --",

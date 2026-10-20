@@ -18,15 +18,10 @@ tests/
 │     ├─ purchases/          /demo/purchases
 │     ├─ items/              /demo/items 與其子路由
 │     └─ …                   其他現有 route
-├─ helpers/                  真正被重複使用的工具
-│  ├─ test.ts               共用 test、日期、Redux 檢查與頁面初始化
-│  ├─ xlsx.ts               解析真實下載檔案
-│  └─ capture.ts            截圖檢視模式
 ├─ setup.ts                  Vitest 日期與 mock 清理
 ├─ tsconfig.json             瀏覽器測試的型別檢查設定
 ├─ types/                    測試型別，依用途與來源資料夾分類
-│  ├─ browser.d.ts           測試環境的瀏覽器型別
-│  └─ helpers/xlsx.ts        Excel 讀取工具型別
+│  └─ browser.d.ts           測試環境的瀏覽器型別
 └─ README.md
 ```
 
@@ -67,15 +62,16 @@ Playwright 自動啟動伺服器。port 已被占用時，先設定 `$env:PLAYWR
 
 失敗附件、報告、檢視截圖統一輸出到 `frontend/.artifacts/`，不提交 Git。舊的 anchor-audit 結果移至 `.artifacts/archive/` 保留，不再散落在 frontend 根目錄。
 
-`test:ui:report` 查看 `.artifacts/reports/ui`；`test:ui:build:report` 查看正式產物報告。截圖差異先檢查原因，確認符合需求才用 `test:ui:update` 更新基準。`test:ui:capture` 只供檢視，不能當成像素比對通過。
+`test:ui:report` 查看 `.artifacts/reports/ui`；`test:ui:build:report` 查看正式產物報告。截圖差異先檢查原因，確認符合需求才用 `test:ui:update` 更新基準。
 
 ## 歸屬與維護規則
 
+- Playwright 測試直接從 `@playwright/test` 匯入 `test`、`expect`。路由載入與重新整理的檢查直接寫在所屬測試；登入開關直接匯入 `src/constants/demoAccess.ts`。
 - Page 的表單、子元件互動、鍵盤、畫面、錯誤與取消行為寫在所屬 route 的 Playwright 測試。
 - 計算、store、驗證、資料轉換與未來的 request 邏輯，將 `.test.ts` 放在受測 `.ts` 旁。
 - `interface` 統一放在 `src/types`，依領域或來源資料夾分類（例如 `types/items`、`types/demo`、`types/store`、`types/helpers`），實作檔使用 `import type` 引用。測試專用型別放在 `tests/types`，同樣依來源資料夾分類；不在元件、model、store 或 helper 內宣告 `interface`。
 - 子元件與必要的 store 使用真實實作；需要模擬時從網路邊界處理。現有 Demo 沒有正式 HTTP client，不建立空的 request 模組。
-- 每個瀏覽器情境使用獨立 context，測試資料留在記憶體。日期預設固定為台北 2026-10-20；特定歷史情境可自行設定。Vitest 每次清理 mock 與假計時器。
+- 每個瀏覽器情境使用獨立 context，測試資料留在記憶體。需要固定日期的測試，在案例或 `test.beforeEach` 中直接呼叫 Playwright 的 `page.clock.setFixedTime()`。Vitest 每次清理 mock 與假計時器。
 - 依頁面功能涵蓋成功、載入、空資料、驗證、失敗、重試、取消、權限及重複送出。重要流程加 `@critical`；route 對應測試會檢查頁面入口案例是否存在。
 - Demo 登入暫停時，依賴登入／登出 UI 的舊情境會說明原因後跳過。
 

@@ -79,7 +79,12 @@ export function NewPurchaseForm({
       onDirty={onDirty}
       submitText="確認入庫"
       submit={() => {
-        if (!lines.length) return { message: "請至少加入一筆進貨商品。" };
+        if (!lines.length)
+          return {
+            message:
+              "請至少加入一筆進貨商品。請在商品搜尋中選取商品，或輸入完整料號後按 Enter 加入。",
+            field: "purchase-item-search",
+          };
         if (
           lines.some(
             (l) =>
@@ -96,6 +101,10 @@ export function NewPurchaseForm({
         });
       }}
     >
+      <p className="purchase-callout">
+        必填：供應商、入庫倉別、收貨日期，以及至少一筆進貨商品。
+        商品加入後，請填寫數量與單位成本；有批號或效期管理的商品也必須填寫批號、效期。
+      </p>
       <section>
         <h3>基本資料</h3>
         <div className="items-form-grid purchase-header-grid">
@@ -161,7 +170,7 @@ export function NewPurchaseForm({
         </div>
       </section>
       <section>
-        <h3>進貨商品</h3>
+        <h3>進貨商品（必填，至少加入一筆）</h3>
         <div className="purchase-product-search">
           <Field
             name="purchase-item-search"
@@ -251,6 +260,7 @@ export function NewPurchaseForm({
                   </BaseTableCell>
                   <BaseTableCell>{l.specification}</BaseTableCell>
                   <BaseTableCell>
+                    <small>{l.trackBatch ? "必填" : "不需填寫"}</small>
                     <BaseInput
                       aria-label={`第${i + 1}筆批號`}
                       required={l.trackBatch}
@@ -260,6 +270,7 @@ export function NewPurchaseForm({
                     />
                   </BaseTableCell>
                   <BaseTableCell>
+                    <small>{l.trackExpiry ? "必填" : "不需填寫"}</small>
                     <BaseInput
                       aria-label={`第${i + 1}筆效期`}
                       type="date"
@@ -270,6 +281,7 @@ export function NewPurchaseForm({
                     />
                   </BaseTableCell>
                   <BaseTableCell>
+                    <small>必填，大於 0</small>
                     <BaseInput
                       aria-label={`第${i + 1}筆數量`}
                       type="number"
@@ -288,6 +300,7 @@ export function NewPurchaseForm({
                   </BaseTableCell>
                   <BaseTableCell>{l.unit}</BaseTableCell>
                   <BaseTableCell>
+                    <small>必填，可為 0</small>
                     <BaseInput
                       aria-label={`第${i + 1}筆單位成本`}
                       type="number"
@@ -339,7 +352,7 @@ export function NewPurchaseForm({
               {!lines.length && (
                 <BaseTableRow>
                   <BaseTableCell colSpan={10} className="purchase-empty">
-                    尚未加入商品，請從上方搜尋。
+                    必填：至少加入一筆進貨商品。請從上方搜尋並點選商品，或輸入完整料號後按 Enter 加入。
                   </BaseTableCell>
                 </BaseTableRow>
               )}

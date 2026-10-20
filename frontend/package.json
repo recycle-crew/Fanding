@@ -12,7 +12,6 @@
     "typecheck": "tsc -p tsconfig.json && tsc -p tests/tsconfig.json",
     "dev:test": "vite --mode test --host 127.0.0.1 --port 4173 --strictPort",
     "test:ui:build": "node scripts/test-ui.mjs --build",
-    "test:ui:capture": "node scripts/test-ui.mjs --capture",
     "test:ui:build:report": "playwright show-report .artifacts/reports/build",
     "test:e2e:critical": "playwright test --grep @critical --ignore-snapshots",
     "test:visual": "playwright test",
@@ -36,7 +35,8 @@
     "tailwindcss": "4.3.3",
     "typescript": "7.0.2",
     "vite": "8.3.4",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "dependencies": {
     "@reduxjs/toolkit": "2.13.0",

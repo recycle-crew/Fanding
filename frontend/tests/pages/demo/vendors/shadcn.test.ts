@@ -1,9 +1,5 @@
-import {
-  test as base,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-} from "../../../helpers/test";
+import { test as base, expect } from "@playwright/test";
+import { DEMO_LOGIN_ENABLED as loginEnabled } from "../../../../src/constants/demoAccess";
 
 const test = base.extend<{ componentErrors: void }>({
   componentErrors: [
@@ -33,7 +29,7 @@ test("shadcn 確認視窗的鍵盤取消、焦點限制與回復", async ({ page
   await page.goto("/demo/vendors");
   if (loginEnabled)
     await page.locator("#demo-permission").selectOption("privileged");
-  await enterWorkspace(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
   const trigger = page.locator("[data-action=delete][data-id=V005]");
   await trigger.click();

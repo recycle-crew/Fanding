@@ -77,7 +77,7 @@ export function BaseForm({
     if (invalid) {
       setError({
         field: invalid.name,
-        message: `${invalid.labels?.[0]?.querySelector("span")?.textContent || "欄位"}：${invalid.validationMessage}`,
+        message: `${invalid.getAttribute("aria-label") || invalid.labels?.[0]?.querySelector("span")?.textContent || "欄位"}：${invalid.validationMessage}`,
       });
       return;
     }

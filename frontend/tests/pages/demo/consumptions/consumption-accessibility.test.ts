@@ -1,7 +1,8 @@
 import axe from "axe-core";
-import { test, expect } from "../../../helpers/test";
+import { test, expect } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
   await page.goto("/demo/consumptions");
   await expect(
     page.getByRole("heading", { name: "藥品耗用查詢", exact: true }),

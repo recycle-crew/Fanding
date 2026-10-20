@@ -1,5 +1,5 @@
 import axe from "axe-core";
-import { test, expect } from "../../../helpers/test";
+import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 async function audit(page: Page) {

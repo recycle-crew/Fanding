@@ -112,6 +112,9 @@ export function CheckoutForm({
         onSuccess(result.saleId!);
       }}
     >
+      <p className="purchase-callout">
+        必填確認：銷售資格；非現金付款須確認外部付款成功。
+      </p>
       <section>
         <h3>交易摘要</h3>
         <p>

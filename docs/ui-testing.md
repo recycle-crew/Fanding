@@ -28,7 +28,6 @@ Live Chromium checks at 320/390/768/1440px passed for `/`, `/architecture`, `/bo
 
 本次沿用現有使用者流程，將全站共用 UI 遷移為 shadcn/ui：Button、Input、Label、NativeSelect、Table、Card、Badge、Alert、Checkbox、Accordion、Dialog。元件客製與應用責任見 [shadcn/ui 慣例](shadcn-ui.md)，需求逐項對照見 [案例清單](ui-case-matrix.md) 首節。
 
-先以 `npm run test:ui:capture` 執行正常、找不到、錯誤、取消、重試、權限與 320／390／768／1440px 案例，把實際 Chromium 畫面保留於 `frontend/ui-review/`。以分組聯絡表及關鍵原尺寸圖片檢查新元件、表格、Dialog、文件與導覽後，才接受對應基準，再以一般模式執行完整截圖比對。截圖容許值維持 0.002。
 
 檢視過程修正出入庫選取分類、載入失敗重試按鈕的文字／底色衝突；改用 Button variant 管理狀態。320px 的播放器底部按鈕需要換行，footer 改用三欄自適應高度，播放器內容採可收縮的 flex 區域，避免按鈕溢出或壓住 iframe。受影響案例重新擷取後再檢視。
 
@@ -38,7 +37,6 @@ Live Chromium checks at 320/390/768/1440px passed for `/`, `/architecture`, `/bo
 
 ```powershell
 $env:PLAYWRIGHT_PORT = "4185"
-npm run test:ui:capture
 npm run test:ui
 npm run build
 npm run test:ui:build
@@ -94,7 +92,6 @@ React 版本的測試會自動啟動 Vite `test` 模式。頁面就緒以可見�
 
 測試入口等待畫面週期後才讀取最新狀態；純讀取不派送更新，初始化變更則同步提交，避免測試用的舊快照覆寫尚在提交的 React 狀態。傳票重試也先確認畫面已鎖定送出，再檢查庫存。
 
-需要先檢視畫面時，可執行 `npm run test:ui:capture`；它把實際 Chromium 截圖與案例資訊寫到忽略追蹤的 `frontend/ui-review/`，不比對或改寫基準。這是視覺檢查前的擷取步驟，不能代替一般 `npm run test:ui` 的截圖比較。正式 build 可用 `npm run test:ui:capture -- --build` 先擷取畫面。完成檢視後才接受必要的基準變更，再以一般模式重跑。
 
 流程規劃板的縮圖先依場景等待登入、編輯或工作區實際顯示，再擷取畫面，避免把 React 尚未載入的空白 iframe 當成基準。原生數字驗證案例會核對錯誤訊息、stepMismatch、焦點及未送出資料，再把焦點移至備註欄後擷取穩定表單；Chromium 原生驗證泡泡的位置不納入像素基準，應用程式的錯誤提示仍直接比對。
 

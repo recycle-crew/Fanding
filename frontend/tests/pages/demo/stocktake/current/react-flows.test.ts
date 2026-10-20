@@ -1,9 +1,5 @@
-import {
-  test,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-} from "../../../../helpers/test";
+import { test, expect } from "@playwright/test";
+import { DEMO_LOGIN_ENABLED as loginEnabled } from "../../../../../src/constants/demoAccess";
 import type { Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
@@ -14,9 +10,6 @@ test.beforeEach(async ({ page }) => {
   ).toBeVisible();
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
 });
-async function login(page: Page, privileged = false) {
-  await enterWorkspace(page, privileged);
-}
 async function navigate(page: Page, module: string) {
   if (page.viewportSize().width <= 800)
     await page.locator("#menu-toggle").click();
@@ -24,7 +17,12 @@ async function navigate(page: Page, module: string) {
 }
 
 test("React 盤點草稿、路由保護、鎖定與歷史更正", async ({ page }) => {
-  await login(page, true);
+  await expect(page.locator("#workspace")).toBeVisible();
+  await page.evaluate(() =>
+    window.__demoTest.run((state) => {
+      state.canEditExistingData = true;
+    }),
+  );
   await navigate(page, "stocktake");
   await page.locator("[data-action=start-batch]").click();
   await page.locator("#barcode").fill("9902000000001");
@@ -71,7 +69,7 @@ test("React 盤點草稿、路由保護、鎖定與歷史更正", async ({ page 
 
 test("React 盤點路由直接開啟與上一頁", async ({ page }) => {
   await page.goto("/demo/stocktake/history");
-  await login(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await expect(page.locator("#content h2")).toHaveText("歷史盤點紀錄");
   await navigate(page, "stocktake");
   await expect(page).toHaveURL(/\/demo\/stocktake\/current$/);
@@ -80,7 +78,7 @@ test("React 盤點路由直接開啟與上一頁", async ({ page }) => {
 });
 
 test("React 盤點未完成不能結束，移除後可取消或結束批次", async ({ page }) => {
-  await login(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await navigate(page, "stocktake");
   await page.locator("[data-action=start-batch]").click();
   await page.locator("#barcode").fill("9902000000001");

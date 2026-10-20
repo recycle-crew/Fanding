@@ -36,8 +36,9 @@ describe("route 與頁面測試對應", () => {
       .some((file) => {
         const content = readFileSync(new URL(file, directory), "utf8");
         return (
-          content.includes("checkPageEntry") &&
-          content.includes(JSON.stringify(route))
+          content.includes(`page.goto(${JSON.stringify(route)})`) &&
+          content.includes("page.reload()") &&
+          content.includes(".toHaveURL(")
         );
       });
     expect(covered, `${route} 需要頁面入口與重新整理測試`).toBe(true);

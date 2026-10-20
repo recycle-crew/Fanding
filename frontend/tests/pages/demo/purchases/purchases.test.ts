@@ -1,9 +1,9 @@
 import axe from "axe-core";
-import { test as base, expect, checkPageEntry } from "../../../helpers/test";
+import { test as base, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import * as fs from "node:fs/promises";
-import XLSX from "../../../helpers/xlsx";
+import * as XLSX from "xlsx";
 
 const test = base.extend<{ runtimeErrors: void }>({
   runtimeErrors: [
@@ -69,9 +69,9 @@ test(
     const download = await downloadPromise;
     const buffer = await fs.readFile(await download.path());
     const workbook = XLSX.read(buffer.toString("base64"), { type: "base64" });
-    const rows = XLSX.utils.sheet_to_json(
-      workbook.Sheets[workbook.SheetNames[0]],
-    );
+    const rows = XLSX.utils.sheet_to_json<
+      Record<string, string | number | boolean>
+    >(workbook.Sheets[workbook.SheetNames[0]]);
     expect(rows).toHaveLength(9);
     expect(typeof rows[0]["原始進貨金額"]).toBe("number");
     expect(rows[0]).not.toHaveProperty("操作");
@@ -129,6 +129,109 @@ test(
         .locator("td")
         .nth(6),
     ).toHaveText("35");
+  },
+);
+
+test(
+  "必填提示在送出前可見，只有倉別與日期時指出缺少供應商",
+  { tag: "@critical" },
+  async ({ page }) => {
+    await page.getByRole("button", { name: "新增進貨單", exact: true }).click();
+    await expect(
+      modal(page).getByText(
+        "必填：供應商、入庫倉別、收貨日期，以及至少一筆進貨商品。",
+        { exact: false },
+      ),
+    ).toBeVisible();
+    await expect(
+      modal(page).getByRole("heading", {
+        name: "進貨商品（必填，至少加入一筆）",
+      }),
+    ).toBeVisible();
+    await expect(
+      modal(page).getByText("必填：至少加入一筆進貨商品。", { exact: false }),
+    ).toBeVisible();
+    await page.locator("#purchase-warehouse").selectOption("展示倉");
+    await modal(page)
+      .getByRole("button", { name: "確認入庫", exact: true })
+      .click();
+    const alert = modal(page).getByRole("alert");
+    await expect(alert).toContainText("供應商");
+    await expect(alert).toBeVisible();
+    await expect(alert).toBeFocused();
+    await expect(page.locator("#purchase-supplier")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    await expect(
+      modal(page).getByRole("button", { name: "確認送出", exact: true }),
+    ).toHaveCount(0);
+    await expect(list(page)).not.toContainText("PO20261020010");
+  },
+);
+
+test(
+  "表頭必填逐項阻擋，商品漏填有提示，補齊後才建立單據",
+  { tag: "@critical" },
+  async ({ page }) => {
+    await page.getByRole("button", { name: "新增進貨單", exact: true }).click();
+    const submit = modal(page).getByRole("button", {
+      name: "確認入庫",
+      exact: true,
+    });
+    await page.locator("#purchase-supplier").selectOption("明康醫藥有限公司");
+    await submit.click();
+    await expect(modal(page).getByRole("alert")).toContainText("入庫倉別");
+    await page.locator("#purchase-warehouse").selectOption("主倉庫");
+    await page.locator("#purchase-date").fill("");
+    await submit.click();
+    await expect(modal(page).getByRole("alert")).toContainText("收貨日期");
+    await page.locator("#purchase-date").fill("2026-10-20");
+    await submit.click();
+    await expect(modal(page).getByRole("alert")).toContainText(
+      "請至少加入一筆進貨商品",
+    );
+    await expect(page.locator("#purchase-item-search")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    await expect(list(page)).not.toContainText("PO20261020010");
+    await page.locator("#purchase-item-search").fill("MED0001");
+    await page.locator("#purchase-item-search").press("Enter");
+    const row = modal(page).locator(".purchase-lines-table tbody tr").first();
+    for (const column of [2, 3, 4, 6]) {
+      await expect(row.locator("td").nth(column)).toContainText("必填");
+    }
+    await submit.click();
+    await expect(modal(page).getByRole("alert")).toContainText("第1筆批號");
+    await page.getByLabel("第1筆批號", { exact: true }).fill("REQUIRED-001");
+    await submit.click();
+    await expect(modal(page).getByRole("alert")).toContainText("第1筆效期");
+    await page.getByLabel("第1筆效期", { exact: true }).fill("2027-10-20");
+    for (const [label, invalid, valid] of [
+      ["第1筆數量", "0", "2"],
+      ["第1筆單位成本", "-1", "0"],
+    ]) {
+      await page.getByLabel(label, { exact: true }).fill(invalid);
+      await submit.click();
+      await expect(modal(page).getByRole("alert")).toContainText(label);
+      await expect(
+        modal(page).getByRole("button", { name: "確認送出", exact: true }),
+      ).toHaveCount(0);
+      await expect(list(page)).not.toContainText("PO20261020010");
+      await page.getByLabel(label, { exact: true }).fill(valid);
+    }
+    await expect(page.locator("#purchase-supplier")).toHaveValue(
+      "明康醫藥有限公司",
+    );
+    await expect(page.locator("#purchase-warehouse")).toHaveValue("主倉庫");
+    await submit.click();
+    await expect(modal(page)).toContainText("確認本次操作");
+    await expect(list(page)).not.toContainText("PO20261020010");
+    await finish(page);
+    await expect(list(page)).toContainText("PO20261020010");
+    await action(page, "PO20261020010", "查看進貨明細");
+    await expect(modal(page)).toContainText("REQUIRED-001");
   },
 );
 
@@ -385,7 +488,17 @@ test("a11y 進貨列表、選單及所有主要視窗", async ({ page }) => {
 test(
   "/demo/purchases 直接進入與重新整理",
   { tag: "@critical" },
-  async ({ page }, info) => {
-    await checkPageEntry(page, "/demo/purchases", info);
+  async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+    await page.goto("/demo/purchases");
+    await expect(page.locator("#workspace")).toBeVisible();
+    await expect(
+      page.locator("#workspace").getByRole("heading").first(),
+    ).not.toBeEmpty();
+    await expect(page).toHaveURL((url) => url.pathname === "/demo/purchases");
+    const entryURL = page.url();
+    await page.reload();
+    await expect(page).toHaveURL(entryURL);
+    await expect(page.locator("#workspace").first()).toBeVisible();
   },
 );

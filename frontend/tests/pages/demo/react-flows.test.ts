@@ -1,4 +1,5 @@
-import { test, expect, enterWorkspace, loginEnabled } from "../../helpers/test";
+import { test, expect } from "@playwright/test";
+import { DEMO_LOGIN_ENABLED as loginEnabled } from "../../../src/constants/demoAccess";
 import type { Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
@@ -9,9 +10,6 @@ test.beforeEach(async ({ page }) => {
   ).toBeVisible();
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
 });
-async function login(page: Page, privileged = false) {
-  await enterWorkspace(page, privileged);
-}
 async function navigate(page: Page, module: string) {
   if (page.viewportSize().width <= 800)
     await page.locator("#menu-toggle").click();
@@ -43,7 +41,7 @@ test(
       "react-recovery.png",
     );
     await page.locator("#back-to-login").click();
-    await login(page);
+    await expect(page.locator("#workspace")).toBeVisible();
     await expect(page.locator("#account-label")).toContainText("demo.user");
   },
 );

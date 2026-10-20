@@ -1,13 +1,8 @@
-import {
-  test as base,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-  checkPageEntry,
-} from "../../../../helpers/test";
+import { test as base, expect } from "@playwright/test";
+import { DEMO_LOGIN_ENABLED as loginEnabled } from "../../../../../src/constants/demoAccess";
 import type { Page } from "@playwright/test";
 
-import XLSX from "../../../../helpers/xlsx";
+import * as XLSX from "xlsx";
 import * as fs from "node:fs";
 
 const test = base.extend<{ browserErrors: string[] }>({
@@ -34,7 +29,7 @@ test.beforeEach(async ({ page }) => {
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
-  await enterWorkspace(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await page.addStyleTag({
     content: "#notice {visibility:hidden !important;}",
   });
@@ -101,7 +96,19 @@ test("盤點按品項核對庫存，不套用出入庫傳票批次", async ({ pa
 test(
   "/demo/stocktake/current 直接進入與重新整理",
   { tag: "@critical" },
-  async ({ page }, info) => {
-    await checkPageEntry(page, "/demo/stocktake/current", info);
+  async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+    await page.goto("/demo/stocktake/current");
+    await expect(page.locator("#workspace")).toBeVisible();
+    await expect(
+      page.locator("#workspace").getByRole("heading").first(),
+    ).not.toBeEmpty();
+    await expect(page).toHaveURL(
+      (url) => url.pathname === "/demo/stocktake/current",
+    );
+    const entryURL = page.url();
+    await page.reload();
+    await expect(page).toHaveURL(entryURL);
+    await expect(page.locator("#workspace").first()).toBeVisible();
   },
 );

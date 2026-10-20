@@ -1,10 +1,4 @@
-import {
-  test as base,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-  checkPageEntry,
-} from "../../helpers/test";
+import { test as base, expect } from "@playwright/test";
 
 const test = base.extend<{ componentErrors: void }>({
   componentErrors: [
@@ -59,10 +53,13 @@ test("shadcn 規劃板關閉重開仍保留 iframe 中新增的廠商", async ({
   );
 });
 
-test(
-  "/board 直接進入與重新整理",
-  { tag: "@critical" },
-  async ({ page }, info) => {
-    await checkPageEntry(page, "/board", info);
-  },
-);
+test("/board 直接進入與重新整理", { tag: "@critical" }, async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+  await page.goto("/board");
+  await expect(page.getByRole("heading", { level: 1 }).first()).not.toBeEmpty();
+  await expect(page).toHaveURL((url) => url.pathname === "/board");
+  const entryURL = page.url();
+  await page.reload();
+  await expect(page).toHaveURL(entryURL);
+  await expect(page.locator("h1").first()).toBeVisible();
+});

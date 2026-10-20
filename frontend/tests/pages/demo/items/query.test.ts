@@ -1,10 +1,11 @@
-import { test, expect } from "../../../helpers/test";
+import { test, expect } from "@playwright/test";
 
 test(
   "搜尋與倉別、庫存條件取交集，無結果後可清除並恢復列表",
   { tag: "@critical" },
   async ({ page }, info) => {
-    // 共用 fixture 固定日期；每個案例有獨立瀏覽器 context 與 Demo 資料。
+    await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+    // 每個案例有獨立瀏覽器 context 與 Demo 資料。
     // 全程操作 UI，不直接改 Redux，也不 mock 元件或篩選邏輯。
     const results = page.getByRole("table", {
       name: "品項與庫存查詢結果",

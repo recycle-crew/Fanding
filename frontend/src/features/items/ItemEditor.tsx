@@ -26,7 +26,12 @@ export function ItemEditor({
 }) {
   const state = useAppSelector((s) => s.items);
   const options = useBaseDataOptions();
-  const suppliers = Array.from(new Set([...options.suppliers, ...(initial.supplier ? [initial.supplier] : [])]));
+  const suppliers = Array.from(
+    new Set([
+      ...options.suppliers,
+      ...(initial.supplier ? [initial.supplier] : []),
+    ]),
+  );
   const [draft, setDraft] = useState(initial);
   const [error, setError] = useState("");
   const [errorField, setErrorField] = useState("");
@@ -150,7 +155,9 @@ export function ItemEditor({
     >(":invalid");
     if (invalid) {
       setErrorField(invalid.name);
-      setError(invalid.validationMessage);
+      const label =
+        invalid.labels?.[0]?.querySelector("span")?.textContent || "欄位";
+      setError(`${label}：${invalid.validationMessage}`);
       return;
     }
     const normalized = {
@@ -288,7 +295,9 @@ export function ItemEditor({
             <BaseLabel className="items-check">
               <BaseCheckbox
                 checked={draft.active}
-                onCheckedChange={(checked) => change("active", checked === true)}
+                onCheckedChange={(checked) =>
+                  change("active", checked === true)
+                }
               />
               啟用品項
             </BaseLabel>

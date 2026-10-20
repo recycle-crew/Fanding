@@ -1,14 +1,8 @@
-import {
-  test,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-  checkPageEntry,
-} from "../../../helpers/test";
+import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import * as fs from "node:fs/promises";
-import XLSX from "../../../helpers/xlsx";
+import * as XLSX from "xlsx";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
@@ -18,6 +12,52 @@ test.beforeEach(async ({ page }) => {
     page.getByRole("heading", { name: "品項與庫存管理", exact: true }),
   ).toBeVisible();
 });
+
+for (const group of ["his", "general"]) {
+  test(`@critical ${group} 品項必填標示、逐欄漏填阻擋與補齊儲存`, async ({
+    page,
+  }) => {
+    await page.goto(`/demo/items/${group}`);
+    await page.getByRole("button", { name: "新增品項", exact: true }).click();
+    const modal = page.getByRole("dialog");
+    const fields = [
+      ["code", "料號", `REQ-${group.toUpperCase()}`],
+      ["name", "品名", `必填測試${group}`],
+      ["category", "品項分類", group === "his" ? "眼科用藥" : "保健食品"],
+      ["unit", "基本單位", "瓶"],
+      ["safetyStock", "安全庫存", "0"],
+      ["effectiveFrom", "開始使用日期", "2026-10-20"],
+    ];
+    for (const [key] of fields) {
+      const input = page.locator(`#item-${key}`);
+      if (["category", "unit"].includes(key)) await input.selectOption("");
+      else await input.fill("");
+    }
+    for (const [key, label, value] of fields) {
+      const input = page.locator(`#item-${key}`);
+      await expect(input).toHaveAttribute("required", "");
+      await expect(modal.locator(`label[for="item-${key}"]`)).toContainText(
+        "*",
+      );
+      await modal
+        .getByRole("button", { name: "儲存品項", exact: true })
+        .click();
+      await expect(modal.getByRole("alert")).toContainText(label);
+      await expect(input).toHaveAttribute("aria-invalid", "true");
+      if (["category", "unit"].includes(key)) await input.selectOption(value);
+      else await input.fill(value);
+    }
+    await modal.getByRole("button", { name: "儲存品項", exact: true }).click();
+    await expect(modal).toBeHidden();
+    await page
+      .getByRole("textbox", { name: "搜尋品項", exact: true })
+      .fill(`REQ-${group.toUpperCase()}`);
+    await expect(page.locator(".items-main-table tbody tr")).toHaveCount(1);
+    await expect(page.locator(".items-main-table")).toContainText(
+      `必填測試${group}`,
+    );
+  });
+}
 
 const table = (page: Page) => page.locator(".items-main-table");
 const dialog = (page: Page) => page.locator(".items-modal");
@@ -221,9 +261,9 @@ test("Excel 匯出全部分頁、保留條碼文字及數值型別", async ({ pa
   expect(download.suggestedFilename()).toMatch(/\.xlsx$/);
   const buffer = await fs.readFile(await download.path());
   const workbook = XLSX.read(buffer.toString("base64"), { type: "base64" });
-  const data = XLSX.utils.sheet_to_json(
-    workbook.Sheets[workbook.SheetNames[0]],
-  );
+  const data = XLSX.utils.sheet_to_json<
+    Record<string, string | number | boolean>
+  >(workbook.Sheets[workbook.SheetNames[0]]);
   expect(data).toHaveLength(6);
   expect(data[0]["國際條碼"]).toBe("4711234560000");
   expect(data[0]["庫存數量"]).toBe(35);
@@ -271,7 +311,17 @@ test("新舊入口並存及桌面／手機基本版面", async ({ page }, testIn
 test(
   "/demo/items 直接進入與重新整理",
   { tag: "@critical" },
-  async ({ page }, info) => {
-    await checkPageEntry(page, "/demo/items", info);
+  async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+    await page.goto("/demo/items");
+    await expect(page.locator("#workspace")).toBeVisible();
+    await expect(
+      page.locator("#workspace").getByRole("heading").first(),
+    ).not.toBeEmpty();
+    await expect(page).toHaveURL((url) => url.pathname === "/demo/items/his");
+    const entryURL = page.url();
+    await page.reload();
+    await expect(page).toHaveURL(entryURL);
+    await expect(page.locator("#workspace").first()).toBeVisible();
   },
 );

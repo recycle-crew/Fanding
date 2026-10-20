@@ -1,10 +1,5 @@
-import {
-  test,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-  checkPageEntry,
-} from "../../../helpers/test";
+import { test, expect } from "@playwright/test";
+import { DEMO_LOGIN_ENABLED as loginEnabled } from "../../../../src/constants/demoAccess";
 import type { Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
@@ -15,9 +10,6 @@ test.beforeEach(async ({ page }) => {
   ).toBeVisible();
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
 });
-async function login(page: Page, privileged = false) {
-  await enterWorkspace(page, privileged);
-}
 async function navigate(page: Page, module: string) {
   if (page.viewportSize().width <= 800)
     await page.locator("#menu-toggle").click();
@@ -25,7 +17,7 @@ async function navigate(page: Page, module: string) {
 }
 
 test("React 領用新增、庫存不足、刪除回復及查無資料", async ({ page }) => {
-  await login(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await navigate(page, "requisitions");
   await page.locator("[data-action=add]").click();
   await page.locator("#editor [name=productId]").selectOption("O001");
@@ -48,7 +40,19 @@ test("React 領用新增、庫存不足、刪除回復及查無資料", async ({
 test(
   "/demo/requisitions 直接進入與重新整理",
   { tag: "@critical" },
-  async ({ page }, info) => {
-    await checkPageEntry(page, "/demo/requisitions", info);
+  async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+    await page.goto("/demo/requisitions");
+    await expect(page.locator("#workspace")).toBeVisible();
+    await expect(
+      page.locator("#workspace").getByRole("heading").first(),
+    ).not.toBeEmpty();
+    await expect(page).toHaveURL(
+      (url) => url.pathname === "/demo/requisitions",
+    );
+    const entryURL = page.url();
+    await page.reload();
+    await expect(page).toHaveURL(entryURL);
+    await expect(page.locator("#workspace").first()).toBeVisible();
   },
 );

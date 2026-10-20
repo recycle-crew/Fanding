@@ -1,10 +1,5 @@
-import {
-  test,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-  checkPageEntry,
-} from "../../../helpers/test";
+import { test, expect } from "@playwright/test";
+import { DEMO_LOGIN_ENABLED as loginEnabled } from "../../../../src/constants/demoAccess";
 import type { Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
@@ -15,9 +10,6 @@ test.beforeEach(async ({ page }) => {
   ).toBeVisible();
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
 });
-async function login(page: Page, privileged = false) {
-  await enterWorkspace(page, privileged);
-}
 async function navigate(page: Page, module: string) {
   if (page.viewportSize().width <= 800)
     await page.locator("#menu-toggle").click();
@@ -25,7 +17,7 @@ async function navigate(page: Page, module: string) {
 }
 
 test("React 廠商新增、重複代碼、權限與修改歷程", async ({ page }) => {
-  await login(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await navigate(page, "vendors");
   await page.locator("[data-action=add]").click();
   await page.locator("#editor [name=code]").fill("V001");
@@ -57,7 +49,7 @@ test("React 廠商新增、重複代碼、權限與修改歷程", async ({ page 
 });
 
 test("React Excel 載入錯誤可重試，空結果仍可匯出", async ({ page }) => {
-  await login(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await navigate(page, "vendors");
   await page.route("**/vendor/xlsx-0.20.3.mini.min.js", (route) =>
     route.abort(),
@@ -79,7 +71,7 @@ test("React Excel 載入錯誤可重試，空結果仍可匯出", async ({ page 
 });
 
 test("React 廠商搜尋鍵盤選取、Escape 與無結果", async ({ page }) => {
-  await login(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await navigate(page, "vendors");
   await page.locator("#search").fill("晴川");
   await page.locator("#search").press("ArrowDown");
@@ -103,7 +95,12 @@ test("React 廠商搜尋鍵盤選取、Escape 與無結果", async ({ page }) =>
 });
 
 test("React 高權限編輯、取消與刪除保護", async ({ page }) => {
-  await login(page, true);
+  await expect(page.locator("#workspace")).toBeVisible();
+  await page.evaluate(() =>
+    window.__demoTest.run((state) => {
+      state.canEditExistingData = true;
+    }),
+  );
   await navigate(page, "vendors");
   await page.locator("[data-action=edit][data-id=V001]").click();
   await page.locator("#editor [name=name]").fill("修改後測試廠商");
@@ -143,7 +140,17 @@ test("React 高權限編輯、取消與刪除保護", async ({ page }) => {
 test(
   "/demo/vendors 直接進入與重新整理",
   { tag: "@critical" },
-  async ({ page }, info) => {
-    await checkPageEntry(page, "/demo/vendors", info);
+  async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+    await page.goto("/demo/vendors");
+    await expect(page.locator("#workspace")).toBeVisible();
+    await expect(
+      page.locator("#workspace").getByRole("heading").first(),
+    ).not.toBeEmpty();
+    await expect(page).toHaveURL((url) => url.pathname === "/demo/vendors");
+    const entryURL = page.url();
+    await page.reload();
+    await expect(page).toHaveURL(entryURL);
+    await expect(page.locator("#workspace").first()).toBeVisible();
   },
 );

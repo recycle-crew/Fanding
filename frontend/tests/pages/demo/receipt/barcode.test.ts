@@ -1,9 +1,5 @@
-import {
-  test,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-} from "../../../helpers/test";
+import { test, expect } from "@playwright/test";
+import { DEMO_LOGIN_ENABLED as loginEnabled } from "../../../../src/constants/demoAccess";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
@@ -11,7 +7,6 @@ test.beforeEach(async ({ page }) => {
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
-  await enterWorkspace(page);
   await expect(page.locator("#workspace")).toBeVisible();
   await page.addStyleTag({
     content: "#notice { visibility:hidden !important; }",
@@ -99,7 +94,6 @@ for (const module of ["receipt"]) {
       await expect(
         page.locator(loginEnabled ? "#login-form" : "#workspace"),
       ).toBeVisible();
-      await enterWorkspace(page);
       await expect(page.locator("#workspace")).toBeVisible();
       await page.addStyleTag({
         content: "#notice { visibility:hidden !important; }",

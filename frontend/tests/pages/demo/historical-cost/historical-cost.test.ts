@@ -1,19 +1,13 @@
-import {
-  test,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-  checkPageEntry,
-} from "../../../helpers/test";
+import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import XLSX from "../../../helpers/xlsx";
+import * as XLSX from "xlsx";
 import * as fs from "node:fs";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
   await page.goto("/demo");
-  await enterWorkspace(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await page.addStyleTag({
     content: "#notice {visibility:hidden !important;}",
   });
@@ -140,7 +134,7 @@ test("成本篩選交集、跨頁 XLSX、無結果與錯誤重試", async ({ pag
   const workbook = XLSX.read(fs.readFileSync(await download.path()), {
     type: "buffer",
   });
-  const rows = XLSX.utils.sheet_to_json(
+  const rows = XLSX.utils.sheet_to_json<(string | number | boolean)[]>(
     workbook.Sheets[workbook.SheetNames[0]],
     {
       header: 1,
@@ -264,7 +258,19 @@ test("入庫單價輸入、沿用主檔及送出重新驗證，不回寫主檔",
 test(
   "/demo/historical-cost 直接進入與重新整理",
   { tag: "@critical" },
-  async ({ page }, info) => {
-    await checkPageEntry(page, "/demo/historical-cost", info);
+  async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+    await page.goto("/demo/historical-cost");
+    await expect(page.locator("#workspace")).toBeVisible();
+    await expect(
+      page.locator("#workspace").getByRole("heading").first(),
+    ).not.toBeEmpty();
+    await expect(page).toHaveURL(
+      (url) => url.pathname === "/demo/historical-cost",
+    );
+    const entryURL = page.url();
+    await page.reload();
+    await expect(page).toHaveURL(entryURL);
+    await expect(page.locator("#workspace").first()).toBeVisible();
   },
 );

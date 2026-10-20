@@ -1,4 +1,4 @@
-import { test, expect, enterWorkspace, loginEnabled } from "../../helpers/test";
+import { test, expect } from "@playwright/test";
 
 import { readdirSync } from "node:fs";
 
@@ -45,7 +45,7 @@ test("build 單一 HTML、四個路由、錨點與正式版無測試入口", asy
   await page.goto("/#development-readiness");
   await expect(page.locator("#development-readiness")).toBeVisible();
   await page.goto("/demo/stocktake/history");
-  await enterWorkspace(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await expect(page.locator("#content h2")).toHaveText("歷史盤點紀錄");
   expect(errors).toEqual([]);
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
@@ -55,7 +55,7 @@ test("build 本機 XLSX 與條碼套件、傳票及下載", async ({ page }) => 
   const response = await page.request.get("/vendor/zxing-browser-0.2.1.min.js");
   expect(response.ok()).toBe(true);
   await page.goto("/demo");
-  await enterWorkspace(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   if (page.viewportSize().width <= 800)
     await page.locator("#menu-toggle").click();
   await page.locator("#module-nav [data-module=receipt]").click();
@@ -102,7 +102,7 @@ test("build 實際載入本機辨識 SDK 並顯示相機權限提示", async ({ 
     });
   });
   await page.goto("/demo");
-  await enterWorkspace(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   if (page.viewportSize().width <= 800)
     await page.locator("#menu-toggle").click();
   await page.locator("#module-nav [data-module=receipt]").click();

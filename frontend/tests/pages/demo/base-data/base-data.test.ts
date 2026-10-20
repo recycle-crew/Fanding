@@ -1,5 +1,5 @@
 import axe from "axe-core";
-import { test, expect, checkPageEntry } from "../../../helpers/test";
+import { test, expect } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
@@ -8,6 +8,46 @@ test.beforeEach(async ({ page }) => {
     page.getByRole("heading", { name: "基礎資料管理", exact: true }),
   ).toBeVisible();
 });
+
+for (const noun of ["倉別", "供應商"]) {
+  test(`@critical ${noun}必填標示、逐欄漏填阻擋與補齊儲存`, async ({
+    page,
+  }) => {
+    await page.getByRole("tab", { name: `${noun}管理`, exact: true }).click();
+    await page
+      .getByRole("button", { name: `新增${noun}`, exact: true })
+      .click();
+    const dialog = page.getByRole("dialog");
+    const fields =
+      noun === "倉別"
+        ? [
+            ["倉別代碼", "REQ-E2E"],
+            ["倉別名稱", "必填測試倉"],
+          ]
+        : [["供應商名稱", "必填測試供應商"]];
+    for (const [label, value] of fields) {
+      const input = dialog.getByLabel(label, { exact: true });
+      await expect(input).toHaveAttribute("required", "");
+      await expect(
+        dialog.locator(`label[for="${await input.getAttribute("id")}"]`),
+      ).toContainText("*");
+      await dialog.getByRole("button", { name: "儲存", exact: true }).click();
+      await expect(dialog.getByRole("alert")).toContainText(label);
+      await expect(dialog.getByRole("alert")).toBeVisible();
+      await expect(input).toHaveAttribute("aria-invalid", "true");
+      await input.fill(value);
+    }
+    await dialog.getByRole("button", { name: "儲存", exact: true }).click();
+    await expect(dialog).toBeHidden();
+    await page
+      .getByRole("textbox", { name: `搜尋${noun}`, exact: true })
+      .fill(fields.at(-1)![1]);
+    await expect(page.locator("tbody tr:visible")).toHaveCount(1);
+    await expect(page.locator("tbody tr:visible")).toContainText(
+      fields.at(-1)![1],
+    );
+  });
+}
 
 test("倉別開關可用鍵盤切換，且不會誤送出表單或開啟視窗", async ({ page }) => {
   const control = page.getByRole("switch", { name: "停用主倉庫", exact: true });
@@ -133,7 +173,17 @@ test("無障礙與桌面／手機版面", async ({ page }, testInfo) => {
 test(
   "/demo/base-data 直接進入與重新整理",
   { tag: "@critical" },
-  async ({ page }, info) => {
-    await checkPageEntry(page, "/demo/base-data", info);
+  async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+    await page.goto("/demo/base-data");
+    await expect(page.locator("#workspace")).toBeVisible();
+    await expect(
+      page.locator("#workspace").getByRole("heading").first(),
+    ).not.toBeEmpty();
+    await expect(page).toHaveURL((url) => url.pathname === "/demo/base-data");
+    const entryURL = page.url();
+    await page.reload();
+    await expect(page).toHaveURL(entryURL);
+    await expect(page.locator("#workspace").first()).toBeVisible();
   },
 );

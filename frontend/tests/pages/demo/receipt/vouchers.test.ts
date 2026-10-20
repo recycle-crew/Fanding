@@ -1,12 +1,8 @@
-import {
-  test,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-} from "../../../helpers/test";
+import { test, expect } from "@playwright/test";
+import { DEMO_LOGIN_ENABLED as loginEnabled } from "../../../../src/constants/demoAccess";
 import type { Page } from "@playwright/test";
 
-import XLSX from "../../../helpers/xlsx";
+import * as XLSX from "xlsx";
 import * as fs from "node:fs";
 
 test.beforeEach(async ({ page }) => {
@@ -15,7 +11,7 @@ test.beforeEach(async ({ page }) => {
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
-  await enterWorkspace(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await page.addStyleTag({
     content: "#notice {visibility:hidden !important;}",
   });
@@ -272,7 +268,7 @@ test("傳票明細分頁與 XLSX 匯出所有明細，異動匯出保留傳票�
   const details = XLSX.read(fs.readFileSync(await detailDownload.path()), {
     type: "buffer",
   });
-  const detailRows = XLSX.utils.sheet_to_json(
+  const detailRows = XLSX.utils.sheet_to_json<(string | number | boolean)[]>(
     details.Sheets[details.SheetNames[0]],
     {
       header: 1,
@@ -293,7 +289,7 @@ test("傳票明細分頁與 XLSX 匯出所有明細，異動匯出保留傳票�
       type: "buffer",
     },
   );
-  const rows = XLSX.utils.sheet_to_json(
+  const rows = XLSX.utils.sheet_to_json<(string | number | boolean)[]>(
     movementsWorkbook.Sheets[movementsWorkbook.SheetNames[0]],
     {
       header: 1,

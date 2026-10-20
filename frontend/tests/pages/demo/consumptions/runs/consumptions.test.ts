@@ -1,6 +1,7 @@
-import { test, expect, checkPageEntry } from "../../../../helpers/test";
+import { test, expect } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
   await page.goto("/demo/consumptions/runs");
   await expect(
     page.getByRole("heading", { name: "藥品耗用查詢", exact: true }),
@@ -75,7 +76,19 @@ test("@critical 重複同步略過、部分成功與失敗留存、待人工核�
 test(
   "/demo/consumptions/runs 直接進入與重新整理",
   { tag: "@critical" },
-  async ({ page }, info) => {
-    await checkPageEntry(page, "/demo/consumptions/runs", info);
+  async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+    await page.goto("/demo/consumptions/runs");
+    await expect(page.locator("#workspace")).toBeVisible();
+    await expect(
+      page.locator("#workspace").getByRole("heading").first(),
+    ).not.toBeEmpty();
+    await expect(page).toHaveURL(
+      (url) => url.pathname === "/demo/consumptions/runs",
+    );
+    const entryURL = page.url();
+    await page.reload();
+    await expect(page).toHaveURL(entryURL);
+    await expect(page.locator("#workspace").first()).toBeVisible();
   },
 );

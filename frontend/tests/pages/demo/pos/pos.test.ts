@@ -1,5 +1,5 @@
 import axe from "axe-core";
-import { test, expect, checkPageEntry } from "../../../helpers/test";
+import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
@@ -43,6 +43,63 @@ async function checkout(page: Page, { medicine = false } = {}) {
   ).toBeVisible();
   return dialog;
 }
+test("@critical 結帳必填與確認事項可見，漏填阻擋並保留購物車，補齊成交", async ({
+  page,
+}) => {
+  await scan(page, "OTC0001");
+  await page.getByRole("button", { name: "前往結帳", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  const submit = dialog.getByRole("button", {
+    name: "確認完成結帳",
+    exact: true,
+  });
+  await expect(
+    dialog.getByText("必填確認：銷售資格；非現金付款須確認外部付款成功。", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  const received = dialog.getByLabel("實收金額", { exact: true });
+  await received.fill("");
+  await expect(received).toHaveAttribute("required", "");
+  await expect(dialog.locator('label[for="checkout-received"]')).toContainText(
+    "*",
+  );
+  await submit.click();
+  await expect(dialog.getByRole("alert")).toContainText("實收金額");
+  await expect(received).toHaveAttribute("aria-invalid", "true");
+  await received.fill("10000");
+  await submit.click();
+  await expect(dialog.getByRole("alert")).toContainText("確認銷售資格");
+  await dialog
+    .getByRole("checkbox", {
+      name: "已確認銷售主體具備該品項及單據資格（展示）",
+      exact: true,
+    })
+    .check();
+  await received.fill("0");
+  await submit.click();
+  await expect(dialog.getByRole("alert")).toContainText(
+    "現金實收不可小於應收金額",
+  );
+  await dialog.getByLabel("付款方式", { exact: true }).selectOption("信用卡");
+  await submit.click();
+  await expect(dialog.getByRole("alert")).toContainText("請先確認外部付款成功");
+  await expect(
+    dialog.getByRole("heading", { name: "銷售明細與交易憑證", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("購物車（1 項）", { exact: true }),
+  ).toBeAttached();
+  await dialog
+    .getByRole("checkbox", { name: "已確認外部付款成功（展示）", exact: true })
+    .check();
+  await submit.click();
+  await expect(
+    dialog.getByRole("heading", { name: "銷售明細與交易憑證", exact: true }),
+  ).toBeVisible();
+  await expect(dialog).toContainText("葉黃素膠囊");
+});
+
 test("@critical 掃碼合併、禁止品項、無庫存、搜尋與清空", async ({ page }) => {
   await scan(page, "OTC0001");
   await scan(page, "OTC0001");
@@ -254,10 +311,16 @@ test("無障礙、取消保留購物車與桌面／手機畫面", async ({ page 
   ).toBeTruthy();
 });
 
-test(
-  "/demo/pos 直接進入與重新整理",
-  { tag: "@critical" },
-  async ({ page }, info) => {
-    await checkPageEntry(page, "/demo/pos", info);
-  },
-);
+test("/demo/pos 直接進入與重新整理", { tag: "@critical" }, async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+  await page.goto("/demo/pos");
+  await expect(page.locator("#workspace")).toBeVisible();
+  await expect(
+    page.locator("#workspace").getByRole("heading").first(),
+  ).not.toBeEmpty();
+  await expect(page).toHaveURL((url) => url.pathname === "/demo/pos");
+  const entryURL = page.url();
+  await page.reload();
+  await expect(page).toHaveURL(entryURL);
+  await expect(page.locator("#workspace").first()).toBeVisible();
+});

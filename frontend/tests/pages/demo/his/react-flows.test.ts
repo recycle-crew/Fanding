@@ -1,10 +1,5 @@
-import {
-  test,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-  checkPageEntry,
-} from "../../../helpers/test";
+import { test, expect } from "@playwright/test";
+import { DEMO_LOGIN_ENABLED as loginEnabled } from "../../../../src/constants/demoAccess";
 import type { Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
@@ -15,9 +10,6 @@ test.beforeEach(async ({ page }) => {
   ).toBeVisible();
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
 });
-async function login(page: Page, privileged = false) {
-  await enterWorkspace(page, privileged);
-}
 async function navigate(page: Page, module: string) {
   if (page.viewportSize().width <= 800)
     await page.locator("#menu-toggle").click();
@@ -25,7 +17,12 @@ async function navigate(page: Page, module: string) {
 }
 
 test("React HIS 高權限回寫展示不修改庫存", async ({ page }) => {
-  await login(page, true);
+  await expect(page.locator("#workspace")).toBeVisible();
+  await page.evaluate(() =>
+    window.__demoTest.run((state) => {
+      state.canEditExistingData = true;
+    }),
+  );
   await navigate(page, "his");
   const row = page.locator("#list-table tbody tr").first();
   await expect(row).toContainText("1200");
@@ -42,10 +39,16 @@ test("React HIS 高權限回寫展示不修改庫存", async ({ page }) => {
   );
 });
 
-test(
-  "/demo/his 直接進入與重新整理",
-  { tag: "@critical" },
-  async ({ page }, info) => {
-    await checkPageEntry(page, "/demo/his", info);
-  },
-);
+test("/demo/his 直接進入與重新整理", { tag: "@critical" }, async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+  await page.goto("/demo/his");
+  await expect(page.locator("#workspace")).toBeVisible();
+  await expect(
+    page.locator("#workspace").getByRole("heading").first(),
+  ).not.toBeEmpty();
+  await expect(page).toHaveURL((url) => url.pathname === "/demo/his");
+  const entryURL = page.url();
+  await page.reload();
+  await expect(page).toHaveURL(entryURL);
+  await expect(page.locator("#workspace").first()).toBeVisible();
+});

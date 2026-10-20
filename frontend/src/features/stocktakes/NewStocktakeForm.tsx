@@ -105,7 +105,7 @@ export function NewStocktakeForm({
         </div>
       </section>
       <section>
-        <h3>指派盤點人員</h3>
+        <h3>指派盤點人員（必填，至少一位）</h3>
         {stocktakePeople.map((person) => (
           <BaseCheckField
             key={person}
@@ -118,7 +118,7 @@ export function NewStocktakeForm({
       </section>
       {form.type === "部分盤點" && (
         <section>
-          <h3>指定品項（已選 {form.itemIds.length} 項）</h3>
+          <h3>指定品項（必填，至少一項；已選 {form.itemIds.length} 項）</h3>
           <Field name="stocktake-scope-search" label="搜尋盤點範圍">
             <BaseInput
               value={search}

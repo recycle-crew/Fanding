@@ -1,10 +1,4 @@
-import {
-  test,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-  checkPageEntry,
-} from "../../helpers/test";
+import { test, expect } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-15T04:00:00Z"));
@@ -57,7 +51,16 @@ test("SPA 延遲載入顯示狀態並恢復頁面", async ({ page }) => {
 test(
   "/architecture 直接進入與重新整理",
   { tag: "@critical" },
-  async ({ page }, info) => {
-    await checkPageEntry(page, "/architecture", info);
+  async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+    await page.goto("/architecture");
+    await expect(
+      page.getByRole("heading", { level: 1 }).first(),
+    ).not.toBeEmpty();
+    await expect(page).toHaveURL((url) => url.pathname === "/architecture");
+    const entryURL = page.url();
+    await page.reload();
+    await expect(page).toHaveURL(entryURL);
+    await expect(page.locator("h1").first()).toBeVisible();
   },
 );

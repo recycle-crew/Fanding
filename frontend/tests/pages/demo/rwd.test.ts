@@ -1,9 +1,5 @@
-import {
-  test as base,
-  expect,
-  enterWorkspace,
-  loginEnabled,
-} from "../../helpers/test";
+import { test as base, expect } from "@playwright/test";
+import { DEMO_LOGIN_ENABLED as loginEnabled } from "../../../src/constants/demoAccess";
 import type { Page, Locator } from "@playwright/test";
 
 const test = base.extend<{ browserErrors: string[] }>({
@@ -125,7 +121,7 @@ test("RWD Layout 外框與 Home 登入流程及切頁保護", async ({
     contentType: "image/png",
   });
   await page.locator("#back-to-login").click();
-  await enterWorkspace(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await expect(page.locator("#content h2")).toHaveText("廠商資料維護");
   await expect(page.locator("#login")).toBeHidden();
   await expect(page.locator("#account-label")).toContainText("layout.user");
@@ -197,7 +193,7 @@ test("RWD Layout 外框與 Home 登入流程及切頁保護", async ({
 
 test("RWD Demo Layout 承載子頁並保留工作區", async ({ page }) => {
   await page.goto("/demo/vendors");
-  await enterWorkspace(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   await expect(page.locator("#content h2")).toHaveText("廠商資料維護");
   await expect(page.locator("#workspace > #sidebar")).toBeAttached();
   await expect(
@@ -264,7 +260,7 @@ test("RWD Tailwind 版面斷點兩側", async ({ page }, testInfo) => {
     documentPage ? "/architecture" : boardPage ? "/board" : "/demo/vendors",
   );
   if (!documentPage && !boardPage) {
-    await enterWorkspace(page);
+    await expect(page.locator("#workspace")).toBeVisible();
     await expect(page.locator("#content h2")).toHaveText("廠商資料維護");
     await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
     if (testInfo.project.name === "rwd-small-phone") {
@@ -322,7 +318,7 @@ test("RWD Tailwind 版面斷點兩側", async ({ page }, testInfo) => {
 test("RWD React 重複代碼錯誤及唯讀說明", async ({ page }) => {
   await page.goto("/demo");
   await page.addStyleTag({ content: "#notice{visibility:hidden!important}" });
-  await enterWorkspace(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   if (page.viewportSize().width < 768)
     await page.locator("#menu-toggle").click();
   await page.locator("[data-module=vendors]").click();
@@ -458,7 +454,7 @@ test("RWD 舊頁面區所有既有網址可直接開啟", async ({ page }) => {
     ["stocktake-history", "/demo/stocktake/history"],
   ] as const) {
     await page.goto(path);
-    await enterWorkspace(page);
+    await expect(page.locator("#workspace")).toBeVisible();
     await expect(page.locator("#content h2")).toBeVisible();
     expect(new URL(page.url()).pathname).toBe(path);
     if (page.viewportSize().width < 768)
@@ -529,8 +525,14 @@ async function enterDemoModule(page: Page, module: string, privileged = false) {
   await expect(
     page.locator(loginEnabled ? "#login-form" : "#workspace"),
   ).toBeVisible();
-  await enterWorkspace(page, privileged);
   await expect(page.locator("#workspace")).toBeVisible();
+  if (privileged) {
+    await page.evaluate(() =>
+      window.__demoTest.run((state) => {
+        state.canEditExistingData = true;
+      }),
+    );
+  }
   if (page.viewportSize().width < 768)
     await page.locator("#menu-toggle").click();
   await page.locator(`#module-nav [data-module="${module}"]`).click();
@@ -920,7 +922,7 @@ test("RWD 長帳號與權限在側欄底部不溢出", async ({ page }) => {
     .locator('#login-form [name="account"]')
     .fill("pharmacy.inventory.supervisor.long.account");
   await page.locator("#demo-permission").selectOption("privileged");
-  await enterWorkspace(page);
+  await expect(page.locator("#workspace")).toBeVisible();
   if (page.viewportSize().width < 768)
     await page.locator("#menu-toggle").click();
   await expect(page.locator("#account-label")).toContainText("高權限（展示）");
