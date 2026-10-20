@@ -63,7 +63,7 @@ Playwright 自動啟動伺服器。port 已被占用時，先設定 `$env:PLAYWR
 
 ## 截圖與執行產物
 
-截圖基準放在測試旁的 `<檔名>-snapshots/`，需提交 Git。搬移只調整位置，不重新產生圖片。
+截圖基準集中放在各測試目錄的 `screenshots/<測試檔名>/`，例如 `receipt/screenshots/barcode.test.ts/`，需提交 Git。保留完整測試檔名，方便對應來源；圖片檔名保留裝置與平台，避免不同執行環境互相覆蓋。搬移只調整位置，不重新產生圖片。
 
 失敗附件、報告、檢視截圖統一輸出到 `frontend/.artifacts/`，不提交 Git。舊的 anchor-audit 結果移至 `.artifacts/archive/` 保留，不再散落在 frontend 根目錄。
 

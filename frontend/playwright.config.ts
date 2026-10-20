@@ -30,6 +30,8 @@ const rwdProjects: Project[] = [
 export default defineConfig({
   testDir: "./tests/pages",
   testMatch: "**/*.test.ts",
+  snapshotPathTemplate:
+    "{testDir}/{testFileDir}/screenshots/{testFileName}/{arg}{-projectName}{-platform}{ext}",
   outputDir: "./.artifacts/test-results",
   forbidOnly: !!process.env.CI,
   retries: 0,
