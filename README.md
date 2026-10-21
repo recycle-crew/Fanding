@@ -48,14 +48,20 @@ frontend/src/
 ├─ main.tsx                  # 掛載 React、Provider 與 Router
 ├─ App.tsx                   # 全站外殼、樣式與路由保護
 ├─ pages/
-│  ├─ Planning/              # Layout.tsx＋Home.tsx
-│  ├─ Architecture/          # Layout.tsx＋Home.tsx
 │  ├─ Board/                 # Layout.tsx＋Home.tsx
-│  ├─ Demo/                  # Layout.tsx＋Home.tsx，共用工作區外殼
+│  ├─ Workspace/             # Layout.tsx，只組合 BaseLayout
+│  ├─ Overview/              # 總覽
+│  ├─ Items/、Purchases/     # 品項與進貨頁面
+│  ├─ BaseData/、Consumptions/ # 基礎資料與耗用頁面
+│  ├─ Pos/、Stocktakes/      # 收銀／銷售與盤點頁面
+│  ├─ InventoryRecords/     # 舊版資料維護共用列表流程
+│  ├─ InventoryOperations/  # 舊版入出庫與盤點共用操作流程
+│  ├─ HistoricalCost/       # 歷史成本
 │  └─ Error/                 # Layout.tsx＋NotFound.tsx
-├─ features/                 # demo 交易規則與功能元件、planning 場景
+├─ features/                 # 按業務分類；workspace 共用流程、inventory 庫存操作、planning 場景
 ├─ components/
 │  ├─ layout/                # 側欄等版面元件
+│  ├─ workspace/             # 頁首、修改歷程、通知與確認／唯讀視窗
 │  └─ ui/                    # 表格、篩選表單、視窗
 ├─ router/
 │  ├─ index.tsx              # 建立 Router
@@ -64,10 +70,10 @@ frontend/src/
 ├─ constants/                # 模組路徑契約
 ├─ helpers/                  # 庫存篩選、Excel 匯出
 ├─ styles/                   # layout 頁面樣式、themes 共用樣式
-└─ types/                    # 舊 import 相容轉接；業務型別位於所屬 features
+└─ types/                    # 按業務分類的型別與工作區契約
 ```
 
-路由模組沿用 IA_Map 的 Layout／Home 慣例：父路由載入 `Layout.tsx`，透過 `<Outlet />` 呈現 Home 或其他子頁。Layout 負責模組外殼；Home 負責頁面操作流程，功能元件與業務規則由 `features` 擁有。Demo 的登入與共用對話框由 Home 持有，側欄及頂部導覽由 BaseLayout 組合，模組切換沿用同一個工作區外殼；Error Layout 僅承載錯誤子頁。狀態與型別分別歸入 `store`、`types`。正式 API 串接時沿用 IA_Map 的 `api/server` 分層，目前尚未建立 API 或正式資料連線。
+路由直接載入各業務頁面，透過 route handle 的 module 決定側欄選取與既有操作所需的模組狀態。Layout 只組合 BaseLayout，工作區的登入、通知與共用對話框由 `features/workspace/Workspace.tsx` 管理，再以 Outlet 呈現業務頁面；不以 activeModule 集中切換所有頁面。頁面擁有操作流程，功能元件與業務規則由 features 擁有。狀態與型別分別歸入 store、types。目前尚未建立正式 API 或資料連線。
 
 全站 UI 使用 shadcn/ui，元件原始碼集中在 `frontend/src/components/ui/`，設定見 `frontend/components.json`。按鈕、表單、表格、卡片、標籤、確認視窗與文件 Accordion 共用同一套元件；BaseDataTable／BaseFilterForm／BaseModal 保留分頁、查詢和視窗生命週期等應用規則。元件選擇、專案調整與新增方式見 [shadcn/ui 慣例](docs/shadcn-ui.md)。
 
@@ -75,16 +81,18 @@ frontend/src/
 
 RWD 採 mobile-first 預設斷點：sm 640px、md 768px、lg 1024px、xl 1280px、2xl 1536px。瀏覽器驗證涵蓋 320／390／768／1440px，另驗證實際使用的 sm／md／lg 斷點兩側。
 
-全域狀態使用 Redux Toolkit 與 React Redux：store/index.ts 組合 store，store/hooks.ts 提供型別化存取，store/demo.ts 管理現有展示資料及跨元件流程。登入表單、選單、相機與版面等局部狀態維持由元件持有。業務操作及更新 callback 在 thunk 執行，送出可序列化的 Immer patches；reducer 只套用資料更新，Redux 的序列化與不可變檢查維持啟用。不建立尚無正式需求的 global／auth slice。
+全域狀態使用 Redux Toolkit 與 React Redux：store/index.ts 組合 store，store/hooks.ts 提供型別化存取，store/workspace.ts 管理現有假資料及跨元件流程。登入表單、選單、相機與版面等局部狀態維持由元件持有。業務操作及更新 callback 在 thunk 執行，送出可序列化的 Immer patches；reducer 只套用資料更新，Redux 的序列化與不可變檢查維持啟用。不建立尚無正式需求的 global／auth slice。
 
-Demo 左側導覽固定於左側，頂端直接顯示系統名稱；右側拉柄可拖曳或用左右鍵調整寬度。寬度調整只保留在當次頁面，不改動資料或權限。
+工作區左側導覽固定於左側，頂端直接顯示系統名稱；右側拉柄可拖曳或用左右鍵調整寬度。寬度調整只保留在當次頁面，不改動資料或權限。
 
-- `/`：系統分工、功能需求與待確認問題。
-- `/architecture`：React／FastAPI 目錄結構、模組分工、資料流與待確認決策。
-- `/demo`：展示登入、廠商維護、HIS 藥品修改、OTC 入出庫／領用、成本與盤點；功能路徑如 `/demo/vendors`、`/demo/receipt`。
+- `/`：工作區總覽；`/overview` 保留查詢及錨點後轉至首頁。
+- `/items`、`/purchases`、`/base-data`、`/consumptions`、`/pos`、`/sales`、`/stocktakes`：各業務頁面。
+- `/vendors`、`/his`、`/products`、`/receipt`、`/issue`、`/requisitions`、`/historical-cost`、`/stocktake/current`、`/stocktake/history`：保留的舊版功能。
+- `/docs/planning.html`、`/docs/architecture.html`：靜態規劃文件；舊 `/planning`、`/architecture` 網址轉址至文件。
+- `/demo`、`/demo.html`、`/demo/*`：舊網址相容轉址，保留子路徑、查詢及錨點。
 - `/board`：7 個分類、24 個 Frame，可縮放、拖動畫布、逐步示範及直接操作。
 
-Demo 可使用預填的展示帳號登入；登入與業務資料由路由上層的 Provider 保存，站內切換保留，重新整理即重置。規劃板的互動視窗共用該 iframe 當次假資料，縮圖則是獨立的初始畫面參考；iframe 與主視窗資料各自獨立。未完成的編輯表單或確認視窗會阻擋站內切換及上一頁，需先儲存、取消或完成確認。
+系統首頁目前略過登入，規劃板仍保留預填帳號的登入示範。登入與業務資料由路由上層的 Provider 保存，站內切換保留，重新整理即重置。規劃板的互動視窗共用該 iframe 當次假資料，場景切換同步更新 iframe 內的實際路由；縮圖則是獨立的初始畫面參考。iframe 與主視窗資料各自獨立。未完成的編輯表單或確認視窗會阻擋站內切換及上一頁，需先儲存、取消或完成確認。
 
 所有新增／編輯畫面均自動帶入已有值並鎖定，只允許補填空白欄位（數字 0 也視為已有值）。掃描帶入的條碼為唯讀，下拉欄位沒有值時顯示「請選擇」，不自動指定第一筆。狀態不可編輯，右上角以綠色「啟用」或紅色「未啟用」呈現；新資料預設啟用。儲存或取消後返回原列表，保留搜尋、篩選與分頁。新盤點的實盤數量保持空白，儲存草稿後仍可修改，整批確認送出後鎖定並更新假庫存。這些規則為目前 Demo 行為，正式 HIS 可回寫欄位仍待確認。
 

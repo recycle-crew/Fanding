@@ -10,6 +10,16 @@
 
 提交檢查另外選取 52 個 Chromium RWD 案例，以 `--ignore-snapshots --workers=1 --timeout=60000` 執行。期間另有一個全站 Playwright 作業並行，且同一份測試檔仍有截圖穩定化調整；本輪出現 390px 工作區及播放器載入等待逾時，因此停止本輪作業並保留 `.artifacts/test-results/` 中的失敗畫面與 trace。此輪未完成，不列為全站或四尺寸完整回歸通過；未更新舊截圖基準，正式部署、NAS／HIS、身分服務與實機設備仍未驗收。
 
+後續以本輪開始時的完整 UI 檔案備份重新確認：此次整理 17 個檔案，新增 51 個具名 CVA 宣告；既有註解、元件函式順序及範圍外檔案內容保留。Vite 暫時將 UI import 指向原始備份，固定動畫、滑鼠位置、字型與 iframe 場景就緒後，重拍選單、通知、規劃板、播放器的四尺寸共 16 組，全部逐像素一致。比較結果與原始模組清單在 `.artifacts/ui-style-unification/stable-states/comparison.json`、`original-modules.json`；沒有修改 production code 來消除初輪擷取差異，也沒有更新舊基準。RWD 狀態案例同步加入動畫控制、移開滑鼠及等待播放器完成場景切換。
+
+原工作樹的全套 RWD 作業遇到首頁載入等待逾時，已停止並保留 `.artifacts/ui-style-unification/rwd-results/`；原頁面回歸之後又受其他流程搬移 pages/Demo 與路由影響，出現動態匯入失敗，因此中止。這些中斷批次均不列為通過。
+
+後續改以 `git archive f2ef702` 建立 `.artifacts/ui-verify-f2ef702/` 獨立副本，固定本次共用元件完成版本，排除同時進行的 Workspace／路由重構。副本重新執行應用及測試 TypeScript、正式 build 通過；完整頁面行為回歸 310 通過、4 跳過、0 失敗（桌機／手機，9.3 分鐘），4 個跳過案例為展示登入停用後不適用的相機登出釋放情境。正式產物檢查 8／8 通過（32.9 秒），涵蓋深連結、靜態文件、iframe 通訊、XLSX、辨識 SDK 與模擬相機權限。JSON 報告分別為 `.artifacts/ui-style-unification/e2e-isolated.json`、`build-isolated.json`。以上使用 `--ignore-snapshots`，不代表舊截圖基準比對通過。
+
+正式產物的 `/items` 另於 320／390／768／1440px 擷取畫面並檢查 pageerror，四尺寸沒有腳本錯誤，且與調整前逐像素一致；畫面位於 `.artifacts/ui-style-unification/preview/`。本次版本預覽為 `http://127.0.0.1:4200/items`。
+
+獨立副本的完整四尺寸 RWD 首輪 205 通過、20 跳過、3 個桌機案例逾時（13.2 分鐘）。3 項分別為靜態文件返回首頁、架構文件整頁檢查、入庫傳票草稿；前兩種等待為工作區顯示及文件表格捲動檢查，未發現新增的腳本錯誤。保持相同原始碼、90 秒測試上限與原有 5 秒 expect 條件，改為單一 worker 重跑這 3 項，3／3 全部通過（1.1 分鐘）。合併完成 208 個不同 RWD 案例，另有 20 個登入／帳號／密碼重設相關案例因展示登入停用而跳過；不是一次整批全綠，也不以通過數量宣稱沒有覆蓋缺口。完整及重跑 JSON 在 `.artifacts/ui-style-unification/rwd-isolated.json`、`rwd-recheck.json`，原始失敗畫面與 trace 保留在 `rwd-isolated-results/`。本次驗證不涵蓋後續 Workspace 搬移、表單重構、正式部署、NAS／HIS、正式身分服務或真實設備。
+
 ## Base 元件外觀統一 variant（2026-10-21）
 
 盤點 21 個 UI Base 元件檔案、3 個 Layout Base 元件檔案及其呼叫端，將 Badge 狀態、Button 預設外觀與導覽選取、Alert、Card、Label／Select 分頁、Switch、表格／儲存格／Frame、Dialog 與選單 preset 收進元件的 variant；className 保留頁面配置、可見性與定位用途。只有單一外觀的元件保留基底，disabled／checked／aria 仍控制互動狀態。型別沿用 CVA 的 VariantProps 推導。
@@ -196,3 +206,32 @@ npm run test:ui:report
 2026-10-15 歷史成本變更驗證：Windows Chromium，全套 296 次流程／RWD 檢查以更新截圖模式通過，新增及變更畫面已逐組檢視；再以一般截圖比對模式執行 126 個受影響案例，全部通過。這不是正式 NAS／資料庫、其他成本規則或實機相機／掃碼槍驗收。
 
 2026-10-15 導覽圖示調整：只在四個大分類保留圖示，十個功能細項僅顯示文字。涵蓋四種尺寸的 84 個導覽／側欄／流程視窗案例，更新後已檢視側欄及嵌入畫面。一般比對首次 83 通過，320px 廠商側欄一個基準出現一像素文字差異；獨立重跑三次的實際圖片 SHA256 均為 C72DDE48035036605EED8A7F628568333DEA29DD3AEC746A7A7878C1935335B0，檢視後只更新該張基準，再連續三次一般比對通過，未放寬容差。點擊及聚焦尺寸檢查也通過。
+
+## 業務頁面拆分與工作區路由（2026-10-21）
+
+移除 pages/Demo，改由各業務頁面及舊版資料維護／庫存作業畫面直接對應 route。WorkspaceLayout 只組合 BaseLayout；Workspace 功能容器持有登入、通知及共用視窗，頁首與修改歷程拆為元件。資料維護、掃碼與傳票、共用庫存篩選分別持有事件處理，App 保留跨路由未完成表單保護。route handle.module 同步既有操作模組與側欄，URL 決定呈現頁面。
+
+Redux key、command、seed、型別、樣式、測試橋接及規劃板 ready 訊息改為 workspace；相機、庫存及規劃預覽按功能歸屬。舊 /demo 網址轉址、示範帳號／假資料識別與歷史部署紀錄保留。/overview 及 /overview/ 轉至 /，保留 query/hash。規劃板場景同步切換 iframe 實際路由。
+
+最終應用及瀏覽器測試 TypeScript、正式 build 通過；Vitest 10 個檔案、72 個案例通過，JSON 在 frontend/.artifacts/route-split-unit-final.json。正式 dist 已確認不含 __workspaceTest；測試橋接只存在於隔離的 test-mode build。
+
+| 驗證範圍 | 最終結果 | 產物位於 frontend/.artifacts/ |
+| --- | --- | --- |
+| 桌面／手機主要操作：SPA、舊網址、找不到、HIS 權限、掃碼送出／停用／錯誤重試、相機授權取消及資源釋放、播放器資料保留、載入失敗重試 | 50 通過、2 略過；略過的是停用登入設定下的相機登出案例 | route-split-acceptance-results/ |
+| 獨立路由、盤點填寫／審核直接連結及重新整理、複盤與主管核對 | 8 通過，部分路由案例與前列重複，不加總為獨立案例總數 | route-split-form-fixed-results/ |
+| /overview 與尾斜線 query/hash 相容、SPA 上一頁／下一頁 | 桌面／手機 2 通過 | route-split-edge-final-results/ |
+| 編輯中阻擋上一頁及側欄切頁、取消後焦點回復並可重試 | 桌面／手機 2 通過，截圖已檢視 | route-split-guard-results/ |
+| 倉別必填、供應商 Email、HIS 對照逐欄必填及補齊儲存 | 桌面／手機 6 通過，6 張錯誤畫面已檢視 | route-split-native-final-results/ |
+| 320／390／768／1440px 各 24 個業務網址，含耗用子頁、品項分類與盤點參數路由 | 4 個循環案例通過；96 張全頁截圖已檢視，檢查整頁／控制項邊界、表格及耗用頁籤獨立捲動 | route-split-final-rwd-results/ |
+| 唯讀說明、歷史更正、播放器 RWD 視窗 | 12 通過、4 略過；略過的是原本停用的登入流程整合案例 | route-split-interaction-results/ |
+| 639／640、767／768、1023／1024px 斷點；POS 1100／1101px 切欄 | 4 通過；12 張斷點截圖已檢視 | route-split-breakpoint-results/ |
+
+截圖總覽在 route-split-review/，包括 native-states.jpg、interaction-states.jpg、final-states.jpg 與四尺寸全頁總覽。既有 554 張測試基準只搬移，Git blob hash 全部相同，沒有重建基準；以上 --ignore-snapshots 操作驗證不代表舊基準像素比對通過。
+
+回歸修正包括規劃場景對應回傳空值、共用表單原有 HTML 必填／格式驗證的相容步驟，以及測試對舊 DOM 直接子層與品項 canonical URL 的假設。RWD 驗證器補上新版表格與可橫向捲動頁籤容器的檢查。實際截圖另發現 768px POS 商品區被結帳欄壓窄，已將 1100px 以下改為上下排列，手機與 1440px 桌面配置維持原行為。
+
+前幾輪 dev server 導頁逾時及中止批次不列為最終通過；完整全站行為套件未全量完成。未執行的其餘模組細節與舊像素基準比對仍待驗證，不以通過數量宣稱零缺漏。相機案例使用模擬裝置，實機相機／掃碼槍、正式部署、後端／NAS／HIS 及真實身分服務未驗收。沒有 commit、push 或部署。
+
+## Commit 前重跑（2026-10-21）
+
+本輪正式 build、應用及瀏覽器測試 TypeScript 檢查通過，Vitest 10 個檔案共 72 個案例通過。桌面／手機路由與 POS 流程重跑時，前兩個 POS 案例在 beforeEach 等待頁面載入逾時，畫面停留於載入狀態；停止該批次及並行四尺寸路由批次，均不列為完整通過。失敗附件保留於 frontend/.artifacts/commit-check，四尺寸輸出位於 frontend/.artifacts/commit-rwd。沒有更新截圖基準，既有待驗證範圍維持。
