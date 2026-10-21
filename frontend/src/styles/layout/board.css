@@ -178,10 +178,10 @@
   .player-body {
     @apply grid grid-cols-[minmax(0,_1fr)_270px] h-[calc(100%_-_160px)];
   }
-  .demo-stage {
+  .workspace-stage {
     @apply min-w-0 h-full;
   }
-  #interactive-demo {
+  #interactive-workspace {
     @apply w-full h-full [border:0] bg-[#f2faff];
   }
   .step-notes {
@@ -257,7 +257,7 @@
     .player-body {
       @apply flex flex-col overflow-auto;
     }
-    .demo-stage {
+    .workspace-stage {
       @apply h-[65vh] min-h-[440px] shrink-[0];
     }
     .step-notes {

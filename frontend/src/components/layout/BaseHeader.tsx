@@ -1,7 +1,7 @@
 import { BaseButton } from "@/components/ui/BaseButton";
 import { Link } from "react-router";
 type BaseHeaderProps = {
-  variant: "demo" | "board";
+  variant: "workspace" | "board";
   hidden?: boolean;
   menuOpen?: boolean;
   onMenuToggle?: () => void;

@@ -28,7 +28,7 @@ test("shadcn 規劃板關閉重開仍保留 iframe 中新增的廠商", async ({
   await page.goto("/board");
   await page.locator('[data-page="vendors"]').click();
   await page.locator("#start-tour").click();
-  const frame = page.frameLocator("#interactive-demo");
+  const frame = page.frameLocator("#interactive-workspace");
   await expect(page.locator("#player-status")).toHaveText("");
   await frame.locator('[data-action="add"]').click();
   await frame.locator('#editor [name="code"]').fill("SHADCN");
@@ -48,6 +48,7 @@ test("shadcn 規劃板關閉重開仍保留 iframe 中新增的廠商", async ({
   await expect(frame.locator(".list-panel table")).toContainText(
     "元件遷移測試廠商",
   );
+  await page.screenshot({ path: test.info().outputPath("workspace-player-retained.png") });
   await expect(page.locator("#player")).toHaveScreenshot(
     "shadcn-player-retained.png",
   );

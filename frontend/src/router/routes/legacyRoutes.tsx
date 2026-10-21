@@ -19,7 +19,10 @@ function LegacyRedirect() {
     location.pathname === "/board.html"
       ? "/board"
       : location.pathname.replace(/^\/demo(?:\/|\.html)?/, "/");
-  if (location.pathname === "/index.html") path = "/";
+  if (
+    ["/index.html", "/overview"].includes(location.pathname.replace(/\/+$/, ""))
+  )
+    path = "/";
   let hash = location.hash;
   if (
     (location.pathname === "/demo" || location.pathname === "/demo.html") &&
@@ -33,6 +36,7 @@ function LegacyRedirect() {
 export const legacyRoutes: RouteObject[] = [
   ...Object.keys(documentPaths),
   "/index.html",
+  "/overview",
   "/board.html",
   "/demo.html",
   "/demo",

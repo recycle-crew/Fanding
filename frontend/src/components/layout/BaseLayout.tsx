@@ -11,7 +11,7 @@ type BaseLayoutProps = {
 
 export function BaseLayout({ variant }: BaseLayoutProps) {
   const location = useLocation();
-  const loggedIn = useAppSelector((root) => root.demo.loggedIn);
+  const loggedIn = useAppSelector((root) => root.workspace.loggedIn);
   const embedded = new URLSearchParams(location.search).get("embed") === "1";
   const [menuOpen, setMenuOpen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(embedded ? 195 : 228);
@@ -34,7 +34,7 @@ export function BaseLayout({ variant }: BaseLayoutProps) {
   return (
     <div
       id={loggedIn ? "workspace" : undefined}
-      className={`demo-frame${loggedIn ? " authenticated" : ""}`}
+      className={`workspace-frame${loggedIn ? " authenticated" : ""}`}
       style={{ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties}
     >
       {loggedIn && (
@@ -57,7 +57,7 @@ export function BaseLayout({ variant }: BaseLayoutProps) {
       />
       <div className="main-shell">
         <BaseHeader
-          variant="demo"
+          variant="workspace"
           hidden={!loggedIn}
           menuOpen={menuOpen}
           onMenuToggle={() => setMenuOpen((open) => !open)}

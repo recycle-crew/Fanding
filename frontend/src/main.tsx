@@ -17,6 +17,6 @@ createRoot(container).render(
 );
 
 if (import.meta.env.MODE === "test")
-  void import("@/features/demo/testBridge").then(({ installTestBridge }) =>
+  void import("@/features/workspace/testBridge").then(({ installTestBridge }) =>
     installTestBridge(store),
   );

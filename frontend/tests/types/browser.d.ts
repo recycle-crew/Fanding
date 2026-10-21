@@ -1,7 +1,7 @@
-import type { DemoState } from "../../src/types/demo";
-import type * as domain from "../../src/features/demo/domain";
+import type { WorkspaceState } from "../../src/types/workspace";
+import type * as domain from "../../src/features/inventory/domain";
 import type * as axe from "axe-core";
-import "../../src/types/demo/camera";
+import "../../src/types/camera";
 
 declare global {
   type CameraDecodeCallback = Parameters<
@@ -10,9 +10,9 @@ declare global {
     >["decodeFromStream"]
   >[2];
   interface Window {
-    __demoTest: {
+    __workspaceTest: {
       run<T>(
-        operation: (state: DemoState, domain: typeof domain) => T,
+        operation: (state: WorkspaceState, domain: typeof domain) => T,
       ): Promise<T>;
     };
     __spaDocument: string;

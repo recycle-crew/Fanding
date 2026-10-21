@@ -64,7 +64,7 @@ export function BoardPage() {
       )
         return;
       const message = event.data;
-      if (message.type === "fangding-demo-ready") {
+      if (message.type === "fangding-workspace-ready") {
         ready.current = true;
         if (pending.current) request(pending.current.index);
       }
@@ -306,10 +306,10 @@ export function BoardPage() {
               </BaseButton>
             </header>
             <div className="player-body h-auto min-h-0 flex-1">
-              <section className="demo-stage">
+              <section className="workspace-stage">
                 <iframe
                   ref={frame}
-                  id="interactive-demo"
+                  id="interactive-workspace"
                   src="/?embed=1"
                   title="可操作的庫存管理系統"
                 />

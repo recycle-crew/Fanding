@@ -113,7 +113,7 @@
   .count-confirmation input {
     @apply w-[17px] h-[17px] m-0 accent-[var(--primary)];
   }
-  .demo-page .toolbar {
+  .workspace-page .toolbar {
     @apply items-center;
   }
   .search-control {
@@ -135,38 +135,38 @@
   .vendor-options .empty {
     @apply p-[14px] m-0 text-[13px];
   }
-  .demo-page .vendor-filter {
+  .workspace-page .vendor-filter {
     @apply flex items-center gap-[10px] font-[500] whitespace-nowrap;
   }
-  .demo-page .vendor-filter select {
+  .workspace-page .vendor-filter select {
     @apply w-[140px];
   }
-  .demo-page .toolbar > .small {
+  .workspace-page .toolbar > .small {
     @apply ml-auto;
   }
   .list-panel .table-wrap {
     @apply [border:1px_solid_var(--line)] rounded-[8px];
   }
-  .demo-page th {
+  .workspace-page th {
     @apply bg-[#f2f5f8] text-[#354e60];
   }
-  .demo-page th,
-  .demo-page td {
+  .workspace-page th,
+  .workspace-page td {
     @apply border-b-[#e7ecf0] p-[13px_14px];
   }
-  .demo-page tbody tr:last-child td {
+  .workspace-page tbody tr:last-child td {
     @apply [border-bottom:0];
   }
-  .demo-page tbody tr:hover {
+  .workspace-page tbody tr:hover {
     @apply bg-[#f7fafc];
   }
-  .demo-page td button[data-action="edit"] {
+  .workspace-page td button[data-action="edit"] {
     @apply border-[#b6cbd9] text-[var(--primary)];
   }
-  .demo-page td button[data-action="delete"] {
+  .workspace-page td button[data-action="delete"] {
     @apply text-[#8b4242];
   }
-  .demo-page .demo-banner {
+  .workspace-page .workspace-banner {
     @apply bg-[#e9eff4] text-[#425e71] [border-bottom:1px_solid_var(--line)];
   }
   .sidebar-resize {
@@ -179,25 +179,25 @@
   .sidebar.adjusting .sidebar-resize::after {
     @apply opacity-100;
   }
-  .demo-page main {
+  .workspace-page main {
     @apply p-[30px_32px];
   }
-  .demo-page h2 {
+  .workspace-page h2 {
     @apply text-[25px] tracking-[-0.5px];
   }
-  .demo-page .panel {
+  .workspace-page .panel {
     @apply rounded-[10px] p-[22px];
   }
-  .demo-page .metric {
+  .workspace-page .metric {
     @apply rounded-[10px] p-[20px_22px];
   }
-  .demo-page .metric strong {
+  .workspace-page .metric strong {
     @apply text-[30px] tracking-[-0.8px] tabular-nums;
   }
-  .demo-page .metric span:last-child {
+  .workspace-page .metric span:last-child {
     @apply text-[var(--primary)] text-[12px];
   }
-  .demo-page .login-card {
+  .workspace-page .login-card {
     @apply rounded-[12px];
     box-shadow: 0 4px 20px #24384708;
   }
@@ -213,28 +213,28 @@
   #recovery-result {
     @apply bg-[#edf3f7] [border:1px_solid_var(--line)] rounded-[8px] p-[16px] text-[14px] leading-[1.8];
   }
-  .demo-page .login-story h1 {
+  .workspace-page .login-story h1 {
     @apply text-[clamp(32px,_4vw,_48px)];
   }
-  .demo-page .login-tags span {
+  .workspace-page .login-tags span {
     @apply border-[var(--line)] rounded-[6px] bg-white;
   }
-  .demo-page .dialog-heading {
+  .workspace-page .dialog-heading {
     @apply pb-[16px] [border-bottom:1px_solid_var(--line)];
   }
-  .demo-page .dialog-actions {
+  .workspace-page .dialog-actions {
     @apply pt-[20px] [border-top:1px_solid_var(--line)];
   }
-  .demo-page .editor-page {
+  .workspace-page .editor-page {
     @apply max-w-[1000px];
   }
-  .demo-page .back-to-list {
+  .workspace-page .back-to-list {
     @apply mb-[22px];
   }
-  .demo-page .editor-panel {
+  .workspace-page .editor-panel {
     @apply p-[28px];
   }
-  .demo-page .editor-panel .selection {
+  .workspace-page .editor-panel .selection {
     @apply m-[0_0_8px];
   }
   .activation-status {
@@ -250,7 +250,7 @@
   .activation-status.inactive {
     @apply text-[#a03636] bg-[#fceeee] [border:1px_solid_#edc0c0];
   }
-  .demo-page select:disabled {
+  .workspace-page select:disabled {
     @apply bg-[#f1f4f6] text-[var(--muted)] opacity-[1];
   }
   .locked-select-control {
@@ -265,7 +265,7 @@
   #readonly-notice p {
     @apply text-[14px] leading-[1.8];
   }
-  .demo-page.embedded main {
+  .workspace-page.embedded main {
     @apply p-[24px];
   }
   .planning-page .shell {
@@ -374,44 +374,44 @@
   .board-page .question {
     @apply bg-[#eaf0f5];
   }
-  .board-page #interactive-demo {
+  .board-page #interactive-workspace {
     @apply bg-[var(--paper)];
   }
   @media (width < 48rem) {
     .planning-page .hero {
       @apply gap-[24px] p-[32px_0];
     }
-    .demo-page main,
-    .demo-page.embedded main {
+    .workspace-page main,
+    .workspace-page.embedded main {
       @apply p-[20px_16px];
     }
-    .demo-page .toolbar input {
+    .workspace-page .toolbar input {
       @apply max-w-none;
     }
-    .demo-page .search-control {
+    .workspace-page .search-control {
       @apply max-w-none;
     }
   }
   @media (width < 40rem) {
-    .demo-page .panel {
+    .workspace-page .panel {
       @apply p-[16px];
     }
-    .demo-page .editor-panel {
+    .workspace-page .editor-panel {
       @apply p-[20px_16px];
     }
-    .demo-page .metric {
+    .workspace-page .metric {
       @apply p-[16px];
     }
-    .demo-page .metric strong {
+    .workspace-page .metric strong {
       @apply text-[26px];
     }
-    .demo-page .field-hint {
+    .workspace-page .field-hint {
       @apply leading-[1.7];
     }
-    .demo-page .vendor-filter {
+    .workspace-page .vendor-filter {
       @apply w-full;
     }
-    .demo-page .vendor-filter select {
+    .workspace-page .vendor-filter select {
       @apply flex-[1];
     }
     .planning-page .brief {

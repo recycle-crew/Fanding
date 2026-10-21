@@ -12,7 +12,7 @@ test(
       ),
     ).toHaveCount(0);
     await expect(page).toHaveTitle("庫存管理系統");
-    await expect(page.locator('.demo-banner a[href="/board"]')).toBeVisible();
+    await expect(page.locator('.workspace-banner a[href="/board"]')).toBeVisible();
     await expect(page.locator('#sidebar a[href="/board"]')).toHaveCount(0);
     if (page.viewportSize()!.width < 768)
       await page.locator("#menu-toggle").click();
@@ -25,7 +25,7 @@ test(
     await page.reload();
     await expect(page.locator("#content h2")).toHaveText("工作區總覽");
     await page.screenshot({ path: testInfo.outputPath("root-navigation.png") });
-    await page.locator('.demo-banner a[href="/board"]').click();
+    await page.locator('.workspace-banner a[href="/board"]').click();
     await expect(page.locator("#page-title")).toBeVisible();
     await expect(
       page.locator(

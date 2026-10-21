@@ -46,6 +46,7 @@ function staticDocuments(): Plugin {
 }
 export default defineConfig({
   root: import.meta.dirname,
+  cacheDir: process.env.VITE_CACHE_DIR || "node_modules/.vite",
   base: "/",
   plugins: [react(), tailwindcss(), staticDocuments()],
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },

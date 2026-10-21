@@ -1,6 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import type { ThunkAction, UnknownAction } from "@reduxjs/toolkit";
-import demoReducer from "./demo";
+import workspaceReducer from "./workspace";
 import itemsReducer from "./items";
 import purchasesReducer from "./purchases";
 import baseDataReducer from "./baseData";
@@ -12,7 +12,7 @@ import stocktakesReducer from "./stocktakes";
 // Keep module-only data in features/<module>; keep UI drafts in component state.
 export const store = configureStore({
   reducer: {
-    demo: demoReducer,
+    workspace: workspaceReducer,
     items: itemsReducer,
     purchases: purchasesReducer,
     baseData: baseDataReducer,

@@ -4,12 +4,12 @@ import { store } from "@/store";
 import { Component, Suspense, useEffect, useLayoutEffect } from "react";
 import type { ReactNode } from "react";
 import { Outlet, useBlocker, useLocation } from "react-router";
-import { executeDemoCommand } from "@/store/demo";
+import { executeWorkspaceCommand } from "@/store/workspace";
 import boardCss from "@/styles/layout/board.css?inline";
-import demoCss from "@/styles/layout/demo.css?inline";
+import workspaceCss from "@/styles/layout/workspace.css?inline";
 import themeCss from "@/styles/themes/default.css?inline";
 
-// 載入失敗仍提供可見的重試入口；重新整理會依 Demo 規則重置記憶體資料。
+// 載入失敗仍提供可見的重試入口；重新整理會依 工作區規則重置記憶體資料。
 class PageErrorBoundary extends Component<
   { children: ReactNode },
   { failed: boolean }
@@ -39,29 +39,29 @@ class PageErrorBoundary extends Component<
 export function App() {
   const location = useLocation();
   const pathname = location.pathname.replace(/\/+$/, "") || "/";
-  const state = useAppSelector((root) => root.demo);
+  const state = useAppSelector((root) => root.workspace);
   const dispatch = useAppDispatch();
   const blocker = useBlocker(({ currentLocation, nextLocation }) => {
     // A save can clear dirty state and navigate in one event, before React re-renders.
     const current = store.getState();
     return (
       Boolean(
-        current.demo.editor ||
-        current.demo.confirmation ||
+        current.workspace.editor ||
+        current.workspace.confirmation ||
         current.moduleUi.dirty,
       ) && currentLocation.pathname !== nextLocation.pathname
     );
   });
-  const page = pathname === "/board" ? "board" : "demo";
+  const page = pathname === "/board" ? "board" : "workspace";
   const css = {
     board: boardCss,
-    demo: demoCss,
+    workspace: workspaceCss,
   }[page];
 
   useEffect(() => {
     if (blocker.state !== "blocked") return;
     dispatch(
-      executeDemoCommand({
+      executeWorkspaceCommand({
         type: "update",
         update: (d) => {
           d.notice = "請先儲存、取消或完成目前的確認，再切換路由。";
@@ -73,13 +73,13 @@ export function App() {
 
   useLayoutEffect(() => {
     const query = new URLSearchParams(location.search);
-    document.body.className = `${page}-page${page === "demo" && query.get("embed") === "1" ? " embedded" : ""}${page === "demo" && query.get("preview") === "1" ? " preview-mode" : ""}`;
+    document.body.className = `${page}-page${page === "workspace" && query.get("embed") === "1" ? " embedded" : ""}${page === "workspace" && query.get("preview") === "1" ? " preview-mode" : ""}`;
     document.title = {
       board: "庫存管理系統 — 畫面規劃板",
-      demo: "庫存管理系統",
+      workspace: "庫存管理系統",
     }[page];
-    // Demo 自行管理工作區焦點與捲動，避免模組切換改變黏附側欄的位置。
-    if (!location.hash && page !== "demo") window.scrollTo(0, 0);
+    // 工作區自行管理工作區焦點與捲動，避免模組切換改變黏附側欄的位置。
+    if (!location.hash && page !== "workspace") window.scrollTo(0, 0);
   }, [page, location.pathname, location.search]);
 
   // 跨路由的章節可能等延遲載入後才出現，表格列還需先展開所在分頁。

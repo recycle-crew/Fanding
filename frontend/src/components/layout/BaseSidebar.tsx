@@ -1,9 +1,9 @@
 import { BaseButton } from "@/components/ui/BaseButton";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { Link, useLocation, useNavigate } from "react-router";
-import { demoModulePaths } from "@/constants/demoRoutes";
-import { DEMO_LOGIN_ENABLED } from "@/constants/demoAccess";
-import { executeDemoCommand } from "@/store/demo";
+import { workspaceModulePaths } from "@/constants/workspaceRoutes";
+import { WORKSPACE_LOGIN_ENABLED } from "@/constants/workspaceAccess";
+import { executeWorkspaceCommand } from "@/store/workspace";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { useWindowScroll, useWindowSize } from "react-use";
@@ -43,7 +43,7 @@ export function BaseSidebar(props: BaseSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
-  const s = useAppSelector((root) => root.demo);
+  const s = useAppSelector((root) => root.workspace);
   const defaultWidth = embedded ? 195 : 228;
   const [preferredWidth, setPreferredWidth] = useState(defaultWidth);
   const viewport = useWindowSize();
@@ -174,7 +174,7 @@ export function BaseSidebar(props: BaseSidebarProps) {
             className="mb-4 h-auto w-full whitespace-normal py-3 text-left"
             aria-current={s.activeModule === key ? "page" : undefined}
             onClick={() =>
-              navigate(`${demoModulePaths[key]}${location.search}`)
+              navigate(`${workspaceModulePaths[key]}${location.search}`)
             }
           >
             {key === "pos"
@@ -263,7 +263,7 @@ export function BaseSidebar(props: BaseSidebarProps) {
                     s.activeModule === module.key ? "page" : undefined
                   }
                   onClick={() =>
-                    navigate(`${demoModulePaths[module.key]}${location.search}`)
+                    navigate(`${workspaceModulePaths[module.key]}${location.search}`)
                   }
                 >
                   <span>{module.label}</span>
@@ -291,11 +291,11 @@ export function BaseSidebar(props: BaseSidebarProps) {
         <BaseButton
           variant="logout"
           id="logout"
-          hidden={!DEMO_LOGIN_ENABLED}
+          hidden={!WORKSPACE_LOGIN_ENABLED}
           onClick={() => {
             if (s.editor) {
               dispatch(
-                executeDemoCommand({
+                executeWorkspaceCommand({
                   type: "update",
                   update: (d) => {
                     d.notice = "請先儲存或取消編輯，再登出。";
@@ -305,7 +305,7 @@ export function BaseSidebar(props: BaseSidebarProps) {
               return;
             }
             dispatch(
-              executeDemoCommand({
+              executeWorkspaceCommand({
                 type: "update",
                 update: (d) => {
                   d.loggedIn = false;

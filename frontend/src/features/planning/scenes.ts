@@ -233,7 +233,7 @@ export type SceneRequest =
   | { type: "fangding-request-scene"; scene: Scene; requestId: number }
   | { type: "fangding-dismiss-form" };
 export type SceneResponse =
-  | { type: "fangding-demo-ready" }
+  | { type: "fangding-workspace-ready" }
   | {
       type: "fangding-scene-result";
       requestId: number;

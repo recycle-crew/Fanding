@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import type { ChangeEvent, ReactNode } from "react";
-import type { InventoryFilter } from "@/types/demo";
+import type { InventoryFilter } from "@/types/workspace";
 import { BaseInput } from "@/components/ui/BaseInput";
 import { BaseNativeSelect } from "@/components/ui/BaseNativeSelect";
 type ControlProps = {
