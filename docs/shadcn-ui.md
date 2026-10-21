@@ -1,6 +1,6 @@
 # shadcn/ui 元件慣例
 
-全站 React UI 使用 shadcn/ui（官方 `new-york` registry），元件原始碼位於 `frontend/src/components/ui/`。`frontend/components.json` 是 CLI 設定，`frontend/src/lib/utils.ts` 的 `cn` 合併 Tailwind class；主題集中於 `styles/tailwind.css`。沿用 Tailwind CSS 4、React 19、Vite 與 React Router。
+全站 React UI 使用 shadcn/ui（官方 `new-york` registry），元件原始碼位於 `frontend/src/components/ui/`。`frontend/components.json` 是 CLI 設定，元件直接從 `cn` 套件匯入 `cn` 合併 Tailwind class；主題集中於 `styles/tailwind.css`。沿用 Tailwind CSS 4、React 19、Vite 與 React Router。
 
 ## 使用位置與責任
 
@@ -16,6 +16,40 @@
 | Dialog | BaseModal 的確認、唯讀提示與規劃板互動播放器 |
 
 新增 UI 應直接組合上述元件。`BaseDataTable`、`BaseFilterForm`、`BaseModal` 負責跨頁的應用規則；業務狀態、交易、權限判斷與表單提交仍由既有 Home、features、store 擁有，不放入 shadcn primitives。
+
+## 外觀由 variant 管理
+
+呼叫端以 `variant` 選擇預先定義的外觀，不再額外拼接 `tag low`、`primary`、`callout assumption` 或選取色等外觀 class。`className` 保留給頁面寬度、間距、排列、響應式配置、可見性和穩定定位用途；尺寸選項使用 `size`。只有單一外觀的 Input／Textarea／Checkbox／Accordion 等元件沿用基底樣式，不額外製造沒有差異的 variant。
+
+| 元件 | 外觀選項與用途 |
+| --- | --- |
+| BaseBadge | `secondary` 一般、`muted` 停用、`warning` 提醒；保留原 shadcn 選項 |
+| BaseButton | 原選項外，提供 `primary`、`text`、狀態、唯讀說明、排序、紀錄連結、通知、商品卡片、分頁、導覽／選取及登出等既有外觀 |
+| BaseAlert | `info` 作業提示、`warning` 假設提醒、`result` 結果、`notification` 浮動通知；通知位置仍由頁面配置 |
+| BaseCard | `panel` 一般面板、`editor` 編輯面板、`login` 登入面板；asChild 的外觀也由 BaseCard 指定 |
+| BaseLabel／BaseNativeSelect | `pagination` 管理分頁控制的字體、邊框和內距；Label 的 `field`、`check`／`check-inline`、`page-size`、`confirmation`、`inline` 管理既有欄位／勾選配置 |
+| BaseSwitch | `compact` 管理既有品項開關外觀；`checked` 自動反映開關狀態，呼叫端不另拼 `on` class |
+| BaseTable／BaseTableCell／BaseTableFrame | `inventory`／`lines` 選表格樣式；儲存格以 `code`、`name`、`numeric`、`expired`、`money`、`empty`／`empty-lines` 選外觀；Frame 的 `sticky-actions` 管理固定操作欄的表格樣式 |
+| BaseDialogContent／Description | `workspace`／`workspace-wide`、`native`／`player` 管理視窗外觀；Description 的 `workspace` 管理既有說明樣式 |
+| BaseDropdownMenuContent | `menu` 管理作業選單外觀 |
+
+CVA 設定仍透過 `VariantProps<typeof ...>` 推導可用選項。元件內部可組合既有 CSS preset，以保留主題及斷點；呼叫端只選 variant。`disabled`、`checked`、`aria-selected` 等原生／Radix 互動狀態繼續控制對應行為與樣式，不另設一份重複的業務狀態。新增衍生 variant 時也須檢查既有 `data-variant` CSS 選擇器，例如分頁沿用 workspace outline 的主題色。
+
+## 元件內部樣式宣告
+
+`components/ui` 內有自身樣式的元件與部位，將固定及條件 class 集中到所屬檔案的 `xxxVariants` CVA 宣告，放在對應元件前。CardTitle、TableHeader 等子元件，以及圖示、容器、分頁列等內部部位也遵守此規則；沒有自身樣式的 Radix 透傳元件維持原狀，不新增包裝元件或空設定。
+
+只有固定樣式時使用 `cva("...")` 或 `cva(["...", "..."])`，不增加只有 `default` 的外觀選項；有多種外觀時保留 `variants`、`defaultVariants` 與既有公開 props。互動樣式優先沿用原有 ARIA／data-state 選擇器；需要組合外觀與狀態時使用 `compoundVariants`，例如 compact Switch 的 checked 樣式直接取自既有 `checked` prop。
+
+JSX 的 `cn` 只接樣式結果及最後的外部 `className`，不再放固定 class、外觀條件，也不將 `className` 傳入 CVA：
+
+```tsx
+className={cn(inputVariants(), className)}
+className={cn(buttonVariants({ variant, size }), className)}
+className={cn(switchVariants({ variant, checked }), className)}
+```
+
+內部部位沒有外部 class 時使用 `cn(iconVariants())`。完全沿用呼叫端樣式的 BaseFilterForm 保留 `props.className`，不製造沒有樣式的 variants。此規則不擴及 Layout、Home 與 features 的頁面配置；不改動 CSS hooks、DOM 結構或業務流程。
 
 ## 專案調整
 
@@ -34,9 +68,9 @@ cd frontend
 npx shadcn@latest add <component>
 ```
 
-檢查 registry 更新造成的差異，保留上列專案調整；不要直接以 `--overwrite` 覆寫整個元件目錄。新元件的 cn 匯入統一指向 `@/lib/utils`，其餘外部依賴由 CLI 安裝。主題使用現有無前綴的 Tailwind utilities，與專案預設 sm／md／lg／xl／2xl 斷點一致。
+檢查 registry 更新造成的差異，保留上列專案調整；不要直接以 `--overwrite` 覆寫整個元件目錄。新元件統一使用 `import { cn } from "cn"`，不建立本地 `utils.ts`；`components.json` 的 `utils` alias 同步設為 `cn`，其餘外部依賴由 CLI 安裝。主題使用現有無前綴的 Tailwind utilities，與專案預設 sm／md／lg／xl／2xl 斷點一致。
 
-此次新增的 functions 是 registry primitives、cn；既有 BaseFilterForm.controls 補上元件識別、BaseModal 管理 Portal 與原生視窗生命週期、App 的錨點 reveal 改用 Accordion trigger。沒有搬動業務 method 或重寫 store 的交易規則。
+registry primitives 提供共用元件；class 合併直接使用 `cn` 套件，不保留本地 cn function；既有 BaseFilterForm.controls 補上元件識別、BaseModal 管理 Portal 與原生視窗生命週期、App 的錨點 reveal 改用 Accordion trigger。沒有搬動業務 method 或重寫 store 的交易規則。
 
 ## 驗證範圍
 

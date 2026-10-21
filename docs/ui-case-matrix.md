@@ -1,5 +1,35 @@
 # 畫面測試案例清單
 
+## 共用 UI 樣式宣告統一（2026-10-21）
+
+| 需求 | 預期畫面／測試來源 | 驗證狀態／限制 |
+| --- | --- | --- |
+| 固定樣式與外部覆寫 | Input、Textarea、Card／Alert／Table 子元件及 Select 內部部位維持畫面；Input 外部 h-11 可覆寫基底高度 | rwd.test.ts「RWD 共用 UI 固定樣式」及 ui-components.tsx 真實元件展示；實際結果見 ui-testing.md |
+| 原生／Radix 互動 | Checkbox、一般／compact Switch、停用狀態、Accordion 鍵盤與 Tabs 焦點選取維持 | 新增四尺寸案例及既有「RWD Base variant」；compact 切換取消沿用既有案例 |
+| 表單及視窗 | 欄位錯誤可見且聚焦、aria-invalid 正確；預設／workspace／native／player 視窗可取消並回復焦點 | 新增展示案例、既有錯誤／唯讀／shadcn／規劃板案例；涵蓋實際截圖檢視 |
+| 頁面與 RWD | 表格獨立捲動、手機導覽、分頁與所有既有外觀維持；320／390／768／1440px | 現行 RWD 與頁面回歸；另擷取目前工作樹的調整前後十頁及狀態畫面比較 |
+| 覆蓋限制 | 純樣式宣告重構；未新增資料、權限、API 或實體設備流程 | 舊截圖差異與實際執行結果另列；未驗證的 NAS／HIS、正式身分服務、部署及實機設備不列為完成 |
+
+## Base 元件外觀統一 variant（2026-10-21）
+
+盤點 21 個 UI Base 元件檔案與 3 個 Layout Base 元件檔案及其呼叫端；外觀 preset 由元件的 variant 管理，頁面配置與可見性保留 className。只提供單一外觀的元件使用既有基底，互動狀態沿用 disabled／checked／aria 屬性。原生頁面元素不額外改寫成新元件。
+
+| 需求 | 預期畫面／測試來源 | 驗證狀態／限制 |
+| --- | --- | --- |
+| 狀態、提示與面板 | Badge 一般／停用／提醒，Alert 作業提示／假設／通知，Card 面板／登入／編輯；呼叫端不拼外觀 class | 原始碼盤點、TypeScript／build；四尺寸實際畫面結果見 ui-testing.md |
+| 操作與導覽 | 主按鈕、文字、唯讀說明、狀態、排序、分頁及選取外觀以 variant 決定；保留 size 與 aria | rwd.test.ts「RWD Base variant」「RWD shadcn」「RWD 導覽點擊」「RWD 編輯頁」及既有流程示範案例 |
+| 表格與控制項 | 表格 preset、過期／數值／空儲存格、Label／Select 分頁、Switch 樣式；取消啟用變更後 checked 不變 | 新增 variant 案例涵蓋空結果、清除重試、排序、開關取消、紀錄連結、作業選單與 Dialog |
+| Dialog 與選單 | workspace／wide、native／player 及作業選單外觀保留；Esc／關閉與焦點可用 | 四尺寸實際視窗／選單／通知截圖檢視；結果見 ui-testing.md，沒有更新舊截圖基準 |
+| 覆蓋限制 | 這次調整外觀選擇介面，沒有新增資料、權限或網路契約 | 未重跑全站完整測試；既有錯誤／權限完整回歸、正式部署、NAS／HIS 與實機設備待驗證範圍保留 |
+
+## cn 套件直接匯入（2026-10-21）
+
+| 需求 | 預期畫面／測試來源 | 驗證狀態／限制 |
+| --- | --- | --- |
+| 共用元件直接使用套件 | 13 個元件使用 `import { cn } from "cn"`，無本地 utils；Badge 保留 variant 及呼叫端 tag；rwd.test.ts 的 shadcn 案例 | TypeScript／build 通過；四尺寸 Chromium 操作與實際截圖檢視完成 |
+| 畫面與響應式行為 | 總覽、HIS、廠商頁的 Button／Input／Select／Card／Table／Badge 保留畫面；Dialog 取消及焦點、手機導覽、表格獨立捲動維持；既有 RWD 案例 | 略過舊基準時 12／12 通過；舊基準一般比對 12 個失敗，未更新基準。舊／新實作 12 組實際畫面差異與限制見 ui-testing.md |
+| 驗證範圍 | 套件替換未新增資料、請求、權限或錯誤狀態 | 本次未執行其餘正常／找不到／錯誤重試／權限完整回歸，既有待驗證範圍保留；實機設備與正式部署未驗收 |
+
 ## 舊頁面區（2026-10-20）
 
 | 需求 | 預期畫面／測試來源 | 驗證狀態／限制 |

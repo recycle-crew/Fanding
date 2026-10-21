@@ -2,6 +2,36 @@
 
 # 畫面案例驗證
 
+## 共用 UI 樣式宣告統一（2026-10-21）
+
+共用 UI 元件及內部部位的固定樣式集中到各檔案的 CVA 宣告，外部 className 最後交由 cn 合併；保留既有 props、CSS hooks、互動與業務流程。新增真實元件展示與四尺寸案例，涵蓋固定樣式、外部高度覆寫、停用狀態、Checkbox／Switch、Accordion／Tabs 鍵盤、表單錯誤、預設視窗取消及焦點回復。
+
+提交前重新執行正式 build、應用與瀏覽器測試 TypeScript，以及單元測試，61 個單元測試通過。工作目錄既有 `.artifacts/ui-style-unification/after-tests.json` 記錄兩種共用元件案例於 320／390／768／1440px 共 8 次通過；已檢視四尺寸頁面總覽與差異圖，以及本輪 320px 的元件、錯誤與視窗截圖。前後比較 68 組有 59 組逐像素一致，包含 40 組頁面中的 37 組；其餘差異保留於 comparison.json 與 differences.png，不宣稱全部截圖一致。
+
+提交檢查另外選取 52 個 Chromium RWD 案例，以 `--ignore-snapshots --workers=1 --timeout=60000` 執行。期間另有一個全站 Playwright 作業並行，且同一份測試檔仍有截圖穩定化調整；本輪出現 390px 工作區及播放器載入等待逾時，因此停止本輪作業並保留 `.artifacts/test-results/` 中的失敗畫面與 trace。此輪未完成，不列為全站或四尺寸完整回歸通過；未更新舊截圖基準，正式部署、NAS／HIS、身分服務與實機設備仍未驗收。
+
+## Base 元件外觀統一 variant（2026-10-21）
+
+盤點 21 個 UI Base 元件檔案、3 個 Layout Base 元件檔案及其呼叫端，將 Badge 狀態、Button 預設外觀與導覽選取、Alert、Card、Label／Select 分頁、Switch、表格／儲存格／Frame、Dialog 與選單 preset 收進元件的 variant；className 保留頁面配置、可見性與定位用途。只有單一外觀的元件保留基底，disabled／checked／aria 仍控制互動狀態。型別沿用 CVA 的 VariantProps 推導。
+
+TypeScript（應用與瀏覽器測試）及正式 Vite build 通過。Windows Chromium 於 320／390／768／1440px，完成 24 個共用元件、空結果、開關取消、排序、選單、通知、workspace／native／player 視窗、側欄導覽與新增／編輯案例；HIS、入庫頁另重跑 8 個案例通過，共 32 個針對性案例。這些執行使用 `--ignore-snapshots --workers=1 --timeout=60000`，不代表舊截圖基準比對通過。
+
+初輪選取 88 個案例，期間新測試誤將播放器 iframe 當成外層 dialog，且並行擷取時 HIS／入庫出現載入逾時，因此中途停止。修正 selector、停止並行擷取後依序執行上述案例；沒有將未執行的原 88 個案例算成通過。原執行產物保留於 `.artifacts/variant-rwd-initial-results/`。
+
+畫面比對涵蓋總覽、廠商、HIS、入庫、新版品項、進貨、基礎資料、耗用、POS、規劃板共 10 頁，每頁四種寬度。首輪 34 組逐像素一致，6 組分頁文字差異來自舊 CSS 僅匹配 outline；補上 pagination 的相同主題規則並重拍後，40 組前後截圖全部逐像素一致。比較資料與四尺寸畫面總覽位於 `.artifacts/variant-review/comparison.json`、`review-{width}.png`，已逐張檢視四尺寸總覽。
+
+狀態案例另外擷取廠商查詢、workspace 視窗、作業選單、通知及播放器的四尺寸共 20 張畫面。播放器等待登入 frame 實際顯示後才擷取，視窗／選單採實際 viewport 截圖；最新原圖在 `.artifacts/variant-states-final/`，檢視總覽在 `.artifacts/variant-review/states-{width}.png`。未更新舊基準。未重跑全站完整測試，正式部署、NAS／HIS、後端與實機設備仍依案例清單保留待驗證。
+
+## cn 套件直接匯入（2026-10-21）
+
+13 個共用元件直接從 `cn@0.5.0` 匯入，移除本地 `src/lib/utils.ts` 及 `clsx`／`tailwind-merge` 直接依賴；`clsx` 仍由 `class-variance-authority` 間接使用。同步更新 shadcn 設定與維護文件。
+
+TypeScript（應用與瀏覽器測試）及正式 Vite build 通過。Windows Chromium 以 320／390／768／1440px 執行 `RWD shadcn`、`RWD Demo overview`、`RWD Demo his`：一般模式的 12 個案例都遇到既有截圖基準差異，包含此次未修改的靜態文件。保留基準，改以 `--ignore-snapshots` 重跑，12／12 通過，涵蓋表單／表格捲動、狀態 Badge、確認視窗取消與焦點回復、選取狀態及手機導覽。
+
+另在相同原始碼與固定日期下，使用暫存 Vite alias 分別載入舊 `twMerge(clsx(inputs))` 與新 `cn`，比對工作區總覽、HIS、廠商三頁的四種尺寸：11 組截圖位元組完全相同；768px 廠商頁僅按鈕邊緣 15 像素不同（540×1208px，低於既有 0.002 比例容差），放大檢視未見可見外觀差異。四尺寸廠商全頁截圖也已逐張檢視，未更新基準。遷移前後圖片與比較腳本位於 `frontend/.artifacts/cn-parity/`、`frontend/.artifacts/cn-compare.mjs`；原基準失敗報告保留在 `.artifacts/cn-baseline-report/`。
+
+這是 class 合併套件遷移的針對性驗證，不代表全站所有案例、正式部署、NAS／HIS 整合或實機設備驗收。
+
 ## 首頁路由與靜態規劃文件（2026-10-21）
 
 後續依使用者更正，移除系統頂部、規劃板頁首及登入示範內的規劃文件入口；系統頂部僅保留畫面規劃板連結，兩份 HTML 仍保留於 docs。應用與測試 TypeScript、正式 build 通過；桌機／手機共 2 個首頁導覽案例確認首頁及規劃板沒有兩份文件入口，且畫面規劃板仍可切換。已擷取兩頁的桌機／手機畫面並檢視手機首頁與桌機規劃板截圖；未更新基準、未部署。
