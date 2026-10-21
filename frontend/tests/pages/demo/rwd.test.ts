@@ -16,7 +16,9 @@ const test = base.extend<{ browserErrors: string[] }>({
   ],
 });
 
-test("RWD shadcn 表單、Accordion 與確認視窗鍵盤操作", async ({ page }) => {
+test("RWD shadcn 表單、Accordion 與確認視窗鍵盤操作", async ({
+  page,
+}, testInfo) => {
   await page.goto("/docs/planning.html#question-activation");
   const question = page.locator("#question-activation");
   await expect(question).toHaveAttribute("open", "");
@@ -29,6 +31,17 @@ test("RWD shadcn 表單、Accordion 與確認視窗鍵盤操作", async ({ page 
   await checkResponsiveLayout(page);
   await expect(question).toHaveScreenshot("shadcn-accordion.png");
   await enterDemoModule(page, "vendors", true);
+  const statusBadge = page.locator('.list-panel [data-slot="badge"]').first();
+  await expect(statusBadge).toBeVisible();
+  await expect(statusBadge).toHaveAttribute("data-variant", "secondary");
+  await expect(statusBadge).toHaveClass(/\btag\b/);
+  await expect(statusBadge).toHaveCSS("display", "inline-flex");
+  const componentScreenshot = testInfo.outputPath("cn-components.png");
+  await page.screenshot({ path: componentScreenshot, fullPage: true });
+  await testInfo.attach("cn 套件遷移後的共用元件", {
+    path: componentScreenshot,
+    contentType: "image/png",
+  });
   await expect(page.locator("#search")).toHaveAttribute("data-slot", "input");
   await expect(page.locator("#vendor-status-filter")).toHaveAttribute(
     "data-slot",
@@ -66,6 +79,213 @@ test("RWD shadcn 表單、Accordion 與確認視窗鍵盤操作", async ({ page 
   await expect(page.locator(".movement-view-tabs")).toHaveScreenshot(
     "shadcn-selected-filter.png",
   );
+});
+
+test("RWD Base variant 的狀態、空資料、選單與視窗", async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(90_000);
+  await enterDemoModule(page, "vendors", true);
+  await expect(page.locator('.list-panel[data-slot="card"]')).toHaveAttribute(
+    "data-variant",
+    "panel",
+  );
+  await expect(
+    page.locator('.list-panel [data-slot="badge"][data-variant="muted"]'),
+  ).toHaveText("停用");
+  await expect(page.locator("[data-page-size]").first()).toHaveAttribute(
+    "data-variant",
+    "pagination",
+  );
+  await page.locator("#search").fill("不存在的廠商_VARIANT");
+  await expect(
+    page.locator('.list-panel [data-variant="empty"]'),
+  ).toContainText("目前沒有符合的資料");
+  await page.locator("#search").fill("");
+  await checkResponsiveLayout(page);
+  await page.screenshot({
+    path: testInfo.outputPath("variant-vendors.png"),
+    fullPage: false,
+    animations: "disabled",
+  });
+
+  await page.goto("/items");
+  const toggle = page.getByRole("switch").first();
+  await expect(toggle).toHaveAttribute("data-variant", "compact");
+  await expect(toggle).toHaveAttribute("aria-checked", /true|false/);
+  const checkedBeforeCancel = await toggle.getAttribute("aria-checked");
+  await toggle.click();
+  await expect(page.getByRole("dialog")).toHaveAttribute(
+    "data-variant",
+    "workspace",
+  );
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(toggle).toHaveAttribute("aria-checked", checkedBeforeCancel);
+  const sort = page.locator('[data-variant="sort"]').first();
+  await sort.click();
+  await page.getByRole("button", { name: /^查看/ }).first().click();
+  await expect(page.getByRole("dialog")).toHaveAttribute(
+    "data-variant",
+    "workspace-wide",
+  );
+  await page.screenshot({
+    path: testInfo.outputPath("variant-workspace.png"),
+    fullPage: false,
+    animations: "disabled",
+  });
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toBeHidden();
+
+  await page.goto("/purchases");
+  await page
+    .getByRole("button", { name: /^更多作業/ })
+    .first()
+    .click();
+  await expect(page.getByRole("menu")).toHaveAttribute("data-variant", "menu");
+  await page.mouse.move(0, 0);
+  await page.screenshot({
+    path: testInfo.outputPath("variant-menu.png"),
+    fullPage: false,
+    animations: "disabled",
+  });
+  await page.keyboard.press("Escape");
+  await page.locator('[data-variant="record-link"]').first().click();
+  await expect(page.getByRole("dialog")).toHaveAttribute(
+    "data-variant",
+    "workspace-wide",
+  );
+  await page.keyboard.press("Escape");
+
+  await page.goto("/his");
+  await expect(
+    page.locator('[data-slot="alert"][data-variant="info"]'),
+  ).toBeVisible();
+  await page.evaluate(() =>
+    window.__demoTest.run((state) => {
+      state.notice = "共用通知外觀檢查";
+    }),
+  );
+  await expect(page.locator("#notice")).toBeVisible();
+  await expect(page.locator("#notice")).toHaveAttribute(
+    "data-variant",
+    "notification",
+  );
+  await page.mouse.move(0, 0);
+  await page.screenshot({
+    path: testInfo.outputPath("variant-notification.png"),
+    fullPage: false,
+    animations: "disabled",
+  });
+  await page.goto("/board");
+  await expect(page.locator("#start-tour")).toHaveAttribute(
+    "data-variant",
+    "primary",
+  );
+  await page.locator("#start-tour").click();
+  await expect(page.locator("#player")).toHaveAttribute(
+    "data-variant",
+    "player",
+  );
+  await expect(
+    page.frameLocator("#interactive-demo").locator("#login-form"),
+  ).toBeVisible();
+  await expect(page.locator("#player-status")).toBeEmpty();
+  await page.screenshot({
+    path: testInfo.outputPath("variant-player.png"),
+    fullPage: false,
+    animations: "disabled",
+  });
+  await page.locator("#close-player").click();
+  await expect(page.locator("#player")).toBeHidden();
+
+  for (const name of [
+    "vendors",
+    "workspace",
+    "menu",
+    "notification",
+    "player",
+  ]) {
+    await testInfo.attach(`variant-${name}`, {
+      path: testInfo.outputPath(`variant-${name}.png`),
+      contentType: "image/png",
+    });
+  }
+});
+
+test("RWD 共用 UI 固定樣式、覆寫、表單錯誤與預設視窗", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/");
+  await expect(page.locator("#workspace")).toBeVisible();
+  await page.evaluate(async () => {
+    const fixtureUrl = "/tests/pages/demo/ui-components.tsx";
+    const fixture: typeof import("./ui-components") = await import(
+      /* @vite-ignore */ fixtureUrl
+    );
+    fixture.mountUiComponents();
+  });
+  const gallery = page.locator("#ui-components");
+  await expect(gallery).toBeVisible();
+  await expect(gallery.getByLabel("外部覆寫")).toHaveCSS("height", "44px");
+  await expect(gallery.getByLabel("停用輸入")).toBeDisabled();
+  await gallery.getByLabel("分類").selectOption("supply");
+  await expect(gallery.getByLabel("分類")).toHaveValue("supply");
+  await gallery.getByLabel("確認內容").check();
+  await expect(
+    gallery.getByRole("switch", { name: "一般開關" }),
+  ).toHaveAttribute("aria-checked", "true");
+  await gallery.getByRole("switch", { name: "一般開關" }).click();
+  await expect(gallery.getByLabel("確認內容")).not.toBeChecked();
+  await expect(
+    gallery.getByRole("switch", { name: "停用開關" }),
+  ).toBeDisabled();
+  await gallery.getByRole("button", { name: "展開詳細資訊" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(gallery.getByText("詳細資訊內容")).toBeVisible();
+  await gallery.getByRole("tab", { name: "第一頁" }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(gallery.getByRole("tab", { name: "第二頁" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await gallery.getByRole("button", { name: "送出測試表單" }).click();
+  await expect(
+    gallery.getByRole("alert").filter({ hasText: "測試表單錯誤" }),
+  ).toBeFocused();
+  await expect(gallery.getByLabel("測試名稱")).toHaveAttribute(
+    "aria-invalid",
+    "true",
+  );
+  await checkResponsiveLayout(page);
+  await page.screenshot({
+    path: testInfo.outputPath("ui-components.png"),
+    fullPage: true,
+    animations: "disabled",
+  });
+  const trigger = gallery.getByRole("button", { name: "開啟預設視窗" });
+  await trigger.click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Tab");
+  expect(
+    await page
+      .getByRole("dialog")
+      .evaluate((element) => element.contains(document.activeElement)),
+  ).toBe(true);
+  await checkResponsiveLayout(page);
+  await page.screenshot({
+    path: testInfo.outputPath("ui-components-dialog.png"),
+    animations: "disabled",
+  });
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toBeHidden();
+  await expect(trigger).toBeFocused();
+  for (const name of ["ui-components", "ui-components-dialog"]) {
+    await testInfo.attach(name, {
+      path: testInfo.outputPath(`${name}.png`),
+      contentType: "image/png",
+    });
+  }
 });
 
 test("RWD IA_Map 前端組織與 Redux 文件", async ({ page }) => {
