@@ -1,3 +1,5 @@
+import { cn } from "cn";
+import { cva } from "class-variance-authority";
 import { useEffect, useRef, type ReactNode } from "react";
 import {
   BaseDialog,
@@ -6,6 +8,10 @@ import {
   BaseDialogDescription,
 } from "./BaseDialog";
 import { BaseButton } from "./BaseButton";
+
+const workspaceModalHeadingVariants = cva("items-modal-heading");
+
+const workspaceModalDescriptionVariants = cva("px-5 pb-3");
 
 /** Scrollable workspace dialog. Business state and save decisions stay with callers. */
 export function BaseWorkspaceModal({
@@ -34,7 +40,7 @@ export function BaseWorkspaceModal({
       }}
     >
       <BaseDialogContent
-        className="items-modal"
+        variant="workspace"
         showCloseButton={false}
         aria-modal="true"
         onOpenAutoFocus={(event) => {
@@ -48,7 +54,7 @@ export function BaseWorkspaceModal({
           else document.querySelector<HTMLElement>("#content")?.focus();
         }}
       >
-        <header className="items-modal-heading">
+        <header className={cn(workspaceModalHeadingVariants())}>
           <BaseDialogTitle ref={heading} tabIndex={-1}>
             {title}
           </BaseDialogTitle>
@@ -61,7 +67,9 @@ export function BaseWorkspaceModal({
             ×
           </BaseButton>
         </header>
-        <BaseDialogDescription className="px-5 pb-3">
+        <BaseDialogDescription
+          className={cn(workspaceModalDescriptionVariants())}
+        >
           {description}
         </BaseDialogDescription>
         {children}

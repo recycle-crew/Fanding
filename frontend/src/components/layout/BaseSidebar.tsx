@@ -134,32 +134,34 @@ export function BaseSidebar(props: BaseSidebarProps) {
           庫存管理工作區
         </p>
         <BaseButton
-          variant="outline"
-          className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === "items" ? "bg-blue-50 text-blue-700" : ""}`}
+          variant={s.activeModule === "items" ? "module-active" : "module"}
+          className="mb-4 h-auto w-full whitespace-normal py-3 text-left"
           aria-current={s.activeModule === "items" ? "page" : undefined}
           onClick={() => navigate(`/items${location.search}`)}
         >
           品項與庫存管理（新版）
         </BaseButton>
         <BaseButton
-          variant="outline"
-          className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === "purchases" ? "bg-blue-50 text-blue-700" : ""}`}
+          variant={s.activeModule === "purchases" ? "module-active" : "module"}
+          className="mb-4 h-auto w-full whitespace-normal py-3 text-left"
           aria-current={s.activeModule === "purchases" ? "page" : undefined}
           onClick={() => navigate(`/purchases${location.search}`)}
         >
           進貨管理（新版）
         </BaseButton>
         <BaseButton
-          variant="outline"
-          className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === "base-data" ? "bg-blue-50 text-blue-700" : ""}`}
+          variant={s.activeModule === "base-data" ? "module-active" : "module"}
+          className="mb-4 h-auto w-full whitespace-normal py-3 text-left"
           aria-current={s.activeModule === "base-data" ? "page" : undefined}
           onClick={() => navigate(`/base-data${location.search}`)}
         >
           基礎資料管理（新版）
         </BaseButton>
         <BaseButton
-          variant="outline"
-          className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === "consumptions" ? "bg-blue-50 text-blue-700" : ""}`}
+          variant={
+            s.activeModule === "consumptions" ? "module-active" : "module"
+          }
+          className="mb-4 h-auto w-full whitespace-normal py-3 text-left"
           aria-current={s.activeModule === "consumptions" ? "page" : undefined}
           onClick={() => navigate(`/consumptions${location.search}`)}
         >
@@ -168,8 +170,8 @@ export function BaseSidebar(props: BaseSidebarProps) {
         {(["pos", "sales", "stocktakes"] as const).map((key) => (
           <BaseButton
             key={key}
-            variant="outline"
-            className={`mb-4 h-auto w-full whitespace-normal py-3 text-left ${s.activeModule === key ? "bg-blue-50 text-blue-700" : ""}`}
+            variant={s.activeModule === key ? "module-active" : "module"}
+            className="mb-4 h-auto w-full whitespace-normal py-3 text-left"
             aria-current={s.activeModule === key ? "page" : undefined}
             onClick={() =>
               navigate(`${demoModulePaths[key]}${location.search}`)
@@ -183,9 +185,9 @@ export function BaseSidebar(props: BaseSidebarProps) {
           </BaseButton>
         ))}
         <BaseButton
-          variant="ghost"
+          variant="disclosure"
           id="legacy-pages-toggle"
-          className="h-auto min-h-11 w-full justify-between gap-2 whitespace-normal px-3 py-2 text-left text-[14px] font-semibold"
+          className="h-auto min-h-11 w-full justify-between gap-2 whitespace-normal px-3 py-2 text-left"
           aria-expanded={legacyPagesExpanded}
           aria-controls="module-nav"
           aria-describedby="legacy-pages-description"
@@ -251,9 +253,12 @@ export function BaseSidebar(props: BaseSidebarProps) {
                   </div>
                 )}
                 <BaseButton
-                  variant="outline"
+                  variant={
+                    s.activeModule === module.key
+                      ? "navigation-active"
+                      : "navigation"
+                  }
                   data-module={module.key}
-                  className={`flex h-auto w-full min-w-0 items-center justify-start gap-[10px] whitespace-normal rounded-[7px] border-transparent bg-transparent p-3 text-left font-semibold${s.activeModule === module.key ? " active border-[#d3e0e9] bg-[#eaf1f6] text-[#245e7d] shadow-[inset_3px_0_var(--primary)]" : ""}`}
                   aria-current={
                     s.activeModule === module.key ? "page" : undefined
                   }
@@ -284,10 +289,9 @@ export function BaseSidebar(props: BaseSidebarProps) {
           </span>
         </span>
         <BaseButton
-          variant="ghost"
+          variant="logout"
           id="logout"
           hidden={!DEMO_LOGIN_ENABLED}
-          className="h-11 min-w-11 shrink-0 border-0 bg-transparent px-2 py-0 text-[12px] font-medium text-[var(--muted)] shadow-none"
           onClick={() => {
             if (s.editor) {
               dispatch(

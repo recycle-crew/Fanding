@@ -497,10 +497,9 @@ export function DemoPage() {
               <span>掃碼盤點</span>
             </div>
           </div>
-          <BaseCard asChild>
+          <BaseCard variant="login" asChild>
             <form
               id="login-form"
-              className="login-card"
               hidden={s.recovery}
               onSubmit={(event) => {
                 event.preventDefault();
@@ -563,7 +562,7 @@ export function DemoPage() {
               <p className="muted small">
                 此選單僅模擬權限；正式權限由 NAS LDAP 群組提供。
               </p>
-              <BaseButton variant="default" className="primary" type="submit">
+              <BaseButton variant="primary" type="submit">
                 使用展示帳號登入 →
               </BaseButton>
               <p className="muted small">
@@ -571,10 +570,9 @@ export function DemoPage() {
               </p>
               <div className="login-links">
                 <BaseButton
-                  variant="outline"
+                  variant="text"
                   id="forgot-password"
                   type="button"
-                  className="text-button"
                   onClick={() =>
                     dispatch(
                       executeDemoCommand({
@@ -593,11 +591,7 @@ export function DemoPage() {
               </div>
             </form>
           </BaseCard>
-          <BaseCard
-            id="password-recovery"
-            className="login-card"
-            hidden={!s.recovery}
-          >
+          <BaseCard variant="login" id="password-recovery" hidden={!s.recovery}>
             <p className="eyebrow">LDAP 帳號服務</p>
             <h2>忘記密碼</h2>
             <p className="muted">填寫 LDAP 帳號與登記信箱，申請密碼重設。</p>
@@ -642,13 +636,14 @@ export function DemoPage() {
               <p className="muted small">
                 此為介面展示，請使用假資料；尚未串接院內 LDAP 或寄信服務。
               </p>
-              <BaseButton variant="default" type="submit" className="primary">
+              <BaseButton variant="primary" type="submit">
                 模擬申請重設
               </BaseButton>
             </form>
             <BaseAlert
+              variant="result"
               id="recovery-result"
-              className="mb-4 bg-secondary p-4 text-sm leading-[1.8]"
+              className="mb-4"
               role="status"
               tabIndex={-1}
               hidden={!s.recoverySent}
@@ -656,10 +651,9 @@ export function DemoPage() {
               展示申請流程已完成。正式服務會在資料符合院內規則時提供重設指引；本次未查詢帳號、寄送郵件或變更密碼。
             </BaseAlert>
             <BaseButton
-              variant="outline"
+              variant="text"
               id="back-to-login"
               type="button"
-              className="text-button"
               onClick={() => {
                 setEmail("");
                 dispatch(
@@ -792,20 +786,15 @@ export function DemoPage() {
               {["vendors", "products", "requisitions"].includes(
                 s.activeModule,
               ) ? (
-                <BaseButton
-                  variant="default"
-                  className="primary"
-                  data-action="add"
-                >
+                <BaseButton variant="primary" data-action="add">
                   ＋ 新增資料
                 </BaseButton>
               ) : (
                 <div className="page-heading-actions">
                   {s.activeModule === "overview" && (
                     <BaseButton
-                      variant="outline"
+                      variant="notification"
                       type="button"
-                      className="low-stock-bell"
                       data-action="show-low-stock"
                       aria-controls="low-stock-panel"
                       aria-label={`低庫存提醒，共 ${low.length} 個品項，點擊查看`}
@@ -829,26 +818,24 @@ export function DemoPage() {
                       <span>低庫存提醒</span>
                     </BaseButton>
                   )}
-                  <BaseBadge variant="secondary" className="tag">
-                    展示模式・假資料
-                  </BaseBadge>
+                  <BaseBadge variant="secondary">展示模式・假資料</BaseBadge>
                 </div>
               )}
             </div>
           )}
           {s.activeModule === "his" && (
-            <BaseAlert role="note" className="callout">
+            <BaseAlert variant="info" role="note">
               日常扣庫由 HIS
               執行。本頁僅模擬藥品檔維護與回寫；藥品編輯不修改庫存。
             </BaseAlert>
           )}
           {s.activeModule === "requisitions" && (
-            <BaseAlert role="note" className="callout assumption">
+            <BaseAlert variant="warning" role="note">
               展示假設，正式規則待確認：領用立即扣庫，修改依差額調整，刪除回復庫存；不重複產生耗用扣庫。
             </BaseAlert>
           )}
           {["stocktake", "stocktake-history"].includes(s.activeModule) && (
-            <BaseAlert role="note" className="callout assumption">
+            <BaseAlert variant="warning" role="note">
               展示假設，正式規則待確認：HIS 與 OTC
               盤點確認後直接調整假庫存。此操作不會連線或修改 HIS 資料庫。
             </BaseAlert>
@@ -869,7 +856,7 @@ export function DemoPage() {
             ) : s.activeModule === "overview" ? (
               <>
                 {<OverviewMovements />}
-                <BaseCard id="low-stock-panel" className="panel" tabIndex={-1}>
+                <BaseCard variant="panel" id="low-stock-panel" tabIndex={-1}>
                   <h3>OTC 低庫存提醒</h3>
                   <BaseDataTable
                     tableKey="overview-low-stock"
@@ -907,7 +894,7 @@ export function DemoPage() {
           {["vendors", "his", "products", "requisitions"].includes(
             s.activeModule,
           ) && (
-            <BaseCard className="panel">
+            <BaseCard variant="panel">
               <h3>資料修改歷程</h3>
               <BaseDataTable
                 tableKey={`data-changes-${s.activeModule}`}
@@ -967,11 +954,12 @@ export function DemoPage() {
         <EditorPage />
       </div>
       <BaseAlert
+        variant="notification"
         id="notice"
         role="status"
         aria-live="polite"
         hidden={!s.notice}
-        className="pointer-events-none fixed right-6 bottom-6 z-[5] w-auto max-w-[calc(100%_-_48px)] rounded-[10px] border-0 bg-[#17364a] px-[22px] py-[14px] text-base leading-[1.6] text-white shadow-[0_8px_30px_#17364a33]"
+        className="pointer-events-none fixed right-6 bottom-6 z-[5] w-auto max-w-[calc(100%_-_48px)]"
       >
         {s.notice}
       </BaseAlert>
@@ -1003,11 +991,7 @@ export function DemoPage() {
                 <BaseButton variant="outline" value="cancel">
                   取消
                 </BaseButton>
-                <BaseButton
-                  variant="default"
-                  value="confirm"
-                  className="primary"
-                >
+                <BaseButton variant="primary" value="confirm">
                   確認
                 </BaseButton>
               </div>
@@ -1044,7 +1028,7 @@ export function DemoPage() {
                 系統尚未串接 LDAP。
               </p>
               <div className="dialog-actions">
-                <BaseButton variant="default" className="primary" value="close">
+                <BaseButton variant="primary" value="close">
                   了解
                 </BaseButton>
               </div>

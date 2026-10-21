@@ -65,7 +65,7 @@ export function ItemEditor({
     } = {},
   ) {
     return (
-      <BaseLabel className="items-field" key={key} htmlFor={`item-${key}`}>
+      <BaseLabel variant="field" key={key} htmlFor={`item-${key}`}>
         <span id={`item-${key}-label`}>
           {title}
           {options.required && <em> *</em>}
@@ -117,7 +117,7 @@ export function ItemEditor({
     disabled = false,
   ) {
     return (
-      <BaseLabel className="items-field" htmlFor={`item-${key}`}>
+      <BaseLabel variant="field" htmlFor={`item-${key}`}>
         <span id={`item-${key}-label`}>
           {title}
           {required && <em> *</em>}
@@ -200,7 +200,7 @@ export function ItemEditor({
         <section>
           <h3>基本資料</h3>
           <div className="items-form-grid">
-            <BaseLabel className="items-field" htmlFor="item-group">
+            <BaseLabel variant="field" htmlFor="item-group">
               <span>庫存類型 *</span>
               <BaseNativeSelect
                 id="item-group"
@@ -292,7 +292,7 @@ export function ItemEditor({
               required: true,
             })}
             {field("effectiveUntil", "停止使用日期", { type: "date" })}
-            <BaseLabel className="items-check">
+            <BaseLabel variant="check">
               <BaseCheckbox
                 checked={draft.active}
                 onCheckedChange={(checked) =>
@@ -301,7 +301,7 @@ export function ItemEditor({
               />
               啟用品項
             </BaseLabel>
-            <BaseLabel className="items-field" htmlFor="item-remark">
+            <BaseLabel variant="field" htmlFor="item-remark">
               <span>備註</span>
               <BaseTextarea
                 id="item-remark"

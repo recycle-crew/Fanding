@@ -100,10 +100,10 @@ export function BoardPage() {
           <nav id="page-nav" aria-label="畫面分類">
             {planningPages.map((p) => (
               <BaseButton
-                variant={p.id === pageId ? "secondary" : "ghost"}
+                variant={p.id === pageId ? "page-active" : "page"}
                 key={p.id}
                 data-page={p.id}
-                className={`h-auto justify-between whitespace-normal ${p.id === pageId ? "active" : ""}`}
+                className="h-auto justify-between whitespace-normal"
                 aria-current={p.id === pageId ? "page" : undefined}
                 onClick={() => {
                   setPageId(p.id);
@@ -130,9 +130,8 @@ export function BoardPage() {
               <p id="page-description">{page.description}</p>
             </div>
             <BaseButton
-              variant="default"
+              variant="primary"
               id="start-tour"
-              className="primary"
               onClick={() => launch(0, true)}
             >
               ▶ 示範此流程
@@ -356,9 +355,9 @@ export function BoardPage() {
                 返回全部 Frame
               </BaseButton>
               <BaseButton
-                variant="default"
+                variant="primary"
                 id="next-step"
-                className="primary max-sm:h-auto max-sm:min-w-0 max-sm:whitespace-normal max-sm:px-2"
+                className="max-sm:h-auto max-sm:min-w-0 max-sm:whitespace-normal max-sm:px-2"
                 onClick={() => {
                   if (pending.current) return;
                   if (step < page.frames.length - 1) request(step + 1);

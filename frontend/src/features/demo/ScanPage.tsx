@@ -162,7 +162,7 @@ export function ScanPage() {
   return (
     <>
       {stocktake && (
-        <BaseCard className="panel">
+        <BaseCard variant="panel">
           <div className="toolbar">
             <h3>{history ? "已結束歷史批次" : "進行中的盤點週期"}</h3>
             {!history && (
@@ -200,7 +200,9 @@ export function ScanPage() {
                 )
               }
             >
-              <BaseNativeSelectOption value="">請選擇批次</BaseNativeSelectOption>
+              <BaseNativeSelectOption value="">
+                請選擇批次
+              </BaseNativeSelectOption>
               {batches.map((b) => (
                 <BaseNativeSelectOption key={b.id} value={b.id}>
                   {b.name} · {b.id} · {b.endedAt ? "已結束" : "進行中"}
@@ -247,7 +249,7 @@ export function ScanPage() {
           )}
         </BaseCard>
       )}
-      <BaseCard className="panel">
+      <BaseCard variant="panel">
         {!stocktake && <MovementVoucher />}
         {stocktake && (
           <>
@@ -321,9 +323,8 @@ export function ScanPage() {
                 </BaseButton>
               ) : (
                 <BaseButton
-                  variant="default"
+                  variant="primary"
                   type="submit"
-                  className="primary"
                   disabled={!batch || Boolean(batch.endedAt)}
                 >
                   查找品項
@@ -403,9 +404,7 @@ export function ScanPage() {
                 <div className="selection">
                   <strong>
                     {product.name}{" "}
-                    <BaseBadge variant="secondary" className="tag">
-                      {product.id}
-                    </BaseBadge>
+                    <BaseBadge variant="secondary">{product.id}</BaseBadge>
                   </strong>
                   <p>
                     {product.spec} · 帳面庫存 {product.stock} {product.unit} ·{" "}
@@ -429,7 +428,7 @@ export function ScanPage() {
       </BaseCard>
       {stocktake ? (
         <>
-          <BaseCard className="panel list-panel">
+          <BaseCard variant="panel" className="list-panel">
             <h3>盤點明細</h3>
             <p className="field-hint">
               手動填寫實盤數量並核對盤差，每筆勾選確認後，整個批次一次確認送出；送出後一般人員不能修改；高權限人員可另行更正並留歷程。
@@ -464,7 +463,7 @@ export function ScanPage() {
                       ? "—"
                       : `${difference > 0 ? "+" : ""}${difference}`}
                   </span>,
-                  <BaseLabel className="count-confirmation">
+                  <BaseLabel variant="confirmation">
                     <BaseCheckbox
                       data-confirm-count={count.id}
                       aria-label={`確認${p?.name}盤點`}
@@ -498,16 +497,14 @@ export function ScanPage() {
                     <span>{count.confirmed ? "已確認" : "未確認"}</span>
                   </BaseLabel>,
                   count.completed ? (
-                    <BaseBadge variant="secondary" className="tag">
+                    <BaseBadge variant="secondary">
                       {count.correctedActual !== undefined
                         ? "已更正"
                         : "已送出"}
                       ・鎖定
                     </BaseBadge>
                   ) : (
-                    <BaseBadge variant="secondary" className="tag low">
-                      草稿
-                    </BaseBadge>
+                    <BaseBadge variant="warning">草稿</BaseBadge>
                   ),
                   count.filledBy ?? "未記錄",
                   count.completed ? (
@@ -567,9 +564,8 @@ export function ScanPage() {
             {batch && !batch.endedAt && (
               <div className="dialog-actions">
                 <BaseButton
-                  variant="default"
+                  variant="primary"
                   type="button"
-                  className="primary"
                   data-action="submit-batch"
                   disabled={
                     !counts.length ||
@@ -584,7 +580,7 @@ export function ScanPage() {
               </div>
             )}
           </BaseCard>
-          <BaseCard className="panel">
+          <BaseCard variant="panel">
             <h3>批次期間操作紀錄</h3>
             <p className="field-hint">
               保留新增、填寫、移除、調整，以及同工作區在批次進行期間的庫存異動。
@@ -618,7 +614,7 @@ export function ScanPage() {
             />
           </BaseCard>
           {history && (
-            <BaseCard className="panel">
+            <BaseCard variant="panel">
               <h3>歷史更正紀錄</h3>
               <p className="field-hint">
                 更正獨立記錄於原批次期間之外，原送出數量與起迄時間保留。
@@ -652,7 +648,7 @@ export function ScanPage() {
           )}
         </>
       ) : (
-        <BaseCard className="panel">
+        <BaseCard variant="panel">
           <h3>最近 OTC 異動</h3>
           {module === "issue" && (
             <div
@@ -769,7 +765,7 @@ export function ScanPage() {
                   />
                 </BaseLabel>
                 <div className="time-filter-actions">
-                  <BaseButton variant="default" className="primary" type="submit">
+                  <BaseButton variant="primary" type="submit">
                     搜尋
                   </BaseButton>
                   <BaseButton

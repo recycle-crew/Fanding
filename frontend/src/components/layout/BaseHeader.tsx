@@ -25,11 +25,12 @@ export function BaseHeader(props: BaseHeaderProps) {
     <header hidden={props.hidden} className="p-3 md:hidden">
       <BaseButton
         variant="outline"
+        size="menu"
         id="menu-toggle"
         aria-controls="sidebar"
         aria-expanded={props.menuOpen ?? false}
         onClick={props.onMenuToggle}
-        className="block cursor-pointer px-[10px] py-[6px] md:hidden"
+        className="block md:hidden"
       >
         ☰ 功能選單
       </BaseButton>

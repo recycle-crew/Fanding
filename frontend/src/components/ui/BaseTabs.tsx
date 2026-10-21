@@ -1,5 +1,9 @@
+import { cn } from "cn";
+import { cva } from "class-variance-authority";
 import { BaseButton } from "./BaseButton";
 import { moveTabFocus } from "@/lib/tabKeyboard";
+
+const tabsVariants = cva("items-tabs");
 
 export function BaseTabs<T extends string>({
   id,
@@ -16,7 +20,7 @@ export function BaseTabs<T extends string>({
 }) {
   return (
     <div
-      className="items-tabs"
+      className={cn(tabsVariants())}
       role="tablist"
       aria-label={label}
       onKeyDown={moveTabFocus}

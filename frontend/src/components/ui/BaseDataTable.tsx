@@ -23,11 +23,25 @@ import React, {
 } from "react";
 import type { ReactNode } from "react";
 import { downloadTable } from "@/helpers/excel";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "cn";
 type PageState = { page: number; pageSize: number };
 export const BasePaginationContext = createContext<{
   revision: number;
   states: Map<string, PageState>;
 }>({ revision: 0, states: new Map() });
+const tableColumnHintVariants = cva(
+  "mt-1 block text-[11px] leading-[1.4] font-medium",
+  {
+    variants: {
+      editable: {
+        true: "text-[#24688b]",
+        false: "text-[#657480]",
+      },
+    },
+  },
+);
+
 export function BaseDataTable({
   headers,
   rows,
@@ -58,7 +72,11 @@ export function BaseDataTable({
               {header}
               {editableColumns && header !== "操作" && (
                 <span
-                  className={`mt-1 block text-[11px] leading-[1.4] font-medium ${editableColumns.includes(header) ? "text-[#24688b]" : "text-[#657480]"}`}
+                  className={cn(
+                    tableColumnHintVariants({
+                      editable: editableColumns.includes(header),
+                    }),
+                  )}
                 >
                   {editableColumns.includes(header)
                     ? header === "確認盤點"
@@ -86,6 +104,32 @@ export function BaseDataTable({
     />
   );
 }
+const tableFrameVariants = cva(
+  "table-wrap overflow-x-auto print:overflow-visible",
+  {
+    variants: {
+      variant: { default: "", "sticky-actions": "purchase-main-table" },
+    },
+    defaultVariants: { variant: "default" },
+  },
+);
+
+const tablePaginationVariants = cva(
+  "table-pagination m-[14px_0_20px] flex flex-wrap items-center gap-x-5 gap-y-3 text-[12px] text-[var(--muted)] print:hidden",
+);
+
+const tablePaginationSummaryVariants = cva("mr-auto tabular-nums");
+
+const tablePaginationNavigationVariants = cva(
+  "flex flex-wrap items-center justify-start gap-2",
+);
+
+const tablePaginationTotalVariants = cva("pagination-total");
+
+const tableExportStatusVariants = cva(
+  "export-status basis-full text-[var(--muted)]",
+);
+
 export function BaseTableFrame({
   tableKey,
   headers,
@@ -94,8 +138,9 @@ export function BaseTableFrame({
   caption,
   region = "資料表，可左右捲動",
   className = "",
+  variant = "default",
   exportable = true,
-}: {
+}: VariantProps<typeof tableFrameVariants> & {
   tableKey: string;
   headers: ReactNode;
   rows: ReactNode[];
@@ -153,7 +198,8 @@ export function BaseTableFrame({
   return (
     <>
       <div
-        className={`table-wrap overflow-x-auto print:overflow-visible ${className}`}
+        className={cn(tableFrameVariants({ variant }), className)}
+        data-variant={variant}
         data-pagination-key={tableKey}
         tabIndex={0}
         role="region"
@@ -175,10 +221,7 @@ export function BaseTableFrame({
               )
             ) : (
               <BaseTableRow>
-                <BaseTableCell
-                  colSpan={columns}
-                  className="empty p-9 text-center text-[var(--muted)]"
-                >
+                <BaseTableCell variant="empty" colSpan={columns}>
                   目前沒有符合的資料
                 </BaseTableCell>
               </BaseTableRow>
@@ -186,17 +229,21 @@ export function BaseTableFrame({
           </BaseTableBody>
         </BaseTable>
       </div>
-      <div className="table-pagination m-[14px_0_20px] flex flex-wrap items-center gap-x-5 gap-y-3 text-[12px] text-[var(--muted)] print:hidden">
-        <span className="mr-auto tabular-nums" role="status" aria-live="polite">
+      <div className={cn(tablePaginationVariants())}>
+        <span
+          className={cn(tablePaginationSummaryVariants())}
+          role="status"
+          aria-live="polite"
+        >
           {rows.length
             ? `第 ${offset + 1}–${Math.min(offset + pagination.pageSize, rows.length)} 筆，共 ${rows.length} 筆`
             : "共 0 筆"}
         </span>
         {exportable && (
           <BaseButton
-            variant="outline"
+            variant="pagination"
             type="button"
-            className="border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
+
             data-export-excel
             disabled={exporting}
             title="匯出目前篩選條件下的全部資料，包含所有分頁"
@@ -219,10 +266,11 @@ export function BaseTableFrame({
             {exporting ? "匯出中…" : "匯出 Excel (.xlsx)"}
           </BaseButton>
         )}
-        <BaseLabel className="flex items-center gap-2 whitespace-nowrap text-[12px] font-medium">
+        <BaseLabel variant="pagination">
           每頁筆數
           <BaseNativeSelect
-            className="w-auto min-w-[60px] border border-[#bac9d4] bg-white p-[6px_9px] text-[var(--ink)]"
+            variant="pagination"
+
             data-page-size
             value={pagination.pageSize}
             onChange={(event) =>
@@ -235,13 +283,13 @@ export function BaseTableFrame({
           </BaseNativeSelect>
         </BaseLabel>
         <nav
-          className="flex flex-wrap items-center justify-start gap-2"
+          className={cn(tablePaginationNavigationVariants())}
           aria-label="表格分頁"
         >
           <BaseButton
-            variant="outline"
+            variant="pagination"
             type="button"
-            className="border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
+
             data-page-previous
             disabled={page === 1}
             onClick={() => {
@@ -252,10 +300,10 @@ export function BaseTableFrame({
           >
             上一頁
           </BaseButton>
-          <BaseLabel className="flex items-center gap-2 whitespace-nowrap text-[12px] font-medium">
+          <BaseLabel variant="pagination">
             頁碼
             <BaseNativeSelect
-              className="w-auto min-w-[60px] border border-[#bac9d4] bg-white p-[6px_9px] text-[var(--ink)]"
+              variant="pagination"
               ref={pageSelector}
               data-page-number
               value={page}
@@ -271,12 +319,14 @@ export function BaseTableFrame({
                 <BaseNativeSelectOption key={i}>{i + 1}</BaseNativeSelectOption>
               ))}
             </BaseNativeSelect>
-            <span className="pagination-total">／ {pageCount} 頁</span>
+            <span className={cn(tablePaginationTotalVariants())}>
+              ／ {pageCount} 頁
+            </span>
           </BaseLabel>
           <BaseButton
-            variant="outline"
+            variant="pagination"
             type="button"
-            className="border border-[var(--line)] bg-white p-[6px_10px] text-[var(--ink)] disabled:cursor-default disabled:opacity-45"
+
             data-page-next
             disabled={page === pageCount}
             onClick={() => {
@@ -289,7 +339,7 @@ export function BaseTableFrame({
           </BaseButton>
         </nav>
         <span
-          className="export-status basis-full text-[var(--muted)]"
+          className={cn(tableExportStatusVariants())}
           role="status"
           aria-live="polite"
         >

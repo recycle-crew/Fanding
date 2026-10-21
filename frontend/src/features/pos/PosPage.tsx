@@ -268,8 +268,7 @@ export function PosPage() {
                 return (
                   <article className="pos-product" key={item.id}>
                     <BaseButton
-                      className="pos-product-main"
-                      variant="ghost"
+                      variant="product"
                       disabled={Boolean(invalid) || stock(item.id) <= 0}
                       onClick={() => add(item)}
                       aria-label={`加入${item.name}`}

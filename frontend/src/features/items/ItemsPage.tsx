@@ -445,10 +445,7 @@ export function ItemsPage() {
             aria-label="品項庫存列表，可左右捲動"
             tabIndex={0}
           >
-            <BaseTable
-              className="items-main-table"
-              aria-label="品項與庫存查詢結果"
-            >
+            <BaseTable variant="inventory" aria-label="品項與庫存查詢結果">
               <BaseTableHeader>
                 <BaseTableRow>
                   {[
@@ -488,10 +485,9 @@ export function ItemsPage() {
                       >
                         {key ? (
                           <BaseButton
-                            variant="ghost"
+                            variant="sort"
                             size="sm"
                             type="button"
-                            className="items-sort"
                             onClick={() => sorting(key)}
                           >
                             {head}
@@ -508,25 +504,21 @@ export function ItemsPage() {
               <BaseTableBody>
                 {visible.map((r) => (
                   <BaseTableRow key={r.item.id}>
-                    <BaseTableCell className="items-code">
-                      {r.item.code}
-                    </BaseTableCell>
+                    <BaseTableCell variant="code">{r.item.code}</BaseTableCell>
                     <BaseTableCell>{r.item.nhiCode || "—"}</BaseTableCell>
-                    <BaseTableCell className="items-name">
-                      {r.item.name}
-                    </BaseTableCell>
+                    <BaseTableCell variant="name">{r.item.name}</BaseTableCell>
                     <BaseTableCell>{r.item.specification || "—"}</BaseTableCell>
                     <BaseTableCell>{r.item.category}</BaseTableCell>
                     <BaseTableCell>
                       {filter.warehouse || "全部倉別"}
                     </BaseTableCell>
-                    <BaseTableCell className="items-number">
+                    <BaseTableCell variant="numeric">
                       {number(r.quantity)}
                     </BaseTableCell>
                     <BaseTableCell>{r.item.unit}</BaseTableCell>
                     <BaseTableCell
-                      className={
-                        r.expiry && r.expiry < today ? "items-expired" : ""
+                      variant={
+                        r.expiry && r.expiry < today ? "expired" : "default"
                       }
                     >
                       {r.expiry || "—"}
@@ -546,7 +538,7 @@ export function ItemsPage() {
                     </BaseTableCell>
                     <BaseTableCell>
                       <BaseSwitch
-                        className={`items-toggle ${r.item.active ? "on" : ""}`}
+                        variant="compact"
                         type="button"
                         checked={r.item.active}
                         aria-label={`啟用品項：${r.item.name}`}
@@ -607,7 +599,7 @@ export function ItemsPage() {
                 `，顯示 ${(currentPage - 1) * size + 1}–${Math.min(currentPage * size, rows.length)} 筆`}
             </span>
             <div>
-              <BaseLabel className="items-page-size" htmlFor="items-page-size">
+              <BaseLabel variant="page-size" htmlFor="items-page-size">
                 每頁
                 <BaseNativeSelect
                   id="items-page-size"
@@ -716,8 +708,8 @@ export function ItemsPage() {
         }}
       >
         <BaseDialogContent
+          variant={modal?.kind === "view" ? "workspace-wide" : "workspace"}
           aria-modal="true"
-          className={`items-modal ${modal?.kind === "view" ? "items-modal-wide" : ""}`}
           showCloseButton={false}
           onOpenAutoFocus={(e) => {
             e.preventDefault();
@@ -746,7 +738,7 @@ export function ItemsPage() {
               <X size={19} />
             </BaseButton>
           </div>
-          <BaseDialogDescription className="items-modal-description">
+          <BaseDialogDescription variant="workspace">
             {modal?.kind === "view"
               ? "查閱品項資料、各倉批次庫存與歷史紀錄。"
               : "本次操作僅更新展示假資料。"}

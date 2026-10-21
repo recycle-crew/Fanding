@@ -345,7 +345,7 @@ export function OperationForm({
             tabIndex={0}
             aria-label="處理商品明細，可左右捲動"
           >
-            <BaseTable className="purchase-lines-table">
+            <BaseTable variant="lines">
               <BaseTableHeader>
                 <BaseTableRow>
                   {[
@@ -479,11 +479,13 @@ export function OperationForm({
         </section>
       )}
       {kind === "return" && (
-        <BaseLabel className="purchase-check">
+        <BaseLabel variant="check-inline">
           <BaseCheckbox
             id="operation-physical"
             checked={draft.physical}
-            onCheckedChange={(checked) => setDraft({ ...draft, physical: checked === true })}
+            onCheckedChange={(checked) =>
+              setDraft({ ...draft, physical: checked === true })
+            }
           />
           已確認商品實際交付退回供應商（展示確認）
         </BaseLabel>

@@ -1,3 +1,5 @@
+import { cn } from "cn";
+import { cva } from "class-variance-authority";
 import {
   cloneElement,
   createContext,
@@ -28,7 +30,7 @@ export function BaseField({
 }) {
   const error = useContext(ErrorContext);
   return (
-    <BaseLabel className="items-field" htmlFor={name}>
+    <BaseLabel variant="field" htmlFor={name}>
       <span>
         <span id={`${name}-label`}>{label}</span>
         {required && <em aria-hidden="true"> *</em>}
@@ -49,6 +51,14 @@ export function BaseField({
   );
 }
 export type FormError = { message: string; field?: string };
+const formVariants = cva("items-editor-form purchase-form");
+
+const formScrollVariants = cva("items-modal-scroll");
+
+const formErrorVariants = cva("items-error");
+
+const formFooterVariants = cva("items-modal-footer");
+
 export function BaseForm({
   children,
   submitText,
@@ -87,7 +97,7 @@ export function BaseForm({
   return (
     <ErrorContext.Provider value={{ field: error.field || "", id }}>
       <form
-        className="items-editor-form purchase-form"
+        className={cn(formVariants())}
         noValidate
         onSubmit={onSubmit}
         onChangeCapture={() => {
@@ -95,7 +105,7 @@ export function BaseForm({
           onDirty();
         }}
       >
-        <div className="items-modal-scroll">
+        <div className={cn(formScrollVariants())}>
           {children}
           {error.message && (
             <p
@@ -103,13 +113,13 @@ export function BaseForm({
               id={id}
               role="alert"
               tabIndex={-1}
-              className="items-error"
+              className={cn(formErrorVariants())}
             >
               {error.message}
             </p>
           )}
         </div>
-        <footer className="items-modal-footer">
+        <footer className={cn(formFooterVariants())}>
           <span>＊ 必填欄位</span>
           <BaseButton type="button" variant="outline" onClick={onCancel}>
             取消

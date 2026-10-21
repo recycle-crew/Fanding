@@ -232,7 +232,7 @@ export function NewPurchaseForm({
           tabIndex={0}
           aria-label="新增進貨商品明細，可左右捲動"
         >
-          <BaseTable className="purchase-lines-table">
+          <BaseTable variant="lines">
             <BaseTableHeader>
               <BaseTableRow>
                 {[
@@ -351,8 +351,9 @@ export function NewPurchaseForm({
               ))}
               {!lines.length && (
                 <BaseTableRow>
-                  <BaseTableCell colSpan={10} className="purchase-empty">
-                    必填：至少加入一筆進貨商品。請從上方搜尋並點選商品，或輸入完整料號後按 Enter 加入。
+                  <BaseTableCell variant="empty-lines" colSpan={10}>
+                    必填：至少加入一筆進貨商品。請從上方搜尋並點選商品，或輸入完整料號後按
+                    Enter 加入。
                   </BaseTableCell>
                 </BaseTableRow>
               )}

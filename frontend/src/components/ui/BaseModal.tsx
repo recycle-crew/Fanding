@@ -1,3 +1,5 @@
+import { cn } from "cn";
+import { cva } from "class-variance-authority";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import {
@@ -6,6 +8,8 @@ import {
   BaseDialogTitle,
   BaseDialogDescription,
 } from "@/components/ui/BaseDialog";
+const modalAccessibilityTextVariants = cva("sr-only");
+
 export function BaseModal(props: {
   id: string;
   open: boolean;
@@ -27,10 +31,6 @@ export function BaseModal(props: {
     labelledBy,
     describedBy,
   } = props;
-  const dialogClassName =
-    variant === "player"
-      ? "[&[open]]:flex flex-col w-[calc(100%_-_16px)] max-w-[1540px] sm:max-w-[1540px] h-[calc(100%_-_16px)] max-h-full overflow-hidden border border-[var(--line)] rounded-[8px] p-0 text-[var(--ink)] shadow-[0_16px_48px_#24384722] backdrop:bg-[#102b4180] md:w-[calc(100%_-_48px)] md:h-[calc(100%_-_48px)] md:rounded-[14px]"
-      : "w-[min(620px,_calc(100%_-_32px))] sm:max-w-[620px] max-h-[90vh] overflow-auto border border-[var(--line)] rounded-[12px] p-7 text-[var(--ink)] shadow-[0_16px_48px_#24384722] backdrop:bg-[#14374b70]";
   useEffect(() => {
     const element = dialog;
     if (!element) return;
@@ -46,7 +46,7 @@ export function BaseModal(props: {
         asChild
         forceMount={variant === "player" ? true : undefined}
         showCloseButton={false}
-        className={`inset-0 m-auto block translate-x-0 translate-y-0 gap-0 bg-background duration-0 data-[state=open]:animate-none data-[state=closed]:animate-none [&:not([open])]:hidden ${dialogClassName}`}
+        variant={variant === "player" ? "player" : "native"}
         onOpenAutoFocus={(event) => event.preventDefault()}
         onCloseAutoFocus={(event) => event.preventDefault()}
         onInteractOutside={(event) => event.preventDefault()}
@@ -64,8 +64,12 @@ export function BaseModal(props: {
             if (open) onClose(event.currentTarget.returnValue);
           }}
         >
-          <BaseDialogTitle className="sr-only">{props.title}</BaseDialogTitle>
-          <BaseDialogDescription className="sr-only">
+          <BaseDialogTitle className={cn(modalAccessibilityTextVariants())}>
+            {props.title}
+          </BaseDialogTitle>
+          <BaseDialogDescription
+            className={cn(modalAccessibilityTextVariants())}
+          >
             {variant === "player"
               ? "可操作展示畫面並切換流程步驟。"
               : "請閱讀內容後選擇操作。"}

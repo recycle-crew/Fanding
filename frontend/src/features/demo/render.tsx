@@ -55,7 +55,9 @@ function renderInventoryIdentityFilters(
                 .reverse()
                 .map((voucherId, rowIndex) => (
                   <React.Fragment key={rowIndex}>
-                    <BaseNativeSelectOption value={String(voucherId ?? "")}></BaseNativeSelectOption>
+                    <BaseNativeSelectOption
+                      value={String(voucherId ?? "")}
+                    ></BaseNativeSelectOption>
                   </React.Fragment>
                 )),
             )}
@@ -86,7 +88,9 @@ function renderInventoryIdentityFilters(
         {React.Children.toArray(
           [...new Set(people.filter(Boolean))].map((person, rowIndex) => (
             <React.Fragment key={rowIndex}>
-              <BaseNativeSelectOption value={String(person ?? "")}></BaseNativeSelectOption>
+              <BaseNativeSelectOption
+                value={String(person ?? "")}
+              ></BaseNativeSelectOption>
             </React.Fragment>
           )),
         )}
@@ -220,7 +224,7 @@ export function OverviewMovements() {
   ];
   return (
     <>
-      <BaseCard className={"panel"}>
+      <BaseCard variant="panel">
         <h3>{"庫存總覽"}</h3>
         <BaseFilterForm
           id={"overview-movement-filter"}
@@ -247,7 +251,9 @@ export function OverviewMovements() {
               <BaseLabel>
                 {"品項"}
                 <BaseNativeSelect name={"product"}>
-                  <BaseNativeSelectOption value={""}>{"所有"}</BaseNativeSelectOption>
+                  <BaseNativeSelectOption value={""}>
+                    {"所有"}
+                  </BaseNativeSelectOption>
                   {products.map((product, rowIndex) => {
                     const key = `${product.workspace}:${product.id}`;
                     return (
@@ -265,7 +271,9 @@ export function OverviewMovements() {
               <BaseLabel>
                 {"動作"}
                 <BaseNativeSelect name={"action"}>
-                  <BaseNativeSelectOption value={""}>{"所有"}</BaseNativeSelectOption>
+                  <BaseNativeSelectOption value={""}>
+                    {"所有"}
+                  </BaseNativeSelectOption>
                   {React.Children.toArray(
                     actions.map((action, rowIndex) => (
                       <React.Fragment key={rowIndex}>
@@ -280,7 +288,9 @@ export function OverviewMovements() {
               <BaseLabel>
                 {"工作區"}
                 <BaseNativeSelect name={"workspace"}>
-                  <BaseNativeSelectOption value={""}>{"所有"}</BaseNativeSelectOption>
+                  <BaseNativeSelectOption value={""}>
+                    {"所有"}
+                  </BaseNativeSelectOption>
                   {React.Children.toArray(
                     ["HIS", "OTC"].map((workspace, rowIndex) => (
                       <React.Fragment key={rowIndex}>
@@ -292,7 +302,7 @@ export function OverviewMovements() {
                   )}
                 </BaseNativeSelect>
               </BaseLabel>
-              <BaseButton variant="default" type={"submit"} className={"primary"}>
+              <BaseButton variant="primary" type={"submit"}>
                 {"搜尋"}
               </BaseButton>
               <BaseButton
@@ -379,10 +389,7 @@ export function ListPage({
   const rows = filtered.map((entry) => {
     const status = (
       <>
-        <BaseBadge
-          variant="secondary"
-          className={"tag " + String(entry.status === "停用" ? "off" : "")}
-        >
+        <BaseBadge variant={entry.status === "停用" ? "muted" : "secondary"}>
           {String(entry.status ?? "")}
         </BaseBadge>
       </>
@@ -514,9 +521,7 @@ export function ListPage({
         <>
           {entry.status === "啟用" &&
           entry.stock < (activeModule === "his" ? 20 : entry.minStock) ? (
-            <BaseBadge variant="secondary" className="tag low">
-              {entry.stock}
-            </BaseBadge>
+            <BaseBadge variant="warning">{entry.stock}</BaseBadge>
           ) : (
             entry.stock
           )}
@@ -608,7 +613,7 @@ export function ListPage({
             ];
   return (
     <>
-      <BaseCard className={"panel list-panel"}>
+      <BaseCard variant="panel" className="list-panel">
         <div className={"toolbar"}>
           <div
             className={
@@ -749,11 +754,7 @@ export function ListPage({
                       defaultValue={String(requisitionFilter.end ?? "")}
                     />
                   </BaseLabel>
-                  <BaseButton
-                    variant="default"
-                    type={"submit"}
-                    className={"primary"}
-                  >
+                  <BaseButton variant="primary" type={"submit"}>
                     {"搜尋"}
                   </BaseButton>
                   <BaseButton
@@ -884,7 +885,7 @@ export function HistoricalCostsPage() {
   });
   return (
     <>
-      <BaseCard className={"panel"}>
+      <BaseCard variant="panel">
         <BaseFilterForm
           id={"historical-cost-filter"}
           className={"overview-movement-filter"}
@@ -915,7 +916,7 @@ export function HistoricalCostsPage() {
                   defaultValue={String(historicalCostFilter.end ?? "")}
                 />
               </BaseLabel>
-              <BaseButton variant="default" type={"submit"} className={"primary"}>
+              <BaseButton variant="primary" type={"submit"}>
                 {"搜尋"}
               </BaseButton>
               <BaseButton
@@ -955,7 +956,7 @@ export function HistoricalCostsPage() {
           />
         }
       </BaseCard>
-      <BaseCard className={"panel"}>
+      <BaseCard variant="panel">
         <h3>{"入庫成本明細"}</h3>
         <p className={"field-hint"}>
           {"保存當次入庫單價，品項成本價之後變更也不回寫歷史傳票。"}
@@ -1044,7 +1045,9 @@ export function MovementVoucher() {
             value={selectedMovementVoucherIds[activeModule] ?? ""}
             onChange={() => {}}
           >
-            <BaseNativeSelectOption value={""}>{"尚未建立"}</BaseNativeSelectOption>
+            <BaseNativeSelectOption value={""}>
+              {"尚未建立"}
+            </BaseNativeSelectOption>
             {React.Children.toArray(
               movementVouchers
                 .filter((entry) => entry.direction === activeModule)
@@ -1156,9 +1159,8 @@ export function MovementVoucher() {
               <>
                 <div className={"time-filter-actions"}>
                   <BaseButton
-                    variant="default"
+                    variant="primary"
                     type={"button"}
-                    className={"primary"}
                     data-action={"submit-voucher"}
                     disabled={!voucher.lines.length}
                   >

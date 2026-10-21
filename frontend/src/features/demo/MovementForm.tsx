@@ -67,7 +67,7 @@ export function MovementForm({ product }: { product: Product }) {
           />
         </BaseLabel>
       </div>
-      <BaseButton variant="default" className="primary" type="submit">
+      <BaseButton variant="primary" type="submit">
         加入傳票明細
       </BaseButton>{" "}
       <BaseButton

@@ -363,7 +363,7 @@ export function PurchasesPage() {
             tableKey={tableKey}
             columns={11}
             region="進貨管理列表，可左右捲動"
-            className="purchase-main-table"
+            variant="sticky-actions"
             headers={
               <BaseTableRow>
                 {[
@@ -393,10 +393,9 @@ export function PurchasesPage() {
                   >
                     {index === 1 || index === 5 ? (
                       <BaseButton
-                        variant="ghost"
+                        variant="sort"
                         size="sm"
                         type="button"
-                        className="items-sort"
                         onClick={() =>
                           setSort({
                             key: index === 1 ? "date" : "amount",
@@ -421,10 +420,9 @@ export function PurchasesPage() {
               <BaseTableRow key={o.id}>
                 <BaseTableCell>
                   <BaseButton
-                    variant="ghost"
+                    variant="record-link"
                     size="sm"
                     type="button"
-                    className="purchase-order-link"
                     onClick={() => open("view", o.id)}
                   >
                     {o.number}
@@ -434,7 +432,7 @@ export function PurchasesPage() {
                 <BaseTableCell>{o.supplier}</BaseTableCell>
                 <BaseTableCell>{o.warehouse}</BaseTableCell>
                 <BaseTableCell>{o.lines.length}</BaseTableCell>
-                <BaseTableCell className="purchase-money">
+                <BaseTableCell variant="money">
                   {originalAmount(o).toFixed(2)}
                 </BaseTableCell>
                 <BaseTableCell>
@@ -506,8 +504,13 @@ export function PurchasesPage() {
         }}
       >
         <BaseDialogContent
+          variant={
+            modal?.kind === "settle" || modal?.kind === "resolve"
+              ? "workspace"
+              : "workspace-wide"
+          }
           aria-modal="true"
-          className={`items-modal purchase-modal ${modal?.kind === "settle" || modal?.kind === "resolve" ? "" : "items-modal-wide"}`}
+          className="purchase-modal"
           showCloseButton={false}
           onOpenAutoFocus={(e) => {
             e.preventDefault();
@@ -536,7 +539,7 @@ export function PurchasesPage() {
               <X size={19} aria-hidden="true" />
             </BaseButton>
           </div>
-          <BaseDialogDescription className="items-modal-description">
+          <BaseDialogDescription variant="workspace">
             {order
               ? `${order.number} · ${order.supplier}`
               : "建立進貨單與商品歷史快照（展示）"}

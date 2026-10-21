@@ -10,7 +10,11 @@ const badgeVariants = cva(
       variant: {
         default: "bg-primary text-primary-foreground [a&]:hover:bg-primary/90",
         secondary:
-          "bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90",
+          "bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90 tag",
+        muted:
+          "bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90 tag off",
+        warning:
+          "bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90 tag low",
         destructive:
           "bg-destructive text-white focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90",
         outline:
@@ -32,6 +36,7 @@ function BaseBadge({
   ...props
 }: React.ComponentProps<"span"> &
   VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
+  // 如果是aschild，就會用radix-ui的slot，不會有額外的span，這是radix-ui 設計的功能
   const Comp = asChild ? Slot.Root : "span";
 
   return (

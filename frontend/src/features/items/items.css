@@ -125,14 +125,30 @@
   background: #0866ff;
   color: white;
 }
-.items-page [data-slot="button"][data-variant="outline"],
-.items-modal [data-slot="button"][data-variant="outline"] {
+.items-page
+  [data-slot="button"]:is(
+    [data-variant="outline"],
+    [data-variant="pagination"]
+  ),
+.items-modal
+  [data-slot="button"]:is(
+    [data-variant="outline"],
+    [data-variant="pagination"]
+  ) {
   background: #fff;
   color: #29416b;
   transition: none;
 }
-.items-page [data-slot="button"][data-variant="outline"]:hover,
-.items-modal [data-slot="button"][data-variant="outline"]:hover {
+.items-page
+  [data-slot="button"]:is(
+    [data-variant="outline"],
+    [data-variant="pagination"]
+  ):hover,
+.items-modal
+  [data-slot="button"]:is(
+    [data-variant="outline"],
+    [data-variant="pagination"]
+  ):hover {
   background: #edf5ff;
   color: #1d4080;
 }

@@ -31,11 +31,7 @@ export function OrderActions({
         </BaseButton>
       </BaseDropdownMenuTrigger>
       <BaseDropdownMenuPortal>
-        <BaseDropdownMenuContent
-          className="purchase-operation-menu"
-          sideOffset={6}
-          align="end"
-        >
+        <BaseDropdownMenuContent variant="menu" sideOffset={6} align="end">
           <BaseDropdownMenuLabel>進貨單作業</BaseDropdownMenuLabel>
           {(
             [

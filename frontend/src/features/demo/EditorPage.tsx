@@ -93,10 +93,9 @@ export function EditorPage() {
           </p>
         </div>
         <BaseButton
-          variant="outline"
+          variant={enabled ? "status-active" : "status-inactive"}
           type="button"
           id="editor-status"
-          className={`activation-status ${enabled ? "enabled" : "inactive"}`}
           title="點擊查看啟用規則說明"
           aria-label="查看啟用狀態的修改限制"
           onClick={() => readonly(true)}
@@ -104,10 +103,9 @@ export function EditorPage() {
           {enabled ? "啟用" : "未啟用"}
         </BaseButton>
       </div>
-      <BaseCard asChild>
+      <BaseCard variant="editor" asChild>
         <form
           id="editor-form"
-          className="panel editor-panel"
           onSubmit={(event) => {
             event.preventDefault();
             dispatch(executeDemoCommand({ type: "save-editor" }));
@@ -208,9 +206,9 @@ export function EditorPage() {
                           ))}
                         </BaseNativeSelect>
                         <BaseButton
-                          variant="outline"
+                          variant="readonly"
                           type="button"
-                          className="readonly-select-trigger"
+
                           data-locked-field
                           aria-label={`${field.label}為唯讀，查看說明`}
                           onClick={() => readonly()}
@@ -218,7 +216,9 @@ export function EditorPage() {
                       </div>
                     ) : (
                       <BaseNativeSelect {...control}>
-                        <BaseNativeSelectOption value="">請選擇</BaseNativeSelectOption>
+                        <BaseNativeSelectOption value="">
+                          請選擇
+                        </BaseNativeSelectOption>
                         {field.options.map(([value, label]) => (
                           <BaseNativeSelectOption key={value} value={value}>
                             {label}
@@ -307,10 +307,15 @@ export function EditorPage() {
             {s.errors.editor}
           </p>
           <div className="dialog-actions">
-            <BaseButton variant="outline" type="button" data-close onClick={close}>
+            <BaseButton
+              variant="outline"
+              type="button"
+              data-close
+              onClick={close}
+            >
               取消
             </BaseButton>
-            <BaseButton variant="default" type="submit" className="primary">
+            <BaseButton variant="primary" type="submit">
               {correction
                 ? "儲存歷史更正"
                 : kind === "stocktake"
