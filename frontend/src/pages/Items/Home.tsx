@@ -1,12 +1,10 @@
 import { useWorkspaceDirty } from "@/features/workspace/useWorkspaceDirty";
-import { BaseSwitch } from "@/components/ui/BaseSwitch";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { itemGroupPaths } from "@/constants/workspaceRoutes";
 import {
   Box,
   Package,
-  Database,
   TriangleAlert,
   Clock3,
   CalendarX2,
@@ -42,7 +40,7 @@ import {
   BaseDialogDescription,
 } from "@/components/ui/BaseDialog";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { saveItem, setItemActive } from "@/store/items";
+import { saveItem } from "@/store/items";
 import { downloadTable } from "@/helpers/excel";
 import { ItemEditor } from "@/features/items/ItemEditor";
 import { ItemDetails } from "@/features/items/ItemDetails";
@@ -68,7 +66,7 @@ const defaults = {
   expiry: "",
   active: "active",
 };
-type Modal = { kind: "new" | "edit" | "view" | "status"; item: Item };
+type Modal = { kind: "new" | "edit" | "view"; item: Item };
 const number = (value: number) =>
   value.toLocaleString("zh-TW", { maximumFractionDigits: 3 });
 
@@ -115,7 +113,7 @@ export function ItemsPage() {
   const continueRef = useRef<HTMLButtonElement>(null);
   const editorFocus = useRef<HTMLElement | null>(null);
   const today = taipeiToday();
-  const rows = useMemo(
+  const summaryRows = useMemo(
     () =>
       state.items
         .map((item) => {
@@ -141,7 +139,7 @@ export function ItemsPage() {
           };
         })
         .filter((row) => {
-          const { item, batches, stock, usage } = row;
+          const { item, usage } = row;
           return (
             item.group === group &&
             [
@@ -154,15 +152,6 @@ export function ItemsPage() {
               v.toLowerCase().includes(filter.search.trim().toLowerCase()),
             ) &&
             (!filter.category || item.category === filter.category) &&
-            (!filter.stock || stock === filter.stock) &&
-            (!filter.expiry ||
-              (filter.expiry === "不適用"
-                ? !item.trackExpiry
-                : batches.some(
-                    (b) =>
-                      b.quantity > 0 &&
-                      expiryStatus(b, today) === filter.expiry,
-                  ))) &&
             (filter.active === "all" ||
               (filter.active === "active"
                 ? usage === "使用中"
@@ -180,20 +169,29 @@ export function ItemsPage() {
         }),
     [state, group, filter, sort, today],
   );
-  const unitTotals = rows.reduce<Record<string, number>>(
-    (s, r) => ({ ...s, [r.item.unit]: (s[r.item.unit] || 0) + r.quantity }),
-    {},
+  const rows = summaryRows.filter(
+    ({ item, batches, stock }) =>
+      (!filter.stock ||
+        (filter.stock === "安全庫存不足"
+          ? stock === "低庫存" || (stock === "無庫存" && item.safetyStock > 0)
+          : stock === filter.stock)) &&
+      (!filter.expiry ||
+        (filter.expiry === "不適用"
+          ? !item.trackExpiry
+          : batches.some(
+              (b) => b.quantity > 0 && expiryStatus(b, today) === filter.expiry,
+            ))),
   );
-  const low = rows.filter(
+  const low = summaryRows.filter(
     (r) =>
       r.stock === "低庫存" || (r.stock === "無庫存" && r.item.safetyStock > 0),
   ).length;
-  const expiring = rows.filter((r) =>
+  const expiring = summaryRows.filter((r) =>
     r.batches.some(
       (b) => b.quantity > 0 && expiryStatus(b, today) === "即將到期",
     ),
   ).length;
-  const expired = rows.filter((r) =>
+  const expired = summaryRows.filter((r) =>
     r.batches.some(
       (b) => b.quantity > 0 && expiryStatus(b, today) === "已過期",
     ),
@@ -252,30 +250,26 @@ export function ItemsPage() {
   const cards = [
     {
       title: "品項數",
-      value: number(rows.length),
-      note: `使用中 ${rows.filter((r) => r.usage === "使用中").length} ｜ 其他狀態 ${rows.filter((r) => r.usage !== "使用中").length}`,
+      value: number(summaryRows.length),
+      note: "查看全部庫存及效期狀態",
+      stock: "",
+      expiry: "",
       icon: Package,
       color: "blue",
     },
     {
-      title: "可用庫存數量",
-      value:
-        Object.entries(unitTotals)
-          .map(([unit, total]) => `${number(total)} ${unit}`)
-          .join("／") || "0",
-      note: "依基本單位分列，不混合加總",
-      icon: Database,
-      color: "cyan",
-    },
-    {
       title: "安全庫存不足",
+      stock: "安全庫存不足",
+      expiry: "",
       value: number(low),
-      note: "依全倉可用庫存判斷",
+      note: "依全部倉庫的可用庫存判斷",
       icon: TriangleAlert,
       color: "red",
     },
     {
       title: "即將到期品項",
+      stock: "",
+      expiry: "即將到期",
       value: number(expiring),
       note: "90 天內有到期庫存批次",
       icon: Clock3,
@@ -283,6 +277,8 @@ export function ItemsPage() {
     },
     {
       title: "已過期品項",
+      stock: "",
+      expiry: "已過期",
       value: number(expired),
       note: "仍有庫存的過期批次",
       icon: CalendarX2,
@@ -294,9 +290,7 @@ export function ItemsPage() {
       ? "新增品項"
       : modal?.kind === "edit"
         ? "編輯品項"
-        : modal?.kind === "view"
-          ? "庫存批號明細"
-          : `${modal?.item.active ? "停用" : "啟用"}品項`;
+        : "庫存批號明細";
   return (
     <section
       className="items-page"
@@ -370,24 +364,46 @@ export function ItemsPage() {
       >
         <div className="items-stats">
           {cards.map((c) => (
-            <article key={c.title} className={`items-stat ${c.color}`}>
+            <button
+              key={c.title}
+              type="button"
+              className={`items-stat ${c.color}`}
+              aria-label={`篩選${c.title}`}
+              title={c.note}
+              aria-pressed={
+                filter.stock === c.stock && filter.expiry === c.expiry
+              }
+              onClick={() =>
+                setFilter((f) => ({ ...f, stock: c.stock, expiry: c.expiry }))
+              }
+            >
               <span className="items-stat-icon" aria-hidden="true">
-                <c.icon size={23} />
+                <c.icon size={18} />
               </span>
-              <div>
-                <h3>{c.title}</h3>
+              <span className="items-stat-content">
+                <span className="items-stat-title">{c.title}</span>
                 <strong>{c.value}</strong>
-                <p>{c.note}</p>
-              </div>
-            </article>
+              </span>
+            </button>
           ))}
         </div>
+        <details className="items-summary-note">
+          <summary>統計說明</summary>
+          <p>
+            摘要依目前群組、搜尋、分類與啟用條件統計；效期依所選倉別（即將到期為
+            90 天內），安全庫存不足依全倉判斷。點選摘要可篩選列表。
+          </p>
+        </details>
         <div className="items-filter-bar">
           {(
             [
               ["warehouse", "倉別", ["全部倉別", ...warehouses]],
               ["category", "品項分類", ["全部分類", ...categories]],
-              ["stock", "庫存狀態", ["全部", "正常", "低庫存", "無庫存"]],
+              [
+                "stock",
+                "全倉庫存狀態",
+                ["全部", "正常", "低庫存", "無庫存", "安全庫存不足"],
+              ],
               [
                 "expiry",
                 "效期狀態",
@@ -421,7 +437,7 @@ export function ItemsPage() {
                 使用中
               </BaseNativeSelectOption>
               <BaseNativeSelectOption value="inactive">
-                非使用中
+                停用中
               </BaseNativeSelectOption>
               <BaseNativeSelectOption value="all">全部</BaseNativeSelectOption>
             </BaseNativeSelect>
@@ -452,29 +468,25 @@ export function ItemsPage() {
                     "料號",
                     "健保碼",
                     "品名",
-                    "規格",
-                    "分類",
-                    "倉別",
-                    "庫存量",
-                    "單位",
+                    "可用庫存",
                     "最近效期",
-                    "安全庫存",
-                    "庫存狀態",
-                    "建議售價",
-                    "啟用",
+                    "全倉庫存狀態",
                     "操作",
                   ].map((head, index) => {
                     const key = (
                       {
                         0: "code",
                         2: "name",
-                        6: "quantity",
-                        8: "expiry",
+                        3: "quantity",
+                        4: "expiry",
                       } as const
                     )[index];
                     return (
                       <BaseTableHead
                         key={head}
+                        className={
+                          index < 2 ? "items-desktop-column" : undefined
+                        }
                         aria-sort={
                           key && sort.key === key
                             ? sort.direction === 1
@@ -504,18 +516,38 @@ export function ItemsPage() {
               <BaseTableBody>
                 {visible.map((r) => (
                   <BaseTableRow key={r.item.id}>
-                    <BaseTableCell variant="code">{r.item.code}</BaseTableCell>
-                    <BaseTableCell>{r.item.nhiCode || "—"}</BaseTableCell>
-                    <BaseTableCell variant="name">{r.item.name}</BaseTableCell>
-                    <BaseTableCell>{r.item.specification || "—"}</BaseTableCell>
-                    <BaseTableCell>{r.item.category}</BaseTableCell>
-                    <BaseTableCell>
-                      {filter.warehouse || "全部倉別"}
+                    <BaseTableCell
+                      variant="code"
+                      className="items-desktop-column"
+                    >
+                      {r.item.code}
+                    </BaseTableCell>
+                    <BaseTableCell
+                      variant="code"
+                      className="items-desktop-column"
+                    >
+                      {r.item.nhiCode || "—"}
+                    </BaseTableCell>
+                    <BaseTableCell variant="name">
+                      {r.item.name}
+                      <small className="items-mobile-code items-secondary">
+                        料號 {r.item.code}
+                      </small>
+                      <small className="items-mobile-code items-secondary">
+                        健保碼 {r.item.nhiCode || "—"}
+                      </small>
+                      <small className="items-secondary">
+                        {r.item.specification || r.item.category}
+                      </small>
                     </BaseTableCell>
                     <BaseTableCell variant="numeric">
-                      {number(r.quantity)}
+                      {number(r.quantity)} {r.item.unit}
+                      {filter.warehouse && (
+                        <small className="items-secondary">
+                          {filter.warehouse}
+                        </small>
+                      )}
                     </BaseTableCell>
-                    <BaseTableCell>{r.item.unit}</BaseTableCell>
                     <BaseTableCell
                       variant={
                         r.expiry && r.expiry < today ? "expired" : "default"
@@ -523,50 +555,35 @@ export function ItemsPage() {
                     >
                       {r.expiry || "—"}
                     </BaseTableCell>
-                    <BaseTableCell>{number(r.item.safetyStock)}</BaseTableCell>
                     <BaseTableCell>
                       <span
                         className={`items-status ${r.stock === "正常" ? "" : "danger"}`}
                       >
                         {r.stock}
                       </span>
-                    </BaseTableCell>
-                    <BaseTableCell>
-                      {r.item.suggestedPrice === ""
-                        ? "—"
-                        : `${number(Number(r.item.suggestedPrice))} 元`}
-                    </BaseTableCell>
-                    <BaseTableCell>
-                      <BaseSwitch
-                        variant="compact"
-                        type="button"
-                        checked={r.item.active}
-                        aria-label={`啟用品項：${r.item.name}`}
-                        aria-haspopup="dialog"
-                        title={r.usage}
-                        onClick={() => open("status", r.item)}
-                      />
-                      {r.usage !== "使用中" && (
-                        <small className="items-usage">{r.usage}</small>
-                      )}
+                      <small className="items-secondary">
+                        安全庫存 {number(r.item.safetyStock)} {r.item.unit}
+                      </small>
                     </BaseTableCell>
                     <BaseTableCell>
                       <div className="items-row-actions">
                         <BaseButton
                           variant="outline"
-                          size="icon"
+                          size="sm"
                           aria-label={`查看${r.item.name}`}
                           onClick={() => open("view", r.item)}
                         >
                           <Eye size={15} />
+                          明細
                         </BaseButton>
                         <BaseButton
                           variant="outline"
-                          size="icon"
+                          size="sm"
                           aria-label={`編輯${r.item.name}`}
                           onClick={() => open("edit", r.item)}
                         >
                           <Pencil size={14} />
+                          編輯
                         </BaseButton>
                       </div>
                     </BaseTableCell>
@@ -574,7 +591,7 @@ export function ItemsPage() {
                 ))}
                 {!visible.length && (
                   <BaseTableRow>
-                    <BaseTableCell colSpan={14}>
+                    <BaseTableCell colSpan={7}>
                       <div className="items-empty">
                         <Search size={30} />
                         <strong>找不到符合條件的品項</strong>
@@ -657,7 +674,7 @@ export function ItemsPage() {
             <BaseTableRow>
               {[
                 "品項料號",
-                "健保代碼",
+                "健保碼",
                 "國際條碼",
                 "品項名稱",
                 "英文名稱",
@@ -785,45 +802,6 @@ export function ItemsPage() {
               <footer className="items-modal-footer">
                 <BaseButton variant="outline" onClick={() => close()}>
                   關閉
-                </BaseButton>
-              </footer>
-            </>
-          )}
-          {modal?.kind === "status" && (
-            <>
-              <div className="items-status-confirm">
-                <p>
-                  確定要{modal.item.active ? "停用" : "啟用"}「{modal.item.name}
-                  」嗎？
-                </p>
-                {modal.item.active &&
-                  state.batches.some(
-                    (b) => b.itemId === modal.item.id && b.quantity > 0,
-                  ) && (
-                    <p className="items-error">
-                      此品項仍有庫存。停用不會清空庫存或刪除歷史紀錄。
-                    </p>
-                  )}
-              </div>
-              <footer className="items-modal-footer">
-                <BaseButton variant="outline" onClick={() => close()}>
-                  取消
-                </BaseButton>
-                <BaseButton
-                  onClick={() => {
-                    dispatch(
-                      setItemActive({
-                        id: modal.item.id,
-                        active: !modal.item.active,
-                      }),
-                    );
-                    setNotice(
-                      `${modal.item.name}已${modal.item.active ? "停用" : "啟用"}。`,
-                    );
-                    close(true);
-                  }}
-                >
-                  確認{modal.item.active ? "停用" : "啟用"}
                 </BaseButton>
               </footer>
             </>

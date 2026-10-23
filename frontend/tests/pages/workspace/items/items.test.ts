@@ -103,31 +103,91 @@ async function close(page: Page) {
 
 test("新版雙群組、搜尋、倉別及全倉安全庫存、分頁與排序", async ({ page }) => {
   await expect(table(page).locator("tbody tr")).toHaveCount(6);
-  await expect(page.locator(".items-stat.cyan")).toContainText("107 瓶／32 盒");
+  await expect(page.locator(".items-stat")).toHaveCount(4);
   await page
     .getByRole("textbox", { name: "搜尋品項" })
     .fill("Artificial Tears");
   await expect(table(page).locator("tbody tr")).toHaveCount(1);
   await page.locator("#items-filter-warehouse").selectOption("診間倉庫");
   const row = table(page).locator("tbody tr");
-  await expect(row.locator("td").nth(6)).toHaveText("15");
+  await expect(
+    table(page).getByRole("columnheader", { name: "可用庫存" }),
+  ).toBeVisible();
+  await expect(row.locator("td").nth(3)).toContainText("15 瓶");
+  await expect(row.locator("td").nth(3)).toContainText("診間倉庫");
   await expect(row).toContainText("正常"); // 全倉35，不因診間只有15而變成低庫存
   await page.getByRole("button", { name: "清除", exact: true }).click();
   await page.locator("#items-page-size").selectOption("5");
   await expect(table(page).locator("tbody tr")).toHaveCount(5);
   await page.getByRole("button", { name: "下一頁", exact: true }).click();
   await expect(table(page)).toContainText("口服消炎藥");
-  await table(page).getByRole("button", { name: "料號", exact: true }).click();
+  const sortByCode = table(page).getByRole("button", {
+    name: "料號",
+    exact: true,
+  });
+  const sortByName = table(page).getByRole("button", {
+    name: "品名",
+    exact: true,
+  });
+  const desktop = await sortByCode.isVisible();
+  await (desktop ? sortByCode : sortByName).click();
   await page.getByRole("button", { name: "上一頁", exact: true }).click();
-  await expect(table(page).locator("tbody tr").first()).toContainText(
-    "MED0006",
-  );
+  if (desktop) {
+    await expect(table(page).locator("tbody tr").first()).toContainText(
+      "MED0006",
+    );
+  } else {
+    await expect(
+      table(page).getByRole("columnheader", { name: "品名", exact: true }),
+    ).toHaveAttribute("aria-sort", "ascending");
+  }
   await page
     .getByRole("tab", { name: "自費／OTC／其他商品", exact: true })
     .click();
-  await expect(table(page)).toContainText("OTC0006");
+  if (desktop) await expect(table(page)).toContainText("OTC0006");
+  else await expect(table(page).locator("tbody tr")).toHaveCount(5);
   await page.getByRole("textbox", { name: "搜尋品項" }).fill("不存在的商品");
   await expect(table(page)).toContainText("找不到符合條件的品項");
+});
+
+test("摘要卡切換警示列表並保留搜尋、倉別與其他卡片數字", async ({ page }) => {
+  const cards = page.locator(".items-stat");
+  const initialCounts = await cards.locator("strong").allTextContents();
+  await page
+    .getByRole("button", { name: "篩選安全庫存不足", exact: true })
+    .click();
+  await expect(page.locator("#items-filter-stock")).toHaveValue("安全庫存不足");
+  await expect(table(page).locator("tbody tr")).toHaveCount(
+    Number(initialCounts[1]),
+  );
+  await expect(cards.locator("strong")).toHaveText(initialCounts);
+  await page
+    .getByRole("button", { name: "篩選已過期品項", exact: true })
+    .click();
+  await expect(page.locator("#items-filter-stock")).toHaveValue("");
+  await expect(page.locator("#items-filter-expiry")).toHaveValue("已過期");
+  await expect(table(page).locator("tbody tr")).toHaveCount(
+    Number(initialCounts[3]),
+  );
+  await expect(cards.locator("strong")).toHaveText(initialCounts);
+  await page.getByRole("button", { name: "篩選品項數", exact: true }).click();
+  await expect(table(page).locator("tbody tr")).toHaveCount(6);
+  await page
+    .getByRole("textbox", { name: "搜尋品項" })
+    .fill("Artificial Tears");
+  await page.locator("#items-filter-warehouse").selectOption("診間倉庫");
+  await page
+    .getByRole("button", { name: "篩選即將到期品項", exact: true })
+    .click();
+  await expect(page.getByRole("textbox", { name: "搜尋品項" })).toHaveValue(
+    "Artificial Tears",
+  );
+  await expect(page.locator("#items-filter-warehouse")).toHaveValue("診間倉庫");
+  await expect(
+    page.getByRole("button", { name: "篩選即將到期品項", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "篩選品項數", exact: true }).click();
+  await expect(table(page).locator("tbody tr")).toHaveCount(1);
 });
 
 test("新增、重複料號與條碼、日期驗證及零庫存", async ({ page }) => {
@@ -181,7 +241,7 @@ test("修改可編輯欄位、鎖定交易設定、成本與庫存不變", async
   const row = table(page)
     .locator("tbody tr")
     .filter({ hasText: "人工淚液新版" });
-  await expect(row.locator("td").nth(6)).toHaveText("35");
+  await expect(row.locator("td").nth(3)).toContainText("35 瓶");
   await expect(row).toContainText("低庫存"); // 等於安全庫存仍低庫存
   await page
     .getByRole("button", { name: "查看人工淚液新版", exact: true })
@@ -232,12 +292,18 @@ test("過期批次排除可用量、成本歷史與異動篩選", async ({ page 
   await expect(dialog(page).locator("tbody tr")).toHaveCount(1);
 });
 
-test("停用確認後保留庫存及歷史，可重新啟用", async ({ page }) => {
-  await page
-    .getByRole("switch", { name: "啟用品項：人工淚液", exact: true })
-    .click();
+test("透過編輯停用後保留庫存及歷史，可重新啟用", async ({ page }) => {
+  await expect(table(page).getByRole("switch")).toHaveCount(0);
+  await expect(
+    table(page).getByRole("columnheader", { name: "啟用", exact: true }),
+  ).toHaveCount(0);
+  await expect(table(page).locator("thead th").nth(1)).toHaveText("健保碼");
+  await page.getByRole("button", { name: "編輯人工淚液", exact: true }).click();
+  await dialog(page)
+    .getByRole("checkbox", { name: "啟用品項", exact: true })
+    .uncheck();
   await expect(dialog(page)).toContainText("此品項仍有庫存");
-  await dialog(page).getByRole("button", { name: "確認停用" }).click();
+  await dialog(page).getByRole("button", { name: "儲存變更" }).click();
   await expect(table(page)).not.toContainText("人工淚液");
   await page.locator("#items-filter-active").selectOption("inactive");
   await expect(table(page)).toContainText("人工淚液");
@@ -245,10 +311,11 @@ test("停用確認後保留庫存及歷史，可重新啟用", async ({ page }) 
   await expect(dialog(page).locator(".items-stock-total")).toContainText("35");
   await expect(dialog(page).locator("tbody tr")).toHaveCount(3);
   await close(page);
-  await page
-    .getByRole("switch", { name: "啟用品項：人工淚液", exact: true })
-    .click();
-  await dialog(page).getByRole("button", { name: "確認啟用" }).click();
+  await page.getByRole("button", { name: "編輯人工淚液", exact: true }).click();
+  await dialog(page)
+    .getByRole("checkbox", { name: "啟用品項", exact: true })
+    .check();
+  await dialog(page).getByRole("button", { name: "儲存變更" }).click();
   await page.locator("#items-filter-active").selectOption("active");
   await expect(table(page)).toContainText("人工淚液");
 });
