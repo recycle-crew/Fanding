@@ -735,6 +735,111 @@
   margin: 0;
   color: #53647d;
 }
+.items-product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 13px;
+  color: #53647d;
+}
+.items-product-summary > div:first-child {
+  min-width: 0;
+}
+.items-product-meta span {
+  overflow-wrap: anywhere;
+}
+.items-stock-total {
+  flex-shrink: 0;
+}
+.items-detail-facts {
+  margin-top: 16px;
+  border-top: 1px solid #e0e9f5;
+}
+.items-detail-facts summary,
+.items-cost-note summary {
+  cursor: pointer;
+  padding: 10px 0;
+  color: #435273;
+  font-size: 14px;
+}
+.items-detail-facts summary span {
+  display: inline-block;
+  margin-left: 12px;
+  font-size: 12px;
+  color: #62728a;
+}
+.items-detail-facts .items-facts {
+  margin: 8px 0 0;
+}
+.items-availability-note {
+  padding: 10px 12px;
+  margin: 0;
+  border-radius: 5px;
+  background: #f1f8ff;
+  color: #435273;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.items-cost-note {
+  margin-bottom: 8px;
+}
+.items-cost-note .items-note {
+  margin: 0 0 10px;
+}
+.items-details [data-slot="table"] {
+  font-size: 16px;
+}
+.items-details [data-slot="table-head"] {
+  font-size: 15px;
+}
+.items-detail-scope {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+.items-detail-scope select {
+  width: 100%;
+}
+.items-detail-scope > [data-slot="native-select-wrapper"] {
+  width: 160px;
+  flex: 0 0 160px;
+}
+.items-detail-scope > span {
+  color: #62728a;
+  font-size: 12px;
+}
+.items-details .items-detail-filters {
+  align-items: flex-end;
+}
+.items-details .items-batch-filters > label {
+  flex: 0 1 200px;
+}
+.items-batch-table .items-secondary {
+  white-space: normal;
+}
+.items-batch-label {
+  display: none;
+}
+.items-batch-extra {
+  font-size: 13px;
+  color: #53647d;
+}
+.items-batch-extra summary {
+  cursor: pointer;
+  padding: 8px 0;
+}
+.items-batch-extra dl {
+  margin: 4px 0;
+}
+.items-batch-extra dt {
+  font-size: 12px;
+}
+.items-batch-extra dd {
+  margin: 0 0 8px;
+}
 .items-kicker {
   color: #087c67;
   background: #dff6ee;
@@ -799,6 +904,64 @@
   }
 }
 @media (max-width: 640px) {
+  .items-batch-table [data-slot="table"],
+  .items-batch-table tbody {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+  .items-batch-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .items-batch-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "batch available" "expiry book" "extra extra";
+    gap: 12px 16px;
+    padding: 14px;
+    margin-bottom: 10px;
+    border: 1px solid #e0e9f5;
+    border-radius: 7px;
+    background: white;
+  }
+  .items-batch-table tbody td {
+    display: block;
+    padding: 0;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    border: 0;
+  }
+  .items-batch-table td:nth-child(1) {
+    grid-area: batch;
+  }
+  .items-batch-table td:nth-child(2) {
+    grid-area: expiry;
+  }
+  .items-batch-table td:nth-child(3) {
+    grid-area: available;
+    text-align: right;
+  }
+  .items-batch-table td:nth-child(4) {
+    grid-area: book;
+    text-align: right;
+  }
+  .items-batch-table td:nth-child(5) {
+    grid-area: extra;
+  }
+  .items-batch-table td[colspan] {
+    grid-area: 1 / 1 / -1 / -1;
+  }
+  .items-batch-table .items-batch-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    color: #62728a;
+  }
   .items-main-table .items-desktop-column {
     display: none;
   }

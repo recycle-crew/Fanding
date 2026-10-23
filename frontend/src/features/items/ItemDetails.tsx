@@ -18,18 +18,49 @@ import {
 } from "./model";
 import type { Item } from "@/types/items";
 
-export function ItemDetails({ item }: { item: Item }) {
+const transactionLabels: Record<string, string> = {
+  PURCHASE_IN: "進貨入庫",
+  HIS_CONSUMPTION_OUT: "HIS 耗用出庫",
+  POS_OUT: "POS 銷售出庫",
+};
+const transactionLabel = (type: string) => transactionLabels[type] || type;
+
+export function ItemDetails({
+  item,
+  initialWarehouse = "",
+}: {
+  item: Item;
+  initialWarehouse?: string;
+}) {
   const state = useAppSelector((s) => s.items);
   const [tab, setTab] = useState("batches");
   const [filter, setFilter] = useState({
     start: "",
     end: "",
-    warehouse: "",
+    warehouse: initialWarehouse,
     type: "",
     batch: "",
   });
+  const [expiryFilter, setExpiryFilter] = useState("");
   const batches = state.batches.filter((b) => b.itemId === item.id);
+  const warehouseBatches = batches.filter(
+    (b) => !filter.warehouse || b.warehouse === filter.warehouse,
+  );
+  const visibleBatches = warehouseBatches.filter(
+    (b) => !expiryFilter || expiryStatus(b) === expiryFilter,
+  );
+  const warehouseOptions = Array.from(
+    new Set([
+      ...warehouses,
+      ...batches.map((b) => b.warehouse),
+      ...(initialWarehouse ? [initialWarehouse] : []),
+    ]),
+  );
   const costs = state.costs.filter((c) => c.itemId === item.id);
+  const visibleCosts = costs.filter(
+    (c) =>
+      !filter.warehouse || warehouseBatches.some((b) => b.id === c.batchId),
+  );
   const transactions = state.transactions
     .filter(
       (t) =>
@@ -49,51 +80,40 @@ export function ItemDetails({ item }: { item: Item }) {
             {item.group === "HIS_MEDICINE" ? "HIS 藥品" : "自費／OTC／其他商品"}
           </span>
           <h3>{item.name}</h3>
-          <p>{item.englishName || "—"}</p>
+          <div className="items-product-meta">
+            <span>料號 {item.code}</span>
+            <span>健保碼 {item.nhiCode || "—"}</span>
+            <span>規格 {item.specification || "—"}</span>
+          </div>
         </div>
         <div className="items-stock-total">
-          <small>總可用庫存</small>
+          <small>可用庫存</small>
           <strong>
-            {batches.reduce((s, b) => s + available(b), 0)}{" "}
+            {warehouseBatches.reduce((s, b) => s + available(b), 0)}{" "}
             <span>{item.unit}</span>
           </strong>
+          <small>{filter.warehouse || "全部倉庫合計"}</small>
         </div>
       </div>
-      <dl className="items-facts">
-        {[
-          ["料號", item.code],
-          ["健保碼", item.nhiCode || "—"],
-          ["國際條碼", item.barcode || "—"],
-          ["規格", item.specification || "—"],
-          ["分類", item.category],
-          ["基本單位", item.unit],
-          ["安全庫存", String(item.safetyStock)],
-          ["預設供應商", item.supplier || "—"],
-          [
-            "參考成本",
-            item.referenceCost === ""
-              ? "—"
-              : Number(item.referenceCost).toFixed(4),
-          ],
-          [
-            "建議售價",
-            item.suggestedPrice === ""
-              ? "—"
-              : Number(item.suggestedPrice).toFixed(2),
-          ],
-          ["使用狀態", usageStatus(item)],
-          [
-            "使用期間",
-            `${item.effectiveFrom} ～ ${item.effectiveUntil || "無期限"}`,
-          ],
-          ["備註", item.remark || "—"],
-        ].map(([title, value]) => (
-          <div key={title}>
-            <dt>{title}</dt>
-            <dd>{value}</dd>
-          </div>
-        ))}
-      </dl>
+      <div className="items-detail-scope">
+        <BaseLabel htmlFor="items-detail-warehouse">查看倉別</BaseLabel>
+        <BaseNativeSelect
+          id="items-detail-warehouse"
+          value={filter.warehouse}
+          onChange={(e) =>
+            setFilter((f) => ({ ...f, warehouse: e.target.value }))
+          }
+        >
+          <BaseNativeSelectOption value="">全部倉別</BaseNativeSelectOption>
+          {warehouseOptions.map((w) => (
+            <BaseNativeSelectOption key={w} value={w}>
+              {w}
+            </BaseNativeSelectOption>
+          ))}
+        </BaseNativeSelect>
+        <span>適用批號庫存、庫存異動及成本歷史</span>
+      </div>
+
       <div
         className="items-tabs"
         role="tablist"
@@ -128,39 +148,101 @@ export function ItemDetails({ item }: { item: Item }) {
       >
         {tab === "batches" && (
           <>
-            <p className="items-note">
-              成本算法：同批次歷次進貨金額 ÷
-              進貨數量，僅供展示參考；各筆原始成本請見進貨成本歷史。
-            </p>
-            <BaseDataTable
-              tableKey={`items-batches-${item.id}`}
-              headers={[
-                "批號",
-                "效期",
-                "倉別",
-                "帳面數量",
-                "可用數量",
-                "單位",
-                "加權平均成本",
-                "最近入庫日期",
-                "狀態",
-              ]}
-              rows={batches.map((b) => [
-                b.batchNumber || "—",
-                b.expiryDate || "—",
-                b.warehouse,
-                b.quantity,
-                available(b),
-                item.unit,
-                batchAverage(b.id, costs)?.toFixed(4) ?? "—",
-                b.receivedAt,
-                <span
-                  className={`items-status ${expiryStatus(b) === "已過期" ? "danger" : expiryStatus(b) === "即將到期" ? "warning" : ""}`}
+            <div className="items-detail-filters items-batch-filters">
+              <BaseLabel htmlFor="items-batch-expiry">
+                效期狀態
+                <BaseNativeSelect
+                  id="items-batch-expiry"
+                  aria-label="效期狀態"
+                  value={expiryFilter}
+                  onChange={(e) => setExpiryFilter(e.target.value)}
                 >
-                  {expiryStatus(b)}
-                </span>,
-              ])}
-            />
+                  <BaseNativeSelectOption value="">
+                    全部狀態
+                  </BaseNativeSelectOption>
+                  {["正常", "即將到期", "已過期", "不適用"].map((status) => (
+                    <BaseNativeSelectOption key={status} value={status}>
+                      {status}
+                    </BaseNativeSelectOption>
+                  ))}
+                </BaseNativeSelect>
+              </BaseLabel>
+              <BaseButton
+                variant="ghost"
+                onClick={() => {
+                  setExpiryFilter("");
+                  setFilter((f) => ({ ...f, warehouse: "" }));
+                }}
+              >
+                清除篩選
+              </BaseButton>
+            </div>
+            <p className="items-availability-note">
+              帳面數量為批次記錄的數量；可用數量已扣除過期及其他不可用數量。過期批次即使仍有帳面數量，可用數量也為
+              0。
+            </p>
+            <details className="items-cost-note">
+              <summary>成本計算說明</summary>
+              <p className="items-note">
+                成本算法：同批次歷次進貨金額 ÷
+                進貨數量，僅供展示參考；各筆原始成本請見進貨成本歷史。
+              </p>
+            </details>
+            <div className="items-batch-table">
+              <BaseDataTable
+                tableKey={`items-batches-${item.id}-${filter.warehouse}-${expiryFilter}`}
+                headers={[
+                  "批號／倉別",
+                  "效期／狀態",
+                  "可用數量",
+                  "帳面數量",
+                  "成本與入庫",
+                ]}
+                rows={visibleBatches.map((b) => [
+                  <>
+                    <span className="items-batch-label">批號</span>
+                    <strong>{b.batchNumber || "—"}</strong>
+                    <small className="items-secondary">{b.warehouse}</small>
+                  </>,
+                  <>
+                    <span className="items-batch-label">效期</span>
+                    {b.expiryDate || "—"}
+                    <small className="items-secondary">
+                      <span
+                        className={`items-status ${expiryStatus(b) === "已過期" ? "danger" : expiryStatus(b) === "即將到期" ? "warning" : ""}`}
+                      >
+                        {expiryStatus(b) === "已過期"
+                          ? "已過期（不可用）"
+                          : expiryStatus(b)}
+                      </span>
+                    </small>
+                  </>,
+                  <>
+                    <span className="items-batch-label">可用數量</span>
+                    <strong>
+                      {available(b)} {item.unit}
+                    </strong>
+                  </>,
+                  <>
+                    <span className="items-batch-label">帳面數量</span>
+                    {b.quantity} {item.unit}
+                  </>,
+                  <details className="items-batch-extra">
+                    <summary>成本與入庫</summary>
+                    <dl>
+                      <div>
+                        <dt>加權平均成本</dt>
+                        <dd>{batchAverage(b.id, costs)?.toFixed(4) ?? "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>最近入庫日期</dt>
+                        <dd>{b.receivedAt}</dd>
+                      </div>
+                    </dl>
+                  </details>,
+                ])}
+              />
+            </div>
           </>
         )}
         {tab === "transactions" && (
@@ -187,21 +269,6 @@ export function ItemDetails({ item }: { item: Item }) {
                 </BaseLabel>
               ))}
               <BaseLabel>
-                倉別
-                <BaseNativeSelect
-                  aria-label="倉別"
-                  value={filter.warehouse}
-                  onChange={(e) =>
-                    setFilter({ ...filter, warehouse: e.target.value })
-                  }
-                >
-                  <BaseNativeSelectOption value="">全部倉別</BaseNativeSelectOption>
-                  {warehouses.map((w) => (
-                    <BaseNativeSelectOption key={w}>{w}</BaseNativeSelectOption>
-                  ))}
-                </BaseNativeSelect>
-              </BaseLabel>
-              <BaseLabel>
                 異動類型
                 <BaseNativeSelect
                   aria-label="異動類型"
@@ -210,10 +277,14 @@ export function ItemDetails({ item }: { item: Item }) {
                     setFilter({ ...filter, type: e.target.value })
                   }
                 >
-                  <BaseNativeSelectOption value="">全部類型</BaseNativeSelectOption>
+                  <BaseNativeSelectOption value="">
+                    全部類型
+                  </BaseNativeSelectOption>
                   {[...new Set(state.transactions.map((t) => t.type))].map(
                     (t) => (
-                      <BaseNativeSelectOption key={t}>{t}</BaseNativeSelectOption>
+                      <BaseNativeSelectOption key={t} value={t}>
+                        {transactionLabel(t)}
+                      </BaseNativeSelectOption>
                     ),
                   )}
                 </BaseNativeSelect>
@@ -234,7 +305,7 @@ export function ItemDetails({ item }: { item: Item }) {
               ]}
               rows={transactions.map((t) => [
                 t.date,
-                t.type,
+                transactionLabel(t.type),
                 t.reference,
                 t.warehouse,
                 t.batchNumber,
@@ -252,7 +323,7 @@ export function ItemDetails({ item }: { item: Item }) {
               以下為每筆進貨的歷史快照，修改品項參考成本不會改寫本紀錄。
             </p>
             <BaseDataTable
-              tableKey={`items-costs-${item.id}`}
+              tableKey={`items-costs-${item.id}-${filter.warehouse}`}
               headers={[
                 "進貨單號",
                 "入庫日期",
@@ -262,7 +333,7 @@ export function ItemDetails({ item }: { item: Item }) {
                 "單位成本",
                 "小計",
               ]}
-              rows={costs.map((c) => [
+              rows={visibleCosts.map((c) => [
                 c.order,
                 c.date,
                 c.supplier,
@@ -275,6 +346,47 @@ export function ItemDetails({ item }: { item: Item }) {
           </>
         )}
       </div>
+      <details className="items-detail-facts">
+        <summary>
+          品項資料<span>英文名稱、供應商、價格與其他資料</span>
+        </summary>
+        <dl className="items-facts">
+          {[
+            ["料號", item.code],
+            ["英文名稱", item.englishName || "—"],
+            ["健保碼", item.nhiCode || "—"],
+            ["國際條碼", item.barcode || "—"],
+            ["規格", item.specification || "—"],
+            ["分類", item.category],
+            ["基本單位", item.unit],
+            ["安全庫存", String(item.safetyStock)],
+            ["預設供應商", item.supplier || "—"],
+            [
+              "參考成本",
+              item.referenceCost === ""
+                ? "—"
+                : Number(item.referenceCost).toFixed(4),
+            ],
+            [
+              "建議售價",
+              item.suggestedPrice === ""
+                ? "—"
+                : Number(item.suggestedPrice).toFixed(2),
+            ],
+            ["使用狀態", usageStatus(item)],
+            [
+              "使用期間",
+              `${item.effectiveFrom} ～ ${item.effectiveUntil || "無期限"}`,
+            ],
+            ["備註", item.remark || "—"],
+          ].map(([title, value]) => (
+            <div key={title}>
+              <dt>{title}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
     </div>
   );
 }

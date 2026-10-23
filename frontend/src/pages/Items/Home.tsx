@@ -800,7 +800,10 @@ export function ItemsPage() {
           )}
           {modal?.kind === "view" && (
             <>
-              <ItemDetails item={modal.item} />
+              <ItemDetails
+                item={modal.item}
+                initialWarehouse={filter.warehouse}
+              />
               <footer className="items-modal-footer">
                 <BaseButton variant="outline" onClick={() => close()}>
                   關閉

@@ -325,22 +325,94 @@ test("未儲存取消提醒、放棄修改與焦點回復", async ({ page }) => 
 test("過期批次排除可用量、成本歷史與異動篩選", async ({ page }) => {
   await page.getByRole("button", { name: "查看人工淚液", exact: true }).click();
   await expect(dialog(page).locator(".items-stock-total")).toContainText("35");
+  await expect(dialog(page).locator(".items-stock-total")).toContainText(
+    "全部倉庫合計",
+  );
+  await expect(dialog(page).locator(".items-detail-facts")).not.toHaveAttribute(
+    "open",
+    "",
+  );
+  await expect(dialog(page).locator(".items-availability-note")).toContainText(
+    "可用數量也為 0",
+  );
   const expired = dialog(page)
     .locator("tbody tr")
     .filter({ hasText: "已過期" });
   await expect(expired).toHaveCount(1);
-  await expect(expired.locator("td").nth(3)).toHaveText("10");
-  await expect(expired.locator("td").nth(4)).toHaveText("0");
+  await expect(expired.locator("td").nth(3)).toContainText("10 瓶");
+  await expect(expired.locator("td").nth(2)).toContainText("0 瓶");
+  await expect(expired).toContainText("已過期（不可用）");
+  await dialog(page).screenshot({
+    path: test.info().outputPath("stock-details.png"),
+  });
+  await dialog(page).locator(".items-detail-facts summary").click();
+  await expect(dialog(page).locator(".items-facts")).toContainText(
+    "Artificial Tears",
+  );
+  await dialog(page).locator(".items-detail-facts summary").click();
   await dialog(page)
     .getByRole("tab", { name: "庫存異動", exact: true })
     .click();
   await dialog(page)
     .getByLabel("異動類型", { exact: true })
-    .selectOption("HIS_CONSUMPTION_OUT");
+    .selectOption({ label: "HIS 耗用出庫" });
   await expect(dialog(page).locator("tbody tr")).toHaveCount(3);
   await expect(dialog(page).locator("table")).toContainText("-2");
+  await expect(dialog(page).locator("table")).toContainText("HIS 耗用出庫");
+  await expect(dialog(page).locator("table")).not.toContainText(
+    "HIS_CONSUMPTION_OUT",
+  );
   await dialog(page).getByLabel("批號", { exact: true }).fill("A011");
   await expect(dialog(page).locator("tbody tr")).toHaveCount(1);
+});
+
+test("庫存明細沿用倉別，跨分頁篩選及效期空資料", async ({ page }) => {
+  await page.locator("#items-filter-warehouse").selectOption("診間倉庫");
+  await page.getByRole("button", { name: "查看人工淚液", exact: true }).click();
+  const scope = dialog(page).getByLabel("查看倉別", { exact: true });
+  await expect(scope).toHaveValue("診間倉庫");
+  await expect(dialog(page).locator(".items-stock-total")).toContainText("15");
+  await expect(dialog(page).locator(".items-stock-total")).toContainText(
+    "診間倉庫",
+  );
+  await expect(dialog(page).locator("tbody tr")).toHaveCount(1);
+  await dialog(page)
+    .getByLabel("效期狀態", { exact: true })
+    .selectOption("已過期");
+  await expect(dialog(page).locator("td.empty")).toBeVisible();
+  await expect(dialog(page).locator(".items-stock-total")).toContainText("15");
+  await dialog(page)
+    .getByRole("tab", { name: "進貨成本歷史", exact: true })
+    .click();
+  await expect(dialog(page).locator("tbody tr")).toHaveCount(1);
+  await expect(dialog(page).locator("table")).toContainText("A012");
+  await scope.selectOption("主倉庫");
+  await expect(dialog(page).locator("tbody tr")).toHaveCount(2);
+  await expect(dialog(page).locator(".items-stock-total")).toContainText("20");
+  await dialog(page)
+    .getByRole("tab", { name: "庫存異動", exact: true })
+    .click();
+  await expect(dialog(page).locator("tbody tr")).toHaveCount(3);
+  await dialog(page)
+    .getByRole("tab", { name: "批號庫存", exact: true })
+    .click();
+  await dialog(page)
+    .getByRole("button", { name: "清除篩選", exact: true })
+    .click();
+  await expect(scope).toHaveValue("");
+  await expect(dialog(page).locator("tbody tr")).toHaveCount(3);
+  await expect(dialog(page).locator(".items-stock-total")).toContainText("35");
+  const batch = dialog(page).locator("tbody tr").filter({ hasText: "A011" });
+  await batch.locator("summary").click();
+  await expect(batch).toContainText("110.0000");
+  await dialog(page)
+    .locator(".items-modal-scroll")
+    .evaluate((element) => {
+      element.scrollTop = 0;
+    });
+  await dialog(page).screenshot({
+    path: test.info().outputPath("stock-filtered.png"),
+  });
 });
 
 test("透過編輯停用後保留庫存及歷史，可重新啟用", async ({ page }) => {
