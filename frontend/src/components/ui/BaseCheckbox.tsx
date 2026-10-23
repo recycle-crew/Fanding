@@ -7,14 +7,14 @@ import { CheckIcon } from "lucide-react";
 import { Checkbox as CheckboxPrimitive } from "radix-ui";
 
 const checkboxVariants = cva(
-  "peer size-4 shrink-0 rounded-[4px] border border-input shadow-xs transition-shadow outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:data-[state=checked]:bg-primary",
+  "peer inline-flex size-4 shrink-0 items-center justify-center rounded-[4px] border border-input p-0 leading-none shadow-xs transition-shadow outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:bg-input/30 dark:aria-invalid:ring-destructive/40 dark:data-[state=checked]:bg-primary",
 );
 
 const checkboxIndicatorVariants = cva(
-  "grid place-content-center text-current transition-none",
+  "flex size-full items-center justify-center text-current transition-none",
 );
 
-const checkboxIconVariants = cva("size-3.5");
+const checkboxIconVariants = cva("block size-3.5 shrink-0");
 
 function BaseCheckbox({
   className,

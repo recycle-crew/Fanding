@@ -758,7 +758,9 @@ export function ItemsPage() {
           <BaseDialogDescription variant="workspace">
             {modal?.kind === "view"
               ? "查閱品項資料、各倉批次庫存與歷史紀錄。"
-              : "本次操作僅更新展示假資料。"}
+              : modal?.kind === "new"
+                ? "建立品項基本資料，初始庫存為 0；庫存由入庫作業建立。"
+                : "本次操作僅更新展示假資料。"}
           </BaseDialogDescription>
           {discard && (
             <div className="items-discard" role="alert">

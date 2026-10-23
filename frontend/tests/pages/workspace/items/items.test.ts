@@ -197,12 +197,17 @@ test("新增、重複料號與條碼、日期驗證及零庫存", async ({ page 
     .click();
   await expect(dialog(page).getByRole("alert")).toContainText("品項料號已存在");
   await page.locator("#item-code").fill("DEMO-NEW");
+  await dialog(page).locator("summary").filter({ hasText: "其他資料" }).click();
   await page.locator("#item-barcode").fill("4711234560000");
   await dialog(page)
     .getByRole("button", { name: "儲存品項", exact: true })
     .click();
   await expect(dialog(page).getByRole("alert")).toContainText("國際條碼已存在");
   await page.locator("#item-barcode").fill("001234567890");
+  await dialog(page)
+    .locator("summary")
+    .filter({ hasText: "價格與使用設定" })
+    .click();
   await page.locator("#item-effectiveUntil").fill("2026-10-19");
   await dialog(page)
     .getByRole("button", { name: "儲存品項", exact: true })
@@ -225,13 +230,59 @@ test("新增、重複料號與條碼、日期驗證及零庫存", async ({ page 
   await expect(dialog(page)).toContainText("目前沒有符合的資料");
 });
 
+test("新增選填區塊收合保留資料，驗證錯誤會展開欄位", async ({ page }) => {
+  await createForm(page, "OPTIONAL-NEW", "選填資料測試");
+  await expect(dialog(page)).toContainText("初始庫存為 0");
+  await expect(page.locator("#item-barcode")).toBeHidden();
+  await expect(page.locator("#item-effectiveFrom")).toBeVisible();
+  const other = dialog(page).locator("summary").filter({ hasText: "其他資料" });
+  await other.click();
+  await page.locator("#item-barcode").fill("OPTIONAL-BARCODE");
+  await other.click();
+  const pricing = dialog(page)
+    .locator("summary")
+    .filter({ hasText: "價格與使用設定" });
+  await pricing.click();
+  await page.locator("#item-referenceCost").fill("-1");
+  await pricing.click();
+  await dialog(page)
+    .getByRole("button", { name: "儲存品項", exact: true })
+    .click();
+  await expect(page.locator("#item-referenceCost")).toBeVisible();
+  await expect(page.locator("#item-referenceCost")).toBeFocused();
+  await expect(dialog(page).getByRole("alert")).toBeInViewport({ ratio: 1 });
+  await dialog(page)
+    .locator(".items-modal-scroll")
+    .evaluate((element) => {
+      element.scrollTop = 0;
+    });
+  await expect(dialog(page).getByRole("alert")).toBeInViewport({ ratio: 1 });
+  await dialog(page).screenshot({
+    path: test.info().outputPath("items-error.png"),
+  });
+  await page.locator("#item-referenceCost").fill("10");
+  await other.click();
+  await expect(page.locator("#item-barcode")).toHaveValue("OPTIONAL-BARCODE");
+  await dialog(page)
+    .getByRole("button", { name: "儲存品項", exact: true })
+    .click();
+  await expect(dialog(page)).toBeHidden();
+  await page
+    .getByRole("textbox", { name: "搜尋品項" })
+    .fill("OPTIONAL-BARCODE");
+  await expect(table(page)).toContainText("選填資料測試");
+});
+
 test("修改可編輯欄位、鎖定交易設定、成本與庫存不變", async ({ page }) => {
   await page.getByRole("button", { name: "編輯人工淚液", exact: true }).click();
   await expect(page.locator("#item-code")).toHaveAttribute("readonly", "");
   await expect(page.locator("#item-unit")).toBeDisabled();
   await expect(
     dialog(page).getByRole("checkbox", { name: "管理效期" }),
-  ).toBeDisabled();
+  ).toHaveCount(0);
+  await expect(
+    dialog(page).getByRole("checkbox", { name: "管理批號" }),
+  ).toHaveCount(0);
   await page.locator("#item-name").fill("人工淚液新版");
   await page.locator("#item-safetyStock").fill("35");
   await page.locator("#item-referenceCost").fill("999");
@@ -315,6 +366,23 @@ test("透過編輯停用後保留庫存及歷史，可重新啟用", async ({ pa
   await dialog(page)
     .getByRole("checkbox", { name: "啟用品項", exact: true })
     .check();
+  const checkbox = dialog(page).getByRole("checkbox", {
+    name: "啟用品項",
+    exact: true,
+  });
+  const offset = await checkbox.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    const icon = element.querySelector("svg")!.getBoundingClientRect();
+    return {
+      x: Math.abs(box.x + box.width / 2 - icon.x - icon.width / 2),
+      y: Math.abs(box.y + box.height / 2 - icon.y - icon.height / 2),
+    };
+  });
+  expect(offset.x).toBeLessThanOrEqual(1);
+  expect(offset.y).toBeLessThanOrEqual(1);
+  await dialog(page).screenshot({
+    path: test.info().outputPath("item-enabled.png"),
+  });
   await dialog(page).getByRole("button", { name: "儲存變更" }).click();
   await page.locator("#items-filter-active").selectOption("active");
   await expect(table(page)).toContainText("人工淚液");

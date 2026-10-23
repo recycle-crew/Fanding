@@ -72,7 +72,7 @@ export type FormError = { message: string; field?: string };
 
 const formVariants = cva("items-editor-form purchase-form");
 const formScrollVariants = cva("items-modal-scroll");
-const formErrorVariants = cva("items-error");
+const formErrorVariants = cva("items-error items-form-alert");
 const formFooterVariants = cva("items-modal-footer");
 
 export interface BaseFormProps<T extends FieldValues = FieldValues> {
@@ -107,7 +107,7 @@ export function BaseForm<T extends FieldValues = FieldValues>({
 
   useEffect(() => {
     if (firstErrorMessage) {
-      summary.current?.focus();
+      summary.current?.focus({ preventScroll: true });
     }
   }, [firstErrorMessage]);
 
@@ -148,7 +148,7 @@ export function BaseForm<T extends FieldValues = FieldValues>({
                 HTMLInputElement | HTMLSelectElement
               >(":invalid");
               if (invalid) {
-                activeForm.setError(invalid.name as FieldPath<T>, {
+                activeForm.setError((invalid.name || "root") as FieldPath<T>, {
                   type: "native",
                   message: `${invalid.getAttribute("aria-label") || invalid.labels?.[0]?.querySelector("span")?.textContent || "欄位"}：${invalid.validationMessage}`,
                 });
@@ -162,20 +162,18 @@ export function BaseForm<T extends FieldValues = FieldValues>({
             onDirty();
           }}
         >
-          <div className={cn(formScrollVariants())}>
-            {children}
-            {firstErrorMessage && (
-              <p
-                ref={summary}
-                id={id}
-                role="alert"
-                tabIndex={-1}
-                className={cn(formErrorVariants())}
-              >
-                {firstErrorMessage}
-              </p>
-            )}
-          </div>
+          <div className={cn(formScrollVariants())}>{children}</div>
+          {firstErrorMessage && (
+            <p
+              ref={summary}
+              id={id}
+              role="alert"
+              tabIndex={-1}
+              className={cn(formErrorVariants())}
+            >
+              {firstErrorMessage}
+            </p>
+          )}
           <footer className={cn(formFooterVariants())}>
             <span>＊ 必填欄位</span>
             <BaseButton type="button" variant="outline" onClick={onCancel}>

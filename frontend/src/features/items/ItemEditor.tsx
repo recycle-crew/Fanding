@@ -37,8 +37,15 @@ export function ItemEditor({
   const [errorField, setErrorField] = useState("");
   const errorRef = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
-    if (error) errorRef.current?.focus();
-  }, [error]);
+    if (!error) return;
+    const input = document.getElementById(`item-${errorField}`);
+    const section = input?.closest("details");
+    if (section) section.open = true;
+    if (input) {
+      input.focus();
+      input.scrollIntoView({ block: "center" });
+    } else errorRef.current?.focus({ preventScroll: true });
+  }, [error, errorField]);
   const [saving, setSaving] = useState(false);
   const locked =
     !!initial.id &&
@@ -47,7 +54,6 @@ export function ItemEditor({
       state.costs.some((c) => c.itemId === initial.id));
   function change<K extends keyof Item>(key: K, value: Item[K]) {
     const next = { ...draft, [key]: value };
-    if (key === "trackExpiry" && value) next.trackBatch = true;
     setDraft(next);
     onDirty(JSON.stringify(next) !== JSON.stringify(initial));
     setError("");
@@ -65,7 +71,12 @@ export function ItemEditor({
     } = {},
   ) {
     return (
-      <BaseLabel variant="field" key={key} htmlFor={`item-${key}`}>
+      <BaseLabel
+        variant="field"
+        key={key}
+        htmlFor={`item-${key}`}
+        className={key === "name" ? "items-field-wide" : undefined}
+      >
         <span id={`item-${key}-label`}>
           {title}
           {options.required && <em> *</em>}
@@ -201,7 +212,7 @@ export function ItemEditor({
           <h3>基本資料</h3>
           <div className="items-form-grid">
             <BaseLabel variant="field" htmlFor="item-group">
-              <span>庫存類型 *</span>
+              <span>品項類型 *</span>
               <BaseNativeSelect
                 id="item-group"
                 value={draft.group}
@@ -225,53 +236,51 @@ export function ItemEditor({
                 : "系統建議料號，可自行修改",
             })}
             {field("name", "品名", { required: true })}
-            {field("englishName", "英文名稱")}
             {select("category", "品項分類", categories, true)}
-            {field("specification", "規格")}
-            {field("barcode", "國際條碼")}
-            {field("nhiCode", "健保碼")}
-          </div>
-        </section>
-        <section>
-          <h3>庫存設定</h3>
-          <div className="items-form-grid">
             {select("unit", "基本單位", units, true, locked)}
             {field("safetyStock", "安全庫存", {
               required: true,
               type: "number",
               step: "0.001",
-              hint: "依所有倉別可用庫存判斷",
             })}
-            {select("supplier", "預設供應商", suppliers)}
-            <div className="items-switches">
-              {(
-                [
-                  ["trackBatch", "管理批號"],
-                  ["trackExpiry", "管理效期"],
-                ] as const
-              ).map(([key, title]) => (
-                <BaseLabel key={key} className="items-check">
-                  <BaseCheckbox
-                    name={key}
-                    checked={draft[key]}
-                    disabled={
-                      locked || (key === "trackBatch" && draft.trackExpiry)
-                    }
-                    onCheckedChange={(checked) => change(key, checked === true)}
-                  />
-                  {title}
-                </BaseLabel>
-              ))}
-            </div>
+            {field("effectiveFrom", "開始使用日期", {
+              type: "date",
+              required: true,
+            })}
           </div>
           {locked && (
             <p className="items-note">
-              此品項已有庫存或交易，基本單位及追蹤設定已鎖定。
+              此品項已有庫存或交易，基本單位不可修改。
             </p>
           )}
         </section>
-        <section>
-          <h3>價格設定</h3>
+        <details className="items-editor-section" open={!!initial.id}>
+          <summary>
+            其他資料<span>選填</span>
+          </summary>
+          <div className="items-form-grid">
+            {field("englishName", "英文名稱")}
+            {field("specification", "規格")}
+            {field("barcode", "國際條碼")}
+            {field("nhiCode", "健保碼")}
+            {select("supplier", "預設供應商", suppliers)}
+            <BaseLabel variant="field" htmlFor="item-remark">
+              <span>備註</span>
+              <BaseTextarea
+                id="item-remark"
+                value={draft.remark}
+                onChange={(e) => change("remark", e.target.value)}
+                rows={2}
+              />
+            </BaseLabel>
+          </div>
+        </details>
+
+        <details className="items-editor-section" open={!!initial.id}>
+          <summary>
+            價格與使用設定
+            <span>{draft.active ? "啟用" : "停用"}・價格選填</span>
+          </summary>
           <div className="items-form-grid">
             {field("referenceCost", "參考成本", {
               type: "number",
@@ -281,15 +290,6 @@ export function ItemEditor({
             {field("suggestedPrice", "建議售價", {
               type: "number",
               step: "0.01",
-            })}
-          </div>
-        </section>
-        <section>
-          <h3>使用狀態與備註</h3>
-          <div className="items-form-grid">
-            {field("effectiveFrom", "開始使用日期", {
-              type: "date",
-              required: true,
             })}
             {field("effectiveUntil", "停止使用日期", { type: "date" })}
             <BaseLabel variant="check">
@@ -301,17 +301,8 @@ export function ItemEditor({
               />
               啟用品項
             </BaseLabel>
-            <BaseLabel variant="field" htmlFor="item-remark">
-              <span>備註</span>
-              <BaseTextarea
-                id="item-remark"
-                value={draft.remark}
-                onChange={(e) => change("remark", e.target.value)}
-                rows={2}
-              />
-            </BaseLabel>
           </div>
-        </section>
+        </details>
         {initial.active &&
           !draft.active &&
           state.batches.some(
@@ -321,18 +312,18 @@ export function ItemEditor({
               此品項仍有庫存，停用後庫存與歷史紀錄都會保留。
             </p>
           )}
-        {error && (
-          <p
-            ref={errorRef}
-            id="items-editor-error"
-            tabIndex={-1}
-            role="alert"
-            className="items-error"
-          >
-            {error}
-          </p>
-        )}
       </div>
+      {error && (
+        <p
+          ref={errorRef}
+          id="items-editor-error"
+          tabIndex={-1}
+          role="alert"
+          className="items-error items-form-alert"
+        >
+          {error}
+        </p>
+      )}
       <footer className="items-modal-footer">
         <span>＊ 必填欄位</span>
         <BaseButton type="button" variant="outline" onClick={onCancel}>

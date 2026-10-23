@@ -127,8 +127,8 @@ test(
         .locator(".items-main-table tbody tr")
         .filter({ hasText: "人工淚液" })
         .locator("td")
-        .nth(6),
-    ).toHaveText("35");
+        .nth(3),
+    ).toContainText("35 瓶");
   },
 );
 
@@ -182,6 +182,16 @@ test(
     await page.locator("#purchase-supplier").selectOption("明康醫藥有限公司");
     await submit.click();
     await expect(modal(page).getByRole("alert")).toContainText("入庫倉別");
+    await expect(modal(page).getByRole("alert")).toBeInViewport({ ratio: 1 });
+    await modal(page)
+      .locator(".items-modal-scroll")
+      .evaluate((element) => {
+        element.scrollTop = element.scrollHeight;
+      });
+    await expect(modal(page).getByRole("alert")).toBeInViewport({ ratio: 1 });
+    await modal(page).screenshot({
+      path: test.info().outputPath("purchase-error.png"),
+    });
     await page.locator("#purchase-warehouse").selectOption("主倉庫");
     await page.locator("#purchase-date").fill("");
     await submit.click();
