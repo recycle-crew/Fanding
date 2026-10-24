@@ -1,5 +1,5 @@
 import type { NewPurchaseInput } from "@/types/purchases/form";
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Plus, Search, Trash2 } from "lucide-react";
 import { useAppSelector } from "@/store/hooks";
 import { BaseButton } from "@/components/ui/BaseButton";
@@ -33,18 +33,44 @@ export function NewPurchaseForm({
 }) {
   const items = useAppSelector((s) => s.items.items);
   const { suppliers, warehouses } = useBaseDataOptions();
-  const orders = useAppSelector((s) => s.purchases.orders);
   const [header, setHeader] = useState({
     date: taipeiToday(),
     supplier: "",
     warehouse: "",
     remark: "",
-    relatedReturn: "",
   });
   const [search, setSearch] = useState("");
+  const [composing, setComposing] = useState(false);
   const [lines, setLines] = useState<PurchaseLine[]>([]);
   const [message, setMessage] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
+  const lineTableRef = useRef<HTMLDivElement>(null);
+  const pendingFocus = useRef<string | null>(null);
+  const [latestLine, setLatestLine] = useState<string | null>(null);
+  const validLine = (line: PurchaseLine) =>
+    Number.isFinite(line.quantity) &&
+    line.quantity > 0 &&
+    Number.isFinite(line.unitCost) &&
+    line.unitCost >= 0;
+  const incompleteCount = lines.filter((line) => !validLine(line)).length;
+  const total = lines.reduce(
+    (sum, line) =>
+      sum + (validLine(line) ? rounded(line.quantity * line.unitCost) : 0),
+    0,
+  );
+  function focusLine(id: string) {
+    const input = lineTableRef.current?.querySelector<HTMLInputElement>(
+      `input[data-line-id="${id}"]`,
+    );
+    input?.focus();
+    input?.scrollIntoView({ block: "nearest" });
+  }
+  useEffect(() => {
+    if (pendingFocus.current) {
+      focusLine(pendingFocus.current);
+      pendingFocus.current = null;
+    }
+  }, [lines]);
   const matches = search.trim()
     ? items.filter(
         (i) =>
@@ -54,19 +80,60 @@ export function NewPurchaseForm({
           ),
       )
     : [];
-  const returnRecords = orders.flatMap((o) =>
-    o.records
-      .filter((r) => r.kind === "return" && r.resolution === "換貨")
-      .map((r) => ({ value: r.number, label: `${r.number} · ${o.supplier}` })),
+  const add = useCallback(
+    (itemId: string) => {
+      const item = items.find((i) => i.id === itemId);
+      if (!item) return;
+      const line = snapshot(item, crypto.randomUUID());
+      setLines((current) => [...current, line]);
+      setLatestLine(line.id);
+      setSearch("");
+      setMessage(`已加入${item.name}，可繼續掃描下一項。`);
+      onDirty();
+      searchRef.current?.focus();
+    },
+    [items, onDirty],
   );
-  function add(itemId: string) {
-    const item = items.find((i) => i.id === itemId);
-    if (!item) return;
-    setLines((current) => [...current, snapshot(item, crypto.randomUUID())]);
-    setSearch("");
-    setMessage(`已加入${item.name}，請填寫批號、效期與數量。`);
+  useEffect(() => {
+    const value = search.trim().toLowerCase();
+    if (!value || composing) return;
+    const exact = items.filter(
+      (item) =>
+        usageStatus(item) === "使用中" &&
+        item.barcode &&
+        item.barcode.toLowerCase() === value,
+    );
+    const hasLongerBarcode = items.some(
+      (item) =>
+        item.barcode.toLowerCase().startsWith(value) &&
+        item.barcode.length > value.length,
+    );
+    if (exact.length !== 1 || hasLongerBarcode) return;
+    const timer = window.setTimeout(() => add(exact[0].id), 120);
+    return () => window.clearTimeout(timer);
+  }, [search, composing, items, add]);
+  function addBatch(line: PurchaseLine) {
+    const next = {
+      ...line,
+      id: crypto.randomUUID(),
+      batch: "",
+      expiry: "",
+      quantity: 1,
+      traceableQuantity: 1,
+      remark: "",
+    };
+    pendingFocus.current = next.id;
+    setLines((current) => {
+      const index = current.findIndex((row) => row.id === line.id);
+      return [
+        ...current.slice(0, index + 1),
+        next,
+        ...current.slice(index + 1),
+      ];
+    });
+    setLatestLine(next.id);
+    setMessage(`已加入${line.name}的另一批次。`);
     onDirty();
-    searchRef.current?.focus();
   }
   function update(id: string, key: keyof PurchaseLine, value: string | number) {
     setLines((current) =>
@@ -77,7 +144,16 @@ export function NewPurchaseForm({
     <PurchaseForm
       onCancel={onCancel}
       onDirty={onDirty}
-      submitText="確認入庫"
+      submitText="下一步：確認內容"
+      footerSummary={
+        <div className="purchase-draft-total" role="status" aria-live="polite">
+          <span>
+            共 {lines.length} 筆
+            {incompleteCount > 0 && `・${incompleteCount} 筆數量或成本待補齊`}
+          </span>
+          <strong>暫計金額 {currency(total)}</strong>
+        </div>
+      }
       submit={() => {
         if (!lines.length)
           return {
@@ -97,14 +173,12 @@ export function NewPurchaseForm({
           return { message: "數量必須大於 0，單位成本不可為負數。" };
         onSubmit({
           ...header,
+          relatedReturn: "",
           lines: lines.map((l) => ({ ...l, traceableQuantity: l.quantity })),
         });
       }}
     >
-      <p className="purchase-callout">
-        必填：供應商、入庫倉別、收貨日期，以及至少一筆進貨商品。
-        商品加入後，請填寫數量與單位成本；有批號或效期管理的商品也必須填寫批號、效期。
-      </p>
+      <p className="items-note">選擇供應商與倉別，再加入進貨商品。</p>
       <section>
         <h3>基本資料</h3>
         <div className="items-form-grid purchase-header-grid">
@@ -144,28 +218,9 @@ export function NewPurchaseForm({
         </div>
         <details className="purchase-optional-fields">
           <summary>
-            其他資料<span>關聯換貨退貨單、備註（選填）</span>
+            單據備註<span>選填</span>
           </summary>
           <div className="items-form-grid">
-            <Field
-              name="purchase-related-return"
-              label="關聯換貨退貨單"
-              hint="換貨採原商品退貨與替換商品入庫兩筆紀錄。"
-            >
-              <BaseNativeSelect
-                value={header.relatedReturn}
-                onChange={(e) =>
-                  setHeader({ ...header, relatedReturn: e.target.value })
-                }
-              >
-                <Option value="">一般進貨，不關聯退貨單</Option>
-                {returnRecords.map((r) => (
-                  <Option key={r.value} value={r.value}>
-                    {r.label}
-                  </Option>
-                ))}
-              </BaseNativeSelect>
-            </Field>
             <Field name="purchase-remark" label="備註">
               <BaseInput
                 value={header.remark}
@@ -183,24 +238,47 @@ export function NewPurchaseForm({
         <div className="purchase-product-search">
           <Field
             name="purchase-item-search"
-            label="搜尋商品／條碼掃描"
-            hint="可輸入條碼、料號、品名或健保碼；精確符合條碼或料號時可按 Enter 加入。"
+            label="條碼掃描／搜尋商品"
+            hint="掃描完整條碼會自動加入，可連續掃描；料號、品名或健保碼也可搜尋。"
           >
             <BaseInput
               ref={searchRef}
               value={search}
-              placeholder="掃描條碼，或輸入商品關鍵字"
+              placeholder="直接掃描條碼，自動加入商品"
               onChange={(e) => setSearch(e.target.value)}
+              onCompositionStart={() => setComposing(true)}
+              onCompositionEnd={() => setComposing(false)}
               onKeyDown={(e) => {
-                if (e.key !== "Enter") return;
+                if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
                 e.preventDefault();
-                const exact = matches.find((i) =>
+                e.stopPropagation();
+                const value = e.currentTarget.value.trim().toLowerCase();
+                if (!value || e.repeat || composing) return;
+                const currentMatches = items.filter(
+                  (item) =>
+                    usageStatus(item) === "使用中" &&
+                    [item.code, item.name, item.barcode, item.nhiCode].some(
+                      (text) => text.toLowerCase().includes(value),
+                    ),
+                );
+                const exact = currentMatches.filter((i) =>
                   [i.code, i.barcode, i.nhiCode].some(
-                    (v) => v && v.toLowerCase() === search.trim().toLowerCase(),
+                    (v) => v && v.toLowerCase() === value,
                   ),
                 );
-                if (exact || matches.length === 1)
-                  add((exact || matches[0]).id);
+                if (
+                  exact.length === 1 ||
+                  (exact.length === 0 && currentMatches.length === 1)
+                )
+                  add((exact[0] || currentMatches[0]).id);
+                else {
+                  setMessage(
+                    currentMatches.length
+                      ? "找到多筆商品，請選擇正確品項。"
+                      : "找不到對應商品，請確認條碼或改用搜尋。",
+                  );
+                  searchRef.current?.select();
+                }
               }}
             />
           </Field>
@@ -232,11 +310,22 @@ export function NewPurchaseForm({
             )}
           </div>
         )}
-        <p role="status" className="items-note">
-          {message || "加入商品後可分列不同批號與效期，不直接新增品項主檔。"}
-        </p>
+        <div role="status" className="items-note purchase-added-message">
+          <span>{message || "批號、效期選填；不同批次請分筆填寫。"}</span>
+          {latestLine && lines.some((line) => line.id === latestLine) && (
+            <BaseButton
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => focusLine(latestLine)}
+            >
+              填寫這筆
+            </BaseButton>
+          )}
+        </div>
         <div
-          className="purchase-table-scroll"
+          className="purchase-table-scroll purchase-new-lines"
+          ref={lineTableRef}
           role="region"
           tabIndex={0}
           aria-label="新增進貨商品明細，可左右捲動"
@@ -245,16 +334,13 @@ export function NewPurchaseForm({
             <BaseTableHeader>
               <BaseTableRow>
                 {[
-                  "料號／品名",
-                  "規格",
+                  "品項／規格",
                   "批號",
                   "效期",
-                  "數量",
-                  "單位",
+                  "數量／單位",
                   "單位成本",
                   "小計",
-                  "備註",
-                  "操作",
+                  "其他資訊",
                 ].map((h) => (
                   <BaseTableHead key={h}>{h}</BaseTableHead>
                 ))}
@@ -262,54 +348,81 @@ export function NewPurchaseForm({
             </BaseTableHeader>
             <BaseTableBody>
               {lines.map((l, i) => (
-                <BaseTableRow key={l.id}>
+                <BaseTableRow
+                  key={l.id}
+                  className={
+                    l.id === latestLine ? "purchase-line-new" : undefined
+                  }
+                >
                   <BaseTableCell>
                     <strong>{l.name}</strong>
-                    <small>{l.code}</small>
+                    <small>
+                      {l.code} · {l.specification || "—"}
+                    </small>
                   </BaseTableCell>
-                  <BaseTableCell>{l.specification}</BaseTableCell>
                   <BaseTableCell>
-                    <small>{l.trackBatch ? "必填" : "不需填寫"}</small>
+                    <small>
+                      <span className="purchase-line-mobile-label">
+                        批號 ·{" "}
+                      </span>
+                      選填
+                    </small>
                     <BaseInput
                       aria-label={`第${i + 1}筆批號`}
-                      required={l.trackBatch}
+                      data-line-id={l.id}
                       value={l.batch}
-                      disabled={!l.trackBatch}
                       onChange={(e) => update(l.id, "batch", e.target.value)}
                     />
                   </BaseTableCell>
                   <BaseTableCell>
-                    <small>{l.trackExpiry ? "必填" : "不需填寫"}</small>
+                    <small>
+                      <span className="purchase-line-mobile-label">
+                        效期 ·{" "}
+                      </span>
+                      選填
+                    </small>
                     <BaseInput
                       aria-label={`第${i + 1}筆效期`}
                       type="date"
-                      required={l.trackExpiry}
-                      disabled={!l.trackExpiry}
                       value={l.expiry}
                       onChange={(e) => update(l.id, "expiry", e.target.value)}
                     />
                   </BaseTableCell>
                   <BaseTableCell>
-                    <small>必填，大於 0</small>
-                    <BaseInput
-                      aria-label={`第${i + 1}筆數量`}
-                      type="number"
-                      required
-                      min="0.001"
-                      step="0.001"
-                      value={Number.isNaN(l.quantity) ? "" : l.quantity}
-                      onChange={(e) =>
-                        update(
-                          l.id,
-                          "quantity",
-                          e.target.value === "" ? NaN : Number(e.target.value),
-                        )
-                      }
-                    />
+                    <small>
+                      <span className="purchase-line-mobile-label">
+                        數量 ·{" "}
+                      </span>
+                      必填，大於 0
+                    </small>
+                    <div className="purchase-quantity-input">
+                      <BaseInput
+                        aria-label={`第${i + 1}筆數量`}
+                        type="number"
+                        required
+                        min="0.001"
+                        step="0.001"
+                        value={Number.isNaN(l.quantity) ? "" : l.quantity}
+                        onChange={(e) =>
+                          update(
+                            l.id,
+                            "quantity",
+                            e.target.value === ""
+                              ? NaN
+                              : Number(e.target.value),
+                          )
+                        }
+                      />
+                      <span>{l.unit}</span>
+                    </div>
                   </BaseTableCell>
-                  <BaseTableCell>{l.unit}</BaseTableCell>
                   <BaseTableCell>
-                    <small>必填，可為 0</small>
+                    <small>
+                      <span className="purchase-line-mobile-label">
+                        單位成本 ·{" "}
+                      </span>
+                      必填，可為 0
+                    </small>
                     <BaseInput
                       aria-label={`第${i + 1}筆單位成本`}
                       type="number"
@@ -327,6 +440,7 @@ export function NewPurchaseForm({
                     />
                   </BaseTableCell>
                   <BaseTableCell>
+                    <small className="purchase-line-mobile-label">小計</small>
                     {currency(
                       Number.isFinite(l.quantity * l.unitCost)
                         ? rounded(l.quantity * l.unitCost)
@@ -334,61 +448,54 @@ export function NewPurchaseForm({
                     )}
                   </BaseTableCell>
                   <BaseTableCell>
-                    <BaseInput
-                      aria-label={`第${i + 1}筆備註`}
-                      value={l.remark}
-                      onChange={(e) => update(l.id, "remark", e.target.value)}
-                    />
-                  </BaseTableCell>
-                  <BaseTableCell>
+                    <details className="purchase-line-notes">
+                      <summary>備註</summary>
+                      <BaseInput
+                        aria-label={`第${i + 1}筆備註`}
+                        value={l.remark}
+                        onChange={(e) => update(l.id, "remark", e.target.value)}
+                      />
+                    </details>
                     <BaseButton
                       type="button"
                       variant="outline"
-                      size="icon"
+                      size="sm"
+                      aria-label={`新增第${i + 1}筆${l.name}的同商品批次`}
+                      onClick={() => addBatch(l)}
+                    >
+                      新增同商品批次
+                    </BaseButton>
+                    <BaseButton
+                      type="button"
+                      variant="outline"
+                      size="sm"
                       aria-label={`移除第${i + 1}筆${l.name}`}
                       onClick={() => {
                         setLines((current) =>
                           current.filter((row) => row.id !== l.id),
                         );
+                        if (latestLine === l.id) setLatestLine(null);
+                        setMessage(`已移除${l.name}。`);
                         onDirty();
                       }}
                     >
                       <Trash2 size={15} />
+                      移除
                     </BaseButton>
                   </BaseTableCell>
                 </BaseTableRow>
               ))}
               {!lines.length && (
                 <BaseTableRow>
-                  <BaseTableCell variant="empty-lines" colSpan={10}>
-                    必填：至少加入一筆進貨商品。請從上方搜尋並點選商品，或輸入完整料號後按
-                    Enter 加入。
+                  <BaseTableCell variant="empty-lines" colSpan={7}>
+                    尚未加入商品，請先搜尋並加入。
                   </BaseTableCell>
                 </BaseTableRow>
               )}
             </BaseTableBody>
           </BaseTable>
         </div>
-        <div className="purchase-total">
-          <span>共 {lines.length} 筆明細 · 不同單位數量不合計</span>
-          <strong>
-            進貨金額{" "}
-            {currency(
-              lines.reduce(
-                (s, l) =>
-                  s +
-                  (Number.isFinite(l.quantity * l.unitCost)
-                    ? rounded(l.quantity * l.unitCost)
-                    : 0),
-                0,
-              ),
-            )}
-          </strong>
-        </div>
       </section>
-      <p className="purchase-callout">
-        本階段僅展示單據建立與狀態，不連動模組一庫存；確認後保留原始品項與成本快照，不儲存進貨草稿。
-      </p>
     </PurchaseForm>
   );
 }

@@ -78,6 +78,7 @@ const formFooterVariants = cva("items-modal-footer");
 
 export interface BaseFormProps<T extends FieldValues = FieldValues> {
   children: ReactNode;
+  footerSummary?: ReactNode;
   submitText: string;
   onCancel: () => void;
   onDirty: () => void;
@@ -88,6 +89,7 @@ export interface BaseFormProps<T extends FieldValues = FieldValues> {
 
 export function BaseForm<T extends FieldValues = FieldValues>({
   children,
+  footerSummary,
   submitText,
   onCancel,
   onDirty,
@@ -180,6 +182,7 @@ export function BaseForm<T extends FieldValues = FieldValues>({
           }}
         >
           <div className={cn(formScrollVariants())}>{children}</div>
+          {footerSummary}
           {firstErrorMessage && (
             <p
               ref={summary}

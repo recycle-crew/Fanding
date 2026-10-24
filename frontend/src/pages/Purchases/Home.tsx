@@ -146,7 +146,11 @@ export function PurchasesPage() {
     if (discard || pending) safeRef.current?.focus();
   }, [discard, pending]);
   useEffect(() => {
-    if (modal) titleRef.current?.focus();
+    if (modal?.kind === "new")
+      document
+        .getElementById("purchase-item-search")
+        ?.focus({ preventScroll: true });
+    else if (modal) titleRef.current?.focus();
   }, [modal?.kind]);
   function open(kind: Mode, id?: string, recordId?: string) {
     triggerRef.current = document.activeElement as HTMLElement;
@@ -569,7 +573,11 @@ export function PurchasesPage() {
           showCloseButton={false}
           onOpenAutoFocus={(e) => {
             e.preventDefault();
-            titleRef.current?.focus();
+            if (modal?.kind === "new")
+              document
+                .getElementById("purchase-item-search")
+                ?.focus({ preventScroll: true });
+            else titleRef.current?.focus();
           }}
           onCloseAutoFocus={(e) => {
             e.preventDefault();
@@ -599,7 +607,7 @@ export function PurchasesPage() {
               ? "查看進貨商品、核對資訊及異動紀錄。"
               : order
                 ? `${order.number} · ${order.supplier}`
-                : "建立進貨單與商品歷史快照（展示）"}
+                : "填寫收貨資料並加入商品，下一步可確認整張單據。"}
           </BaseDialogDescription>
           {discard && (
             <div className="items-discard" role="alert">
@@ -652,7 +660,11 @@ export function PurchasesPage() {
                     pending.commit();
                   }}
                 >
-                  {modal?.kind === "settle" ? "確認核對" : "確認送出"}
+                  {modal?.kind === "settle"
+                    ? "確認核對"
+                    : modal?.kind === "new"
+                      ? "確認入庫"
+                      : "確認送出"}
                 </BaseButton>
               </div>
             </div>
