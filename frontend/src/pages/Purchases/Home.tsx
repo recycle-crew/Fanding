@@ -51,6 +51,8 @@ import {
 } from "@/features/purchases/OrderActions";
 import {
   correctionStatus,
+  reversalStatus,
+  pendingAccounting,
   currency,
   nextNumber,
   operationLabels,
@@ -124,7 +126,12 @@ export function PurchasesPage() {
   const rows = filtered
     .filter(
       (o) =>
-        tab === "all" || (tab === "settled" ? !!o.settlement : !o.settlement),
+        tab === "all" ||
+        (tab === "accounting"
+          ? pendingAccounting(o).length > 0
+          : tab === "settled"
+            ? !!o.settlement
+            : !o.settlement && reversalStatus(o) !== "全部沖銷"),
     )
     .sort(
       (a, b) =>
@@ -133,8 +140,10 @@ export function PurchasesPage() {
           ? originalAmount(a) - originalAmount(b)
           : a.date.localeCompare(b.date) || a.number.localeCompare(b.number)),
     );
-  const pendingCount = filtered.filter((o) => !o.settlement).length;
-  const settledCount = filtered.length - pendingCount;
+  const pendingCount = filtered.filter(
+    (o) => !o.settlement && reversalStatus(o) !== "全部沖銷",
+  ).length;
+  const settledCount = filtered.filter((o) => !!o.settlement).length;
   useWorkspaceDirty(dirty);
   useEffect(() => {
     if (notice) {
@@ -265,7 +274,11 @@ export function PurchasesPage() {
           },
           {
             text: "待核對單據",
-            value: String(rows.filter((o) => !o.settlement).length),
+            value: String(
+              rows.filter(
+                (o) => !o.settlement && reversalStatus(o) !== "全部沖銷",
+              ).length,
+            ),
             note: "入庫與單據核對分開處理",
             Icon: Clock3,
             color: "orange",
@@ -299,6 +312,10 @@ export function PurchasesPage() {
           ["all", `全部（${filtered.length}）`],
           ["pending", `待核對（${pendingCount}）`],
           ["settled", `核對完成（${settledCount}）`],
+          [
+            "accounting",
+            `待處理帳務（${filtered.filter((o) => pendingAccounting(o).length > 0).length}）`,
+          ],
         ].map(([key, text]) => (
           <BaseButton
             key={key}
@@ -490,7 +507,11 @@ export function PurchasesPage() {
                   <span
                     className={`items-status ${o.settlement ? "" : "warning"}`}
                   >
-                    {o.settlement ? "核對完成" : "待核對"}
+                    {reversalStatus(o) === "全部沖銷"
+                      ? "全部沖銷"
+                      : o.settlement
+                        ? "核對完成"
+                        : "待核對"}
                   </span>
                   <div className="purchase-status-extras">
                     {returnStatus(o) !== "無" && (
@@ -508,14 +529,27 @@ export function PurchasesPage() {
                       </span>
                     )}
                     {o.records.some((r) => r.kind === "reversal") && (
-                      <small>含沖銷紀錄</small>
+                      <small>{reversalStatus(o)}</small>
                     )}
                   </div>
                 </BaseTableCell>
                 <BaseTableCell
                   data-label="備註"
-                  className={!o.remark ? "purchase-mobile-optional" : undefined}
+                  className={
+                    !o.remark && !pendingAccounting(o).length
+                      ? "purchase-mobile-optional"
+                      : undefined
+                  }
                 >
+                  {pendingAccounting(o).length > 0 && (
+                    <BaseButton
+                      type="button"
+                      variant="ghost"
+                      onClick={() => open("view", o.id)}
+                    >
+                      待處理帳務 {pendingAccounting(o).length} 筆
+                    </BaseButton>
+                  )}
                   {o.remark || "—"}
                 </BaseTableCell>
                 <BaseTableCell>

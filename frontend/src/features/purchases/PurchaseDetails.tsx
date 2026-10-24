@@ -9,6 +9,8 @@ import {
   operationLabels,
   returnStatus,
   correctionStatus,
+  reversalStatus,
+  pendingAccounting,
 } from "./model";
 import type { Purchase, PurchaseRecord } from "@/types/purchases";
 export function PurchaseDetails({
@@ -75,7 +77,11 @@ export function PurchaseDetails({
         </div>
         <div className="purchase-order-status">
           <span className={`items-status ${order.settlement ? "" : "warning"}`}>
-            {order.settlement ? "核對完成" : "待核對"}
+            {reversalStatus(order) === "全部沖銷"
+              ? "全部沖銷"
+              : order.settlement
+                ? "核對完成"
+                : "待核對"}
           </span>
           {returnStatus(order) !== "無" && (
             <span className="items-status info">{returnStatus(order)}</span>
@@ -86,11 +92,29 @@ export function PurchaseDetails({
             </span>
           )}
           {order.records.some((r) => r.kind === "reversal") && (
-            <span className="items-status neutral">含沖銷紀錄</span>
+            <span className="items-status neutral">
+              {reversalStatus(order)}
+            </span>
           )}
           {order.settlement && <small>核對完成不代表已付款</small>}
         </div>
       </div>
+      {pendingAccounting(order).length > 0 && (
+        <section aria-label="待處理帳務">
+          <h3>待處理帳務（{pendingAccounting(order).length}）</h3>
+          {pendingAccounting(order).map((record) => (
+            <div key={record.id} className="purchase-settlement-context">
+              <span>
+                {record.number} · {operationLabels[record.kind]} ·{" "}
+                {record.resolution}
+              </span>
+              <BaseButton variant="outline" onClick={() => onResolve(record)}>
+                處理帳務 {record.number}
+              </BaseButton>
+            </div>
+          ))}
+        </section>
+      )}
       <div
         className="items-tabs"
         role="tablist"
@@ -209,14 +233,19 @@ export function PurchaseDetails({
                 ))}
               </dl>
               <p className="purchase-callout">
-                核對結帳不代表已付款；原始核對紀錄不會被後續更正覆蓋。
+                單據核對不代表已付款；原始核對紀錄不會被後續更正覆蓋。
               </p>
             </>
           ) : (
             <div className="purchase-empty purchase-pending-info">
               <strong>此進貨單尚未核對</strong>
               <p>確認發票與金額後，即可完成單據核對。</p>
-              <BaseButton onClick={onSettle}>前往核對</BaseButton>
+              <BaseButton
+                disabled={reversalStatus(order) === "全部沖銷"}
+                onClick={onSettle}
+              >
+                前往核對
+              </BaseButton>
             </div>
           ))}
         {tab === "history" && (
@@ -239,7 +268,7 @@ export function PurchaseDetails({
                 return (
                   <article key={entry.id}>
                     <header>
-                      <strong>核對結帳</strong>
+                      <strong>單據核對</strong>
                       <span>{order.settlement.accountingDate}</span>
                     </header>
                     <p>
