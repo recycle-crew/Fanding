@@ -275,7 +275,117 @@
   color: #53647d;
 }
 .purchase-details .table-wrap {
+  font-size: 16px;
+}
+.purchase-order-summary {
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: #f3f8fd;
+  border-radius: 6px;
+}
+.purchase-order-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.purchase-order-heading h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #17284e;
+}
+.purchase-order-heading p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.purchase-order-total {
+  text-align: right;
+}
+.purchase-order-total small {
+  display: block;
+  color: #62728a;
   font-size: 12px;
+}
+.purchase-order-total strong {
+  font-size: 18px;
+  color: #17284e;
+}
+.purchase-order-meta,
+.purchase-order-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 8px;
+  align-items: center;
+}
+.purchase-order-meta {
+  font-size: 13px;
+  color: #53647d;
+}
+.purchase-order-status small {
+  font-size: 12px;
+  color: #62728a;
+}
+.purchase-pending-info p {
+  margin: 8px 0 16px;
+}
+.purchase-details .purchase-facts dt {
+  font-size: 13px;
+}
+.purchase-details .purchase-facts dd {
+  font-size: 15px;
+}
+.purchase-amount-comparison {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 8px;
+  padding: 14px;
+  background: #f3f8fd;
+  border-radius: 6px;
+}
+.purchase-amount-comparison dt {
+  font-size: 13px;
+  color: #53647d;
+}
+.purchase-amount-comparison dd {
+  margin: 6px 0 0;
+  font-size: 18px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.purchase-amount-comparison > div:last-child dd {
+  color: #0758cf;
+}
+.purchase-details .purchase-history {
+  gap: 10px;
+}
+.purchase-details .purchase-history article {
+  padding: 12px;
+}
+.purchase-details .purchase-history header strong {
+  font-size: 15px;
+}
+.purchase-details .purchase-history header small {
+  margin-top: 4px;
+  font-size: 13px;
+}
+.purchase-details .purchase-history article p,
+.purchase-details .purchase-history ul {
+  font-size: 14px;
+}
+.purchase-details .purchase-history .purchase-history-amount {
+  margin: 8px 0 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.purchase-history-extra summary {
+  cursor: pointer;
+  padding: 10px 0;
+  font-size: 14px;
+  color: #435273;
 }
 .purchases-page [data-slot="table-head"],
 .purchase-modal [data-slot="table-head"] {
@@ -329,6 +439,15 @@
   color: #62728a;
   font-size: 12px;
   margin-left: 10px;
+}
+.purchase-line-extra {
+  font-size: 13px;
+}
+.purchase-details [data-slot="table"] {
+  font-size: 16px;
+}
+.purchase-details [data-slot="table-cell"] {
+  vertical-align: top;
 }
 .purchase-history {
   display: grid;
@@ -437,6 +556,101 @@
   }
 }
 @media (max-width: 640px) {
+  .purchase-amount-comparison {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    gap: 10px;
+  }
+  .purchase-amount-comparison > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .purchase-amount-comparison dd {
+    margin: 0;
+  }
+  .purchase-detail-lines [data-slot="table"],
+  .purchase-detail-lines tbody {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+  .purchase-detail-lines thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .purchase-detail-lines tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px 16px;
+    padding: 14px;
+    margin-bottom: 10px;
+    border: 1px solid #dfe8f4;
+    border-radius: 7px;
+  }
+  .purchase-detail-lines tbody td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .purchase-detail-lines tbody td::before {
+    display: block;
+    font-size: 12px;
+    color: #62728a;
+    margin-bottom: 4px;
+  }
+  .purchase-detail-lines td:nth-child(1) {
+    order: 0;
+    grid-column: 1 / -1;
+  }
+  .purchase-detail-lines td:nth-child(2) {
+    order: 1;
+  }
+  .purchase-detail-lines td:nth-child(2)::before {
+    content: "批號／效期";
+  }
+  .purchase-detail-lines td:nth-child(3) {
+    order: 2;
+    text-align: right;
+  }
+  .purchase-detail-lines td:nth-child(3)::before {
+    content: "進貨數量";
+  }
+  .purchase-detail-lines td:nth-child(4) {
+    order: 3;
+  }
+  .purchase-detail-lines td:nth-child(4)::before {
+    content: "單位成本";
+  }
+  .purchase-detail-lines td:nth-child(5) {
+    order: 4;
+    text-align: right;
+    font-weight: 700;
+  }
+  .purchase-detail-lines td:nth-child(5)::before {
+    content: "小計";
+  }
+  .purchase-detail-lines td:nth-child(6) {
+    order: 5;
+    grid-column: 1 / -1;
+  }
+  .purchase-detail-lines td:nth-child(6)::before {
+    content: "單據剩餘量";
+  }
+  .purchase-detail-lines td:nth-child(7) {
+    order: 6;
+    grid-column: 1 / -1;
+  }
+  .purchase-detail-lines td[colspan] {
+    grid-column: 1 / -1;
+  }
   .purchase-header-grid {
     grid-template-columns: 1fr;
   }

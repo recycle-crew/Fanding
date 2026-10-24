@@ -595,9 +595,11 @@ export function PurchasesPage() {
             </BaseButton>
           </div>
           <BaseDialogDescription variant="workspace">
-            {order
-              ? `${order.number} · ${order.supplier}`
-              : "建立進貨單與商品歷史快照（展示）"}
+            {modal?.kind === "view"
+              ? "查看進貨商品、核對資訊及異動紀錄。"
+              : order
+                ? `${order.number} · ${order.supplier}`
+                : "建立進貨單與商品歷史快照（展示）"}
           </BaseDialogDescription>
           {discard && (
             <div className="items-discard" role="alert">
@@ -691,7 +693,7 @@ export function PurchasesPage() {
               <>
                 <PurchaseDetails
                   order={order}
-
+                  onSettle={() => open("settle", order.id)}
                   onResolve={(r) => open("resolve", order.id, r.id)}
                 />
                 <footer className="items-modal-footer">

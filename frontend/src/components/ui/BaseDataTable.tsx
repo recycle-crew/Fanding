@@ -49,6 +49,7 @@ export function BaseDataTable({
   tableKey,
   privileged = false,
   exportable = true,
+  compactPagination = false,
 }: {
   headers: string[];
   rows: ReactNode[][];
@@ -56,11 +57,13 @@ export function BaseDataTable({
   tableKey: string;
   privileged?: boolean;
   exportable?: boolean;
+  compactPagination?: boolean;
 }) {
   return (
     <BaseTableFrame
       tableKey={tableKey}
       exportable={exportable}
+      compactPagination={compactPagination}
       headers={
         <BaseTableRow>
           {headers.map((header) => (
@@ -140,6 +143,7 @@ export function BaseTableFrame({
   className = "",
   variant = "default",
   exportable = true,
+  compactPagination = false,
 }: VariantProps<typeof tableFrameVariants> & {
   tableKey: string;
   headers: ReactNode;
@@ -149,6 +153,7 @@ export function BaseTableFrame({
   region?: string;
   className?: string;
   exportable?: boolean;
+  compactPagination?: boolean;
 }) {
   const { states, revision } = useContext(BasePaginationContext);
   const [pagination, setPagination] = useState<PageState>(
@@ -266,78 +271,86 @@ export function BaseTableFrame({
             {exporting ? "匯出中…" : "匯出 Excel (.xlsx)"}
           </BaseButton>
         )}
-        <BaseLabel variant="pagination">
-          每頁筆數
-          <BaseNativeSelect
-            variant="pagination"
-
-            data-page-size
-            value={pagination.pageSize}
-            onChange={(event) =>
-              setPagination({ page: 1, pageSize: Number(event.target.value) })
-            }
-          >
-            {[5, 10, 20, 50].map((size) => (
-              <BaseNativeSelectOption key={size}>{size}</BaseNativeSelectOption>
-            ))}
-          </BaseNativeSelect>
-        </BaseLabel>
-        <nav
-          className={cn(tablePaginationNavigationVariants())}
-          aria-label="表格分頁"
-        >
-          <BaseButton
-            variant="pagination"
-            type="button"
-
-            data-page-previous
-            disabled={page === 1}
-            onClick={() => {
-              setPagination({ ...pagination, page: page - 1 });
-              if (page === 2)
-                requestAnimationFrame(() => pageSelector.current?.focus());
-            }}
-          >
-            上一頁
-          </BaseButton>
+        {(!compactPagination || rows.length > 5) && (
           <BaseLabel variant="pagination">
-            頁碼
+            每頁筆數
             <BaseNativeSelect
               variant="pagination"
-              ref={pageSelector}
-              data-page-number
-              value={page}
-              disabled={pageCount === 1}
+
+              data-page-size
+              value={pagination.pageSize}
               onChange={(event) =>
-                setPagination({
-                  ...pagination,
-                  page: Number(event.target.value),
-                })
+                setPagination({ page: 1, pageSize: Number(event.target.value) })
               }
             >
-              {Array.from({ length: pageCount }, (_, i) => (
-                <BaseNativeSelectOption key={i}>{i + 1}</BaseNativeSelectOption>
+              {[5, 10, 20, 50].map((size) => (
+                <BaseNativeSelectOption key={size}>
+                  {size}
+                </BaseNativeSelectOption>
               ))}
             </BaseNativeSelect>
-            <span className={cn(tablePaginationTotalVariants())}>
-              ／ {pageCount} 頁
-            </span>
           </BaseLabel>
-          <BaseButton
-            variant="pagination"
-            type="button"
-
-            data-page-next
-            disabled={page === pageCount}
-            onClick={() => {
-              setPagination({ ...pagination, page: page + 1 });
-              if (page === pageCount - 1)
-                requestAnimationFrame(() => pageSelector.current?.focus());
-            }}
+        )}
+        {(!compactPagination || pageCount > 1) && (
+          <nav
+            className={cn(tablePaginationNavigationVariants())}
+            aria-label="表格分頁"
           >
-            下一頁
-          </BaseButton>
-        </nav>
+            <BaseButton
+              variant="pagination"
+              type="button"
+
+              data-page-previous
+              disabled={page === 1}
+              onClick={() => {
+                setPagination({ ...pagination, page: page - 1 });
+                if (page === 2)
+                  requestAnimationFrame(() => pageSelector.current?.focus());
+              }}
+            >
+              上一頁
+            </BaseButton>
+            <BaseLabel variant="pagination">
+              頁碼
+              <BaseNativeSelect
+                variant="pagination"
+                ref={pageSelector}
+                data-page-number
+                value={page}
+                disabled={pageCount === 1}
+                onChange={(event) =>
+                  setPagination({
+                    ...pagination,
+                    page: Number(event.target.value),
+                  })
+                }
+              >
+                {Array.from({ length: pageCount }, (_, i) => (
+                  <BaseNativeSelectOption key={i}>
+                    {i + 1}
+                  </BaseNativeSelectOption>
+                ))}
+              </BaseNativeSelect>
+              <span className={cn(tablePaginationTotalVariants())}>
+                ／ {pageCount} 頁
+              </span>
+            </BaseLabel>
+            <BaseButton
+              variant="pagination"
+              type="button"
+
+              data-page-next
+              disabled={page === pageCount}
+              onClick={() => {
+                setPagination({ ...pagination, page: page + 1 });
+                if (page === pageCount - 1)
+                  requestAnimationFrame(() => pageSelector.current?.focus());
+              }}
+            >
+              下一頁
+            </BaseButton>
+          </nav>
+        )}
         <span
           className={cn(tableExportStatusVariants())}
           role="status"
