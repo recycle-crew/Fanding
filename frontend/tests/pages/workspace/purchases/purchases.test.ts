@@ -32,7 +32,7 @@ async function action(page: Page, number: string, name: string) {
 }
 async function finish(page: Page) {
   await modal(page)
-    .getByRole("button", { name: "確認送出", exact: true })
+    .getByRole("button", { name: /^(確認送出|確認核對)$/ })
     .click();
   await expect(modal(page)).toBeHidden();
 }
@@ -44,6 +44,176 @@ test.beforeEach(async ({ page }) => {
   ).toBeVisible();
 });
 
+test("診所核對預設免稅、中文錯誤定位與備註收合", async ({ page }, testInfo) => {
+  await action(page, "PO20261020009", "核對單據");
+  await expect(page.locator("#settlement-tax")).toHaveValue("免稅");
+  await page.locator("#settlement-tax").selectOption("應稅");
+  await page.locator("#settlement-tax").selectOption("免稅");
+  await expect(page.locator("#settlement-remark")).toBeHidden();
+  const notes = modal(page).locator(".purchase-optional-fields summary");
+  await notes.click();
+  await page.locator("#settlement-remark").fill("診所進貨核對備註");
+  await notes.click();
+  await expect(notes).toContainText("已填寫");
+  await page.locator("#settlement-invoice-date").fill("");
+  await modal(page)
+    .getByRole("button", { name: "下一步：確認內容", exact: true })
+    .click();
+  await expect(modal(page).getByRole("alert")).toHaveText("請填寫發票日期。");
+  await expect(modal(page).getByRole("alert")).toBeInViewport({ ratio: 1 });
+  await expect(page.locator("#settlement-invoice-date")).toBeFocused();
+  await modal(page).screenshot({
+    path: testInfo.outputPath("settlement-chinese-error.png"),
+  });
+  await page.locator("#settlement-invoice-date").fill("2026-10-20");
+  await page.locator("#settlement-amount").fill("-1");
+  await modal(page)
+    .getByRole("button", { name: "下一步：確認內容", exact: true })
+    .click();
+  await expect(modal(page).getByRole("alert")).toHaveText(
+    "實際核對金額不可小於 0。",
+  );
+  await expect(page.locator("#settlement-amount")).toBeFocused();
+  await page.locator("#settlement-amount").fill("2000");
+  await notes.click();
+  await expect(page.locator("#settlement-remark")).toHaveValue(
+    "診所進貨核對備註",
+  );
+  await modal(page)
+    .getByRole("button", { name: "下一步：確認內容", exact: true })
+    .click();
+  await finish(page);
+  await action(page, "PO20261020009", "查看進貨明細");
+  await modal(page).getByRole("tab", { name: "核對資訊", exact: true }).click();
+  await expect(modal(page)).toContainText("免稅");
+  await expect(modal(page)).toContainText("診所進貨核對備註");
+});
+
+test("核對差額即時更新、無效金額及二次確認", async ({ page }, testInfo) => {
+  await action(page, "PO20261020009", "核對單據");
+  const amount = page.locator("#settlement-amount");
+  const comparison = modal(page).locator(".purchase-settlement-amounts");
+  await expect(comparison).toContainText("金額一致");
+  await expect(page.locator("#settlement-difference")).toHaveCount(0);
+  await amount.fill("");
+  await expect(comparison).toContainText("請輸入有效金額");
+  await expect(page.locator("#settlement-difference")).toHaveCount(0);
+  await amount.fill("-1");
+  await expect(comparison).toContainText("請輸入有效金額");
+  await amount.fill("1900");
+  await expect(comparison).toContainText("低於原始進貨金額");
+  await expect(comparison).toContainText("NT$ -100.00");
+  await expect(page.locator("#settlement-difference")).toHaveAttribute(
+    "required",
+    "",
+  );
+  await expect(page.locator("#settlement-difference")).toBeInViewport({
+    ratio: 1,
+  });
+  await page.locator("#settlement-difference").fill("折扣");
+  await modal(page).screenshot({
+    path: testInfo.outputPath("settlement-edit.png"),
+  });
+  await amount.fill("2100");
+  await expect(comparison).toContainText("高於原始進貨金額");
+  await amount.fill("2000");
+  await expect(comparison).toContainText("金額一致");
+  await page.locator("#settlement-tax").selectOption("應稅");
+  await modal(page)
+    .getByRole("button", { name: "下一步：確認內容", exact: true })
+    .click();
+  await expect(
+    modal(page).getByRole("button", { name: "確認核對", exact: true }),
+  ).toBeVisible();
+  await modal(page)
+    .getByRole("button", { name: "返回檢查", exact: true })
+    .click();
+  await expect(amount).toHaveValue("2000");
+  await modal(page)
+    .getByRole("button", { name: "下一步：確認內容", exact: true })
+    .click();
+  await finish(page);
+  await expect(list(page)).toContainText("核對完成");
+});
+
+test("明細摘要、手機商品卡片與直接核對入口", async ({ page }, testInfo) => {
+  await action(page, "PO20261020009", "查看進貨明細");
+  await expect(modal(page).locator(".purchase-order-summary")).toContainText(
+    "待核對",
+  );
+  await expect(modal(page).locator(".purchase-order-summary")).toContainText(
+    "明康醫藥有限公司",
+  );
+  await expect(modal(page).locator(".purchase-order-summary")).toContainText(
+    "NT$ 2,000.00",
+  );
+  const row = modal(page).locator(".purchase-detail-lines tbody tr").first();
+  await expect(row).toContainText("人工淚液");
+  await expect(row.locator("td").nth(2)).toContainText("20 瓶");
+  await expect(row.locator("td").nth(4)).toContainText("NT$ 2,000.00");
+  await expect(
+    modal(page).getByRole("navigation", { name: "表格分頁", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    modal(page).getByRole("button", {
+      name: "匯出 Excel (.xlsx)",
+      exact: true,
+    }),
+  ).toBeVisible();
+  if (testInfo.project.name === "mobile") {
+    await expect(row.locator("td").nth(4)).toBeInViewport({ ratio: 1 });
+  }
+  await modal(page).screenshot({
+    path: testInfo.outputPath("purchase-detail-cards.png"),
+  });
+  await modal(page).getByRole("tab", { name: "核對資訊", exact: true }).click();
+  await modal(page)
+    .getByRole("button", { name: "前往核對", exact: true })
+    .click();
+  await expect(
+    modal(page).getByRole("heading", { name: "進貨單核對", exact: true }),
+  ).toBeVisible();
+  await expect(modal(page)).toContainText("PO20261020009");
+  await expect(page.locator("#settlement-amount")).toHaveValue("2000");
+});
+
+test("預設最近一個月、進階篩選及清除日期", async ({ page }, testInfo) => {
+  await expect(page.locator("#purchase-filter-start")).toHaveValue(
+    "2026-09-20",
+  );
+  await expect(page.locator("#purchase-filter-end")).toHaveValue("2026-10-20");
+  await expect(page.locator("#purchase-filter-warehouse")).toBeHidden();
+  await page.locator(".purchase-advanced-filters summary").click();
+  await page.locator("#purchase-filter-warehouse").selectOption("診間倉庫");
+  await expect(list(page).locator("tbody tr:visible")).toHaveCount(3);
+  await page.locator(".purchase-advanced-filters summary").click();
+  await expect(
+    page.locator(".purchase-advanced-filters summary"),
+  ).toContainText("已套用 1 項");
+  await page.getByRole("button", { name: "清除", exact: true }).click();
+  await expect(page.locator("#purchase-filter-start")).toHaveValue("");
+  await expect(page.locator("#purchase-filter-end")).toHaveValue("");
+  await page.getByRole("button", { name: "最近一個月", exact: true }).click();
+  await expect(page.locator("#purchase-filter-start")).toHaveValue(
+    "2026-09-20",
+  );
+  const header = list(page).locator("thead th").first();
+  await expect(header).toHaveCSS("color", "rgb(17, 17, 17)");
+  await expect(header).toHaveCSS("font-weight", "700");
+  if (testInfo.project.name === "desktop") {
+    const inset = await header.evaluate(
+      (element) =>
+        element.getBoundingClientRect().left -
+        element.closest(".purchase-list-card")!.getBoundingClientRect().left,
+    );
+    expect(inset).toBeLessThanOrEqual(2);
+  }
+  await page.screenshot({
+    path: testInfo.outputPath("purchase-updated.png"),
+    fullPage: true,
+  });
+});
+
 test(
   "進貨查詢、狀態篩選、分頁、排序與 Excel 全分頁",
   { tag: "@critical" },
@@ -53,12 +223,16 @@ test(
     await expect(list(page).locator("tbody tr:visible")).toHaveCount(4);
     await page.getByRole("tab", { name: /^待核對/ }).click();
     await expect(list(page).locator("tbody tr:visible")).toHaveCount(3);
-    await page.getByRole("tab", { name: /^已結帳/ }).click();
+    await page.getByRole("tab", { name: /^核對完成/ }).click();
     await expect(list(page).locator("tbody tr:visible")).toHaveCount(5);
+    await page.locator(".purchase-advanced-filters summary").click();
     await page.locator("#purchase-filter-returns").selectOption("全部退貨");
     await expect(list(page).locator("tbody tr:visible")).toHaveCount(1);
     await page.getByRole("button", { name: "清除", exact: true }).click();
-    await page.getByRole("button", { name: "收貨日期", exact: true }).click();
+    const mobileSort = page.locator("#purchase-mobile-sort");
+    if (await mobileSort.isVisible()) await mobileSort.selectOption("date-asc");
+    else
+      await page.getByRole("button", { name: "收貨日期", exact: true }).click();
     await expect(list(page).locator("tbody tr:visible").first()).toContainText(
       "PO20261012001",
     );
@@ -158,7 +332,7 @@ test(
     const alert = modal(page).getByRole("alert");
     await expect(alert).toContainText("供應商");
     await expect(alert).toBeVisible();
-    await expect(alert).toBeFocused();
+    await expect(page.locator("#purchase-supplier")).toBeFocused();
     await expect(page.locator("#purchase-supplier")).toHaveAttribute(
       "aria-invalid",
       "true",
@@ -246,20 +420,22 @@ test(
 );
 
 test("核對差異原因及已結帳入口限制", async ({ page }) => {
-  await action(page, "PO20261020009", "核對結帳");
+  await action(page, "PO20261020009", "核對單據");
   await page.locator("#settlement-tax").selectOption("應稅");
   await page.locator("#settlement-amount").fill("1900");
   await modal(page)
-    .getByRole("button", { name: "核對並結帳", exact: true })
+    .getByRole("button", { name: "下一步：確認內容", exact: true })
     .click();
   await expect(modal(page).getByRole("alert")).toBeVisible();
   await page.locator("#settlement-difference").fill("發票折扣差異");
   await page.locator("#settlement-invoice").fill("AB12345678");
   await modal(page)
-    .getByRole("button", { name: "核對並結帳", exact: true })
+    .getByRole("button", { name: "下一步：確認內容", exact: true })
     .click();
   await finish(page);
-  await expect(list(page).locator("tbody tr:visible")).toContainText("已結帳");
+  await expect(list(page).locator("tbody tr:visible")).toContainText(
+    "核對完成",
+  );
   await expect(list(page)).toContainText("2000.00");
   await page
     .getByRole("button", { name: "更多作業 PO20261020009", exact: true })
@@ -359,10 +535,28 @@ test("純金額更正保留核對金額、帳務結果另存", async ({ page }) 
     .click();
   await finish(page);
   await action(page, "PO20261018007", "查看進貨明細");
-  await page.getByRole("tab", { name: "核對結帳", exact: true }).click();
+  await page.getByRole("tab", { name: "核對資訊", exact: true }).click();
   await expect(modal(page)).toContainText("NT$ 9,200.00");
   await expect(modal(page)).toContainText("NT$ 9,050.00");
+  await expect(
+    modal(page).locator(".purchase-amount-comparison"),
+  ).toContainText("NT$ -150.00");
+  await modal(page).screenshot({
+    path: test.info().outputPath("settlement-comparison.png"),
+  });
   await page.getByRole("tab", { name: "異動及更正歷史", exact: true }).click();
+  const latest = modal(page).locator(".purchase-history article").first();
+  await expect(latest).toContainText("PC20261020");
+  await expect(
+    latest.getByText("原因：核對金額修正", { exact: true }),
+  ).toBeHidden();
+  await latest.locator("summary").click();
+  await expect(
+    latest.getByText("原因：核對金額修正", { exact: true }),
+  ).toBeVisible();
+  await modal(page).screenshot({
+    path: test.info().outputPath("purchase-history-latest.png"),
+  });
   await page.getByRole("button", { name: /完成帳務處理 PC20261020/ }).click();
   await page.locator("#resolution-amount").fill("45");
   await page.locator("#resolution-reference").fill("CN-TEST-001");
@@ -382,6 +576,8 @@ test("未儲存提醒、鍵盤與版面", async ({ page }, testInfo) => {
   await expect(
     modal(page).getByRole("heading", { name: "新增進貨單", exact: true }),
   ).toBeFocused();
+  await expect(page.locator("#purchase-remark")).toBeHidden();
+  await modal(page).locator(".purchase-optional-fields summary").click();
   await page.locator("#purchase-remark").fill("不儲存");
   await page.keyboard.press("Escape");
   await expect(
@@ -484,7 +680,7 @@ test("a11y 進貨列表、選單及所有主要視窗", async ({ page }) => {
   await modal(page)
     .getByRole("button", { name: "關閉進貨視窗", exact: true })
     .click();
-  for (const name of ["查看進貨明細", "核對結帳", "進貨沖銷", "進貨退貨"]) {
+  for (const name of ["查看進貨明細", "核對單據", "進貨沖銷", "進貨退貨"]) {
     await action(page, "PO20261020009", name);
     await audit();
     await modal(page)
