@@ -205,7 +205,7 @@ export function PurchasesPage() {
       : modal?.kind === "view"
         ? "進貨單明細"
         : modal?.kind === "settle"
-          ? "進貨核對結帳"
+          ? "進貨單核對"
           : modal?.kind === "resolve"
             ? "完成帳務處理"
             : modal
@@ -652,7 +652,7 @@ export function PurchasesPage() {
                     pending.commit();
                   }}
                 >
-                  確認送出
+                  {modal?.kind === "settle" ? "確認核對" : "確認送出"}
                 </BaseButton>
               </div>
             </div>
@@ -715,7 +715,7 @@ export function PurchasesPage() {
                 onSubmit={(value) =>
                   review(
                     `核對金額 ${currency(value.amount)}`,
-                    "確認後標記已結帳，保留原始進貨金額，不代表已付款。",
+                    "確認後標記核對完成，保留原始進貨金額，不代表已付款。",
                     () => {
                       dispatch(
                         settlePurchase({
@@ -731,7 +731,7 @@ export function PurchasesPage() {
                           },
                         }),
                       );
-                      complete("已完成核對結帳（展示），未執行付款。");
+                      complete("已完成單據核對（展示），未執行付款。");
                     },
                   )
                 }

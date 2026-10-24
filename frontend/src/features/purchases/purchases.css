@@ -331,6 +331,51 @@
 .purchase-pending-info p {
   margin: 8px 0 16px;
 }
+.purchase-settlement-context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+.purchase-settlement-context small {
+  color: #62728a;
+  font-size: 13px;
+}
+.purchase-settlement-amounts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+  background: #f3f8fd;
+  padding: 12px;
+  border-radius: 6px;
+}
+.purchase-amount-label {
+  display: block;
+  color: #53647d;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.purchase-settlement-amounts strong {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.purchase-settlement-amounts small {
+  display: block;
+  margin-top: 4px;
+  color: #62728a;
+  font-size: 12px;
+}
+.purchase-settlement-amounts input {
+  font-size: 18px;
+  font-weight: 600;
+  background: white;
+}
+.purchase-settlement-reason {
+  margin: 12px 4px 0;
+}
 .purchase-details .purchase-facts dt {
   font-size: 13px;
 }
@@ -556,6 +601,19 @@
   }
 }
 @media (max-width: 640px) {
+  .purchase-settlement-amounts {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .purchase-settlement-amounts > div:nth-child(1) {
+    order: 0;
+  }
+  .purchase-settlement-amounts > div:nth-child(3) {
+    order: 1;
+  }
+  .purchase-settlement-amounts > div:nth-child(2) {
+    order: 2;
+    grid-column: 1 / -1;
+  }
   .purchase-amount-comparison {
     grid-template-columns: 1fr;
     padding: 12px;

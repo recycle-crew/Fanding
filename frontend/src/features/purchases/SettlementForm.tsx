@@ -25,57 +25,107 @@ export function SettlementForm({
   const [draft, setDraft] = useState({
     invoice: "",
     invoiceDate: taipeiToday(),
-    tax: "",
+    tax: "免稅",
     amount: String(originalAmount(order)),
     accountingDate: taipeiToday(),
     differenceReason: "",
     remark: "",
   });
-  const difference = rounded(Number(draft.amount) - originalAmount(order));
+  const amount = Number(draft.amount);
+  const validAmount =
+    draft.amount.trim() !== "" &&
+    Number.isFinite(amount) &&
+    amount >= 0 &&
+    Math.abs(amount * 100 - Math.round(amount * 100)) < 0.000001;
+  const difference = validAmount
+    ? rounded(amount - originalAmount(order))
+    : null;
+  const hasDifference = difference !== null && difference !== 0;
   return (
     <PurchaseForm
       onCancel={onCancel}
       onDirty={onDirty}
-      submitText="核對並結帳"
+      submitText="下一步：確認內容"
       submit={() => {
-        if (!Number.isFinite(Number(draft.amount)) || Number(draft.amount) < 0)
+        if (!validAmount)
           return {
-            message: "核對金額必須為非負數。",
+            message: "請輸入有效核對金額，不可為負數，最多小數 2 位。",
             field: "settlement-amount",
           };
-        if (difference && !draft.differenceReason.trim())
+        if (hasDifference && !draft.differenceReason.trim())
           return {
             message: "核對金額與原始進貨金額不同，請填寫差異原因。",
             field: "settlement-difference",
           };
-        onSubmit({ ...draft, amount: Number(draft.amount) });
+        onSubmit({
+          ...draft,
+          amount,
+          differenceReason: hasDifference ? draft.differenceReason.trim() : "",
+        });
       }}
     >
+      <div className="purchase-settlement-context">
+        <span>收貨日期 {order.date}</span>
+        <span>入庫倉別 {order.warehouse}</span>
+      </div>
       <section>
-        <h3>原進貨資訊</h3>
-        <dl className="purchase-facts">
+        <h3>金額核對</h3>
+        <div className="purchase-settlement-amounts">
           <div>
-            <dt>進貨單號</dt>
-            <dd>{order.number}</dd>
+            <span className="purchase-amount-label">原始進貨金額</span>
+            <strong>{currency(originalAmount(order))}</strong>
           </div>
           <div>
-            <dt>供應商</dt>
-            <dd>{order.supplier}</dd>
+            <Field name="settlement-amount" label="實際核對金額" required>
+              <BaseInput
+                type="number"
+                min="0"
+                step="0.01"
+                value={draft.amount}
+                onChange={(e) => setDraft({ ...draft, amount: e.target.value })}
+              />
+            </Field>
           </div>
-          <div>
-            <dt>收貨日期／倉別</dt>
-            <dd>
-              {order.date} · {order.warehouse}
-            </dd>
+          <div role="status" aria-live="polite">
+            <span className="purchase-amount-label">差額</span>
+            <strong>
+              {difference === null
+                ? "—"
+                : difference === 0
+                  ? "金額一致"
+                  : `${difference > 0 ? "+" : ""}${currency(difference)}`}
+            </strong>
+            <small>
+              {difference === null
+                ? "請輸入有效金額"
+                : difference === 0
+                  ? "與原始進貨金額相同"
+                  : difference > 0
+                    ? "高於原始進貨金額"
+                    : "低於原始進貨金額"}
+            </small>
           </div>
-          <div>
-            <dt>原始進貨金額</dt>
-            <dd>{currency(originalAmount(order))}</dd>
+        </div>
+        {hasDifference && (
+          <div className="purchase-settlement-reason">
+            <Field
+              name="settlement-difference"
+              label="差異原因"
+              required
+              hint="核對金額不同時，請說明原因後再繼續。"
+            >
+              <BaseInput
+                value={draft.differenceReason}
+                onChange={(e) =>
+                  setDraft({ ...draft, differenceReason: e.target.value })
+                }
+              />
+            </Field>
           </div>
-        </dl>
+        )}
       </section>
       <section>
-        <h3>發票與金額核對</h3>
+        <h3>發票與帳務資料</h3>
         <div className="items-form-grid">
           <Field name="settlement-invoice" label="發票號碼">
             <BaseInput
@@ -84,7 +134,12 @@ export function SettlementForm({
               placeholder="例如 AB12345678（選填）"
             />
           </Field>
-          <Field name="settlement-invoice-date" label="發票日期" required>
+          <Field
+            name="settlement-invoice-date"
+            label="發票日期"
+            required
+            hint="預設今天，請依此次核對的發票日期調整。"
+          >
             <BaseInput
               type="date"
               value={draft.invoiceDate}
@@ -93,7 +148,12 @@ export function SettlementForm({
               }
             />
           </Field>
-          <Field name="settlement-tax" label="稅別" required>
+          <Field
+            name="settlement-tax"
+            label="稅別"
+            required
+            hint="預設免稅，可依本張單據調整。"
+          >
             <BaseNativeSelect
               value={draft.tax}
               onChange={(e) => setDraft({ ...draft, tax: e.target.value })}
@@ -104,19 +164,11 @@ export function SettlementForm({
               ))}
             </BaseNativeSelect>
           </Field>
-          <Field name="settlement-amount" label="實際核對金額" required>
-            <BaseInput
-              type="number"
-              min="0"
-              step="0.01"
-              value={draft.amount}
-              onChange={(e) => setDraft({ ...draft, amount: e.target.value })}
-            />
-          </Field>
           <Field
             name="settlement-accounting-date"
             label="帳務歸屬日期"
             required
+            hint="這筆核對歸入哪一天的帳務，可與收貨日期、發票日期不同。"
           >
             <BaseInput
               type="date"
@@ -126,19 +178,11 @@ export function SettlementForm({
               }
             />
           </Field>
-          <Field
-            name="settlement-difference"
-            label="差異原因"
-            required={!!difference}
-            hint={`與原始金額差異：${currency(Number.isFinite(difference) ? difference : 0)}`}
-          >
-            <BaseInput
-              value={draft.differenceReason}
-              onChange={(e) =>
-                setDraft({ ...draft, differenceReason: e.target.value })
-              }
-            />
-          </Field>
+        </div>
+        <details className="purchase-optional-fields">
+          <summary>
+            核對備註<span>{draft.remark ? "已填寫，可展開查看" : "選填"}</span>
+          </summary>
           <Field name="settlement-remark" label="核對備註">
             <BaseTextarea
               rows={3}
@@ -146,10 +190,10 @@ export function SettlementForm({
               onChange={(e) => setDraft({ ...draft, remark: e.target.value })}
             />
           </Field>
-        </div>
+        </details>
       </section>
       <p className="purchase-callout">
-        核對結帳只表示發票與金額已核對，不代表已付款；本次操作不再次入庫，也不覆蓋原始進貨金額。
+        確認核對只表示發票與金額已核對，不代表已付款；本次操作不再次入庫，也不覆蓋原始進貨金額。
       </p>
     </PurchaseForm>
   );
