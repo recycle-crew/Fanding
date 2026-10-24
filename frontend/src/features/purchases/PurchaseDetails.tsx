@@ -17,12 +17,14 @@ export function PurchaseDetails({
   order,
   onResolve,
   onSettle,
+  initialTab = "lines",
 }: {
   order: Purchase;
   onResolve: (record: PurchaseRecord) => void;
   onSettle: () => void;
+  initialTab?: string;
 }) {
-  const [tab, setTab] = useState("lines");
+  const [tab, setTab] = useState(initialTab);
   const correctionTotal = order.records
     .filter((r) => r.kind === "correction")
     .reduce((sum, r) => sum + r.amount, 0);
@@ -298,7 +300,11 @@ export function PurchaseDetails({
                     >
                       {record.kind === "reversal"
                         ? "已沖銷"
-                        : `帳務${record.accountingStatus}`}
+                        : record.kind === "return" &&
+                            record.resolution === "換貨" &&
+                            record.accountingStatus === "待處理"
+                          ? "換貨待收貨"
+                          : `帳務${record.accountingStatus}`}
                     </span>
                   </header>
                   <p className="purchase-history-amount">
@@ -330,9 +336,34 @@ export function PurchaseDetails({
                       </div>
                       <div>
                         <dt>相關單號</dt>
-                        <dd>{record.reference || "—"}</dd>
+                        <dd>
+                          {record.reference ||
+                            `未提供外部單號（內部追蹤：${record.number}）`}
+                        </dd>
                       </div>
                     </dl>
+                    {record.exchangeReceipt && (
+                      <section
+                        className="purchase-exchange-receipt-summary"
+                        aria-label="換貨收貨紀錄"
+                      >
+                        <h4>換貨收貨紀錄</h4>
+                        <p>
+                          {record.exchangeReceipt.date} ·{" "}
+                          {record.exchangeReceipt.warehouse}
+                        </p>
+                        <p>
+                          {record.exchangeReceipt.code} ·{" "}
+                          {record.exchangeReceipt.name}（
+                          {record.exchangeReceipt.specification}）
+                          {record.exchangeReceipt.batch &&
+                            ` · 批號 ${record.exchangeReceipt.batch}`}
+                          {record.exchangeReceipt.expiry &&
+                            ` · 效期 ${record.exchangeReceipt.expiry}`}
+                          {` · ${record.exchangeReceipt.quantity} ${record.exchangeReceipt.unit}`}
+                        </p>
+                      </section>
+                    )}
                     {record.lines.length > 0 && (
                       <ul>
                         {record.lines.map((l, i) => (

@@ -1,6 +1,12 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { createPurchasesSeed } from "@/features/purchases/model";
-import type { Purchase, PurchaseRecord, Settlement } from "@/types/purchases";
+import type {
+  ExchangeReceipt,
+  ExchangeOrder,
+  Purchase,
+  PurchaseRecord,
+  Settlement,
+} from "@/types/purchases";
 const slice = createSlice({
   name: "purchases",
   initialState: createPurchasesSeed(),
@@ -24,6 +30,10 @@ const slice = createSlice({
       if (order && !order.records.some((r) => r.id === payload.record.id))
         order.records.push(payload.record);
     },
+    addExchangeOrder(state, { payload }: PayloadAction<ExchangeOrder>) {
+      if (!state.exchanges.some((exchange) => exchange.id === payload.id))
+        state.exchanges.unshift(payload);
+    },
     resolvePurchaseRecord(
       state,
       {
@@ -36,6 +46,7 @@ const slice = createSlice({
         resolution: string;
         resolvedAt: string;
         operator: string;
+        exchangeReceipt?: ExchangeReceipt;
       }>,
     ) {
       const record = state.orders
@@ -48,6 +59,15 @@ const slice = createSlice({
         record.resolution = payload.resolution;
         record.resolvedAt = payload.resolvedAt;
         record.resolvedBy = payload.operator;
+        if (payload.exchangeReceipt)
+          record.exchangeReceipt = payload.exchangeReceipt;
+        const exchange = state.exchanges.find(
+          (candidate) => candidate.returnRecordId === payload.recordId,
+        );
+        if (exchange && payload.exchangeReceipt) {
+          exchange.receipt = payload.exchangeReceipt;
+          exchange.status = "已收貨";
+        }
       }
     },
   },
@@ -56,6 +76,7 @@ export const {
   addPurchase,
   settlePurchase,
   addPurchaseRecord,
+  addExchangeOrder,
   resolvePurchaseRecord,
 } = slice.actions;
 export default slice.reducer;

@@ -209,7 +209,7 @@ export function createPurchasesSeed(): PurchasesState {
       });
     return order;
   });
-  return { orders };
+  return { orders, exchanges: [] };
 }
 export function nextNumber(prefix: string, count: number) {
   return `${prefix}${taipeiToday().replaceAll("-", "")}${String(count + 1).padStart(3, "0")}`;

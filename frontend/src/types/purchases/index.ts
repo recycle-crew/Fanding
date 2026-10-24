@@ -66,7 +66,44 @@ export interface PurchaseRecord {
   createdAt: string;
   resolvedAt?: string;
   resolvedBy?: string;
+  exchangeReceipt?: ExchangeReceipt;
   lines: OperationLine[];
+}
+
+export interface ExchangeReceipt {
+  date: string;
+  itemId: string;
+  code: string;
+  name: string;
+  specification: string;
+  unit: string;
+  quantity: number;
+  batch: string;
+  expiry: string;
+  warehouse: string;
+}
+
+export interface ExchangeOrder {
+  id: string;
+  number: string;
+  purchaseId: string;
+  purchaseNumber: string;
+  returnRecordId: string;
+  returnNumber: string;
+  supplier: string;
+  warehouse: string;
+  date: string;
+  status: "待收貨" | "已收貨";
+  expectedLines: Array<{
+    lineId: string;
+    itemId: string;
+    code: string;
+    name: string;
+    specification: string;
+    unit: string;
+    quantity: number;
+  }>;
+  receipt?: ExchangeReceipt;
 }
 
 export interface Purchase {
@@ -86,4 +123,5 @@ export interface Purchase {
 
 export interface PurchasesState {
   orders: Purchase[];
+  exchanges: ExchangeOrder[];
 }

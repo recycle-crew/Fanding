@@ -2,10 +2,7 @@ import { useWorkspaceDirty } from "@/features/workspace/useWorkspaceDirty";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownUp,
-  CheckCircle2,
-  ClipboardList,
   Clock3,
-  Coins,
   Eye,
   Plus,
   Search,
@@ -15,6 +12,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   addPurchase,
+  addExchangeOrder,
   settlePurchase,
   addPurchaseRecord,
   resolvePurchaseRecord,
@@ -61,6 +59,7 @@ import {
   recentMonthRange,
   returnStatus,
 } from "@/features/purchases/model";
+import type { ExchangeOrder } from "@/types/purchases";
 import "@/features/items/items.css";
 import "@/features/purchases/purchases.css";
 type Mode = "new" | OrderAction | "resolve";
@@ -83,6 +82,9 @@ export function PurchasesPage() {
     ...recentMonthRange(),
   }));
   const [tab, setTab] = useState("all");
+  const [documentType, setDocumentType] = useState<
+    "purchase" | "return" | "exchange"
+  >("purchase");
   const [sort, setSort] = useState({ key: "date", direction: -1 });
   const [modal, setModal] = useState<{
     kind: Mode;
@@ -141,6 +143,57 @@ export function PurchasesPage() {
           ? originalAmount(a) - originalAmount(b)
           : a.date.localeCompare(b.date) || a.number.localeCompare(b.number)),
     );
+  const returnRows = state.orders
+    .flatMap((purchase) =>
+      purchase.records
+        .filter((record) => record.kind === "return")
+        .map((record) => ({ purchase, record })),
+    )
+    .filter(
+      ({ purchase, record }) =>
+        (!filter.start || record.date >= filter.start) &&
+        (!filter.end || record.date <= filter.end) &&
+        (!filter.supplier || purchase.supplier === filter.supplier) &&
+        (!filter.warehouse || purchase.warehouse === filter.warehouse) &&
+        (tab === "all" ||
+          (tab === "pending"
+            ? record.accountingStatus === "待處理"
+            : record.accountingStatus === "已完成")) &&
+        [
+          record.number,
+          purchase.number,
+          purchase.supplier,
+          record.reason,
+          ...record.lines.map(
+            (line) =>
+              purchase.lines.find((source) => source.id === line.lineId)
+                ?.name || "",
+          ),
+        ].some((value) =>
+          value.toLowerCase().includes(filter.search.trim().toLowerCase()),
+        ),
+    );
+  const exchangeRows = state.exchanges.filter(
+    (exchange) =>
+      (!filter.start || exchange.date >= filter.start) &&
+      (!filter.end || exchange.date <= filter.end) &&
+      (!filter.supplier || exchange.supplier === filter.supplier) &&
+      (!filter.warehouse || exchange.warehouse === filter.warehouse) &&
+      (tab === "all" ||
+        (tab === "pending"
+          ? exchange.status === "待收貨"
+          : exchange.status === "已收貨")) &&
+      [
+        exchange.number,
+        exchange.returnNumber,
+        exchange.purchaseNumber,
+        exchange.supplier,
+        ...exchange.expectedLines.map((line) => line.name),
+        exchange.receipt?.name || "",
+      ].some((value) =>
+        value.toLowerCase().includes(filter.search.trim().toLowerCase()),
+      ),
+  );
   const pendingCount = filtered.filter(
     (o) => !o.settlement && reversalStatus(o) !== "全部沖銷",
   ).length;
@@ -221,7 +274,9 @@ export function PurchasesPage() {
         : modal?.kind === "settle"
           ? "進貨單核對"
           : modal?.kind === "resolve"
-            ? "完成帳務處理"
+            ? record?.resolution === "換貨"
+              ? "換貨單收貨"
+              : "完成帳務處理"
             : modal
               ? operationLabels[modal.kind as keyof typeof operationLabels]
               : "進貨單";
@@ -245,79 +300,132 @@ export function PurchasesPage() {
           <div className="items-search">
             <Search size={17} aria-hidden="true" />
             <BaseInput
-              aria-label="搜尋進貨單"
+              aria-label={
+                documentType === "purchase"
+                  ? "搜尋進貨單"
+                  : documentType === "return"
+                    ? "搜尋退貨單"
+                    : "搜尋換貨單"
+              }
               value={filter.search}
               placeholder="搜尋單號、供應商、品名、備註…"
               onChange={(e) => setField("search", e.target.value)}
             />
           </div>
-          <BaseButton onClick={() => open("new")}>
-            <Plus size={17} aria-hidden="true" />
-            新增進貨單
-          </BaseButton>
+          {documentType === "purchase" && (
+            <BaseButton onClick={() => open("new")}>
+              <Plus size={17} aria-hidden="true" />
+              新增進貨單
+            </BaseButton>
+          )}
         </div>
       </header>
-      <div className="purchase-stats">
-        {[
-          {
-            text: "查詢進貨單數",
-            value: String(rows.length),
-            note: "符合目前查詢條件",
-            Icon: ClipboardList,
-            color: "blue",
-          },
-          {
-            text: "原始進貨總額",
-            value: currency(rows.reduce((s, o) => s + originalAmount(o), 0)),
-            note: "保留原始單據金額",
-            Icon: Coins,
-            color: "cyan",
-          },
-          {
-            text: "待核對單據",
-            value: String(
-              rows.filter(
-                (o) => !o.settlement && reversalStatus(o) !== "全部沖銷",
-              ).length,
-            ),
-            note: "入庫與單據核對分開處理",
-            Icon: Clock3,
-            color: "orange",
-          },
-          {
-            text: "核對完成單據",
-            value: String(rows.filter((o) => !!o.settlement).length),
-            note: "核對完成，不代表已付款",
-            Icon: CheckCircle2,
-            color: "blue",
-          },
-        ].map(({ text, value, note, Icon, color }) => (
-          <article key={text} className={`items-stat ${color}`} title={note}>
-            <span className="items-stat-icon" aria-hidden="true">
-              <Icon size={18} />
-            </span>
-            <div className="items-stat-content">
-              <h3 className="items-stat-title">{text}</h3>
-              <strong>{value}</strong>
-            </div>
-          </article>
+      <div
+        className="items-tabs purchase-document-tabs"
+        role="tablist"
+        aria-label="單據類型"
+        onKeyDown={moveTabFocus}
+      >
+        {(
+          [
+            ["purchase", `進貨單（${state.orders.length}）`],
+            [
+              "return",
+              `退貨單（${state.orders.reduce((sum, purchase) => sum + purchase.records.filter((record) => record.kind === "return").length, 0)}）`,
+            ],
+            ["exchange", `換貨單（${state.exchanges.length}）`],
+          ] as const
+        ).map(([key, label]) => (
+          <BaseButton
+            key={key}
+            id={`purchase-document-tab-${key}`}
+            role="tab"
+            aria-selected={documentType === key}
+            aria-controls="purchase-list-panel"
+            tabIndex={documentType === key ? 0 : -1}
+            variant="ghost"
+            onClick={() => {
+              setDocumentType(key);
+              setTab("all");
+            }}
+            onFocus={() => setDocumentType(key)}
+          >
+            {label}
+          </BaseButton>
         ))}
       </div>
+      <div className="purchase-summary" aria-live="polite">
+        <span>
+          {documentType === "purchase"
+            ? "進貨單"
+            : documentType === "return"
+              ? "退貨單"
+              : "換貨單"}
+          <strong>
+            {documentType === "purchase"
+              ? rows.length
+              : documentType === "return"
+                ? returnRows.length
+                : exchangeRows.length}
+          </strong>
+          筆
+        </span>
+        <span className="purchase-summary-pending">
+          <Clock3 size={15} aria-hidden="true" />
+          {documentType === "purchase"
+            ? `待核對 ${rows.filter((order) => !order.settlement && reversalStatus(order) !== "全部沖銷").length} 筆`
+            : documentType === "return"
+              ? `帳務待處理 ${returnRows.filter(({ record }) => record.accountingStatus === "待處理").length} 筆`
+              : `待收貨 ${exchangeRows.filter((exchange) => exchange.status === "待收貨").length} 筆`}
+        </span>
+      </div>
+
       <div
         className="items-tabs"
         role="tablist"
-        aria-label="進貨核對狀態"
+        aria-label={
+          documentType === "purchase"
+            ? "進貨核對狀態"
+            : documentType === "return"
+              ? "退貨單狀態"
+              : "換貨單狀態"
+        }
         onKeyDown={moveTabFocus}
       >
-        {[
-          ["all", `全部（${filtered.length}）`],
-          ["pending", `待核對（${pendingCount}）`],
-          ["settled", `核對完成（${settledCount}）`],
-          [
-            "accounting",
-            `待處理帳務（${filtered.filter((o) => pendingAccounting(o).length > 0).length}）`,
-          ],
-        ].map(([key, text]) => (
+        {(documentType === "purchase"
+          ? [
+              ["all", `全部（${filtered.length}）`],
+              ["pending", `待核對（${pendingCount}）`],
+              ["settled", `核對完成（${settledCount}）`],
+              [
+                "accounting",
+                `待處理帳務（${filtered.filter((o) => pendingAccounting(o).length > 0).length}）`,
+              ],
+            ]
+          : documentType === "return"
+            ? [
+                ["all", `全部（${returnRows.length}）`],
+                [
+                  "pending",
+                  `待處理（${returnRows.filter(({ record }) => record.accountingStatus === "待處理").length}）`,
+                ],
+                [
+                  "settled",
+                  `已完成（${returnRows.filter(({ record }) => record.accountingStatus === "已完成").length}）`,
+                ],
+              ]
+            : [
+                ["all", `全部（${exchangeRows.length}）`],
+                [
+                  "pending",
+                  `待收貨（${exchangeRows.filter((exchange) => exchange.status === "待收貨").length}）`,
+                ],
+                [
+                  "settled",
+                  `已收貨（${exchangeRows.filter((exchange) => exchange.status === "已收貨").length}）`,
+                ],
+              ]
+        ).map(([key, text]) => (
           <BaseButton
             key={key}
             id={`purchase-tab-${key}`}
@@ -342,8 +450,22 @@ export function PurchasesPage() {
         <div className="items-filter-bar purchase-filters">
           {(
             [
-              ["start", "收貨日期起"],
-              ["end", "收貨日期迄"],
+              [
+                "start",
+                documentType === "purchase"
+                  ? "收貨日期起"
+                  : documentType === "return"
+                    ? "退貨日期起"
+                    : "建立日期起",
+              ],
+              [
+                "end",
+                documentType === "purchase"
+                  ? "收貨日期迄"
+                  : documentType === "return"
+                    ? "退貨日期迄"
+                    : "建立日期迄",
+              ],
             ] as const
           ).map(([key, text]) => (
             <BaseLabel key={key} htmlFor={`purchase-filter-${key}`}>
@@ -357,6 +479,7 @@ export function PurchasesPage() {
             </BaseLabel>
           ))}
           {filterSelect("supplier", "供應商", suppliers)}
+          {filterSelect("warehouse", "倉別", warehouses)}
           <BaseButton
             variant="ghost"
             onClick={() => {
@@ -377,31 +500,36 @@ export function PurchasesPage() {
           >
             最近一個月
           </BaseButton>
-          <details className="purchase-advanced-filters">
-            <summary>
-              更多篩選
-              {[filter.warehouse, filter.returns, filter.correction].filter(
-                Boolean,
-              ).length > 0 &&
-                `（已套用 ${[filter.warehouse, filter.returns, filter.correction].filter(Boolean).length} 項）`}
-            </summary>
-            <div>
-              {filterSelect("warehouse", "倉別", warehouses)}
-              {filterSelect("returns", "退貨狀態", [
-                "無",
-                "部分退貨",
-                "全部退貨",
-              ])}
-              {filterSelect("correction", "更正狀態", [
-                "無",
-                "更正處理中",
-                "已更正",
-              ])}
-            </div>
-          </details>
+          {documentType === "purchase" && (
+            <details className="purchase-advanced-filters">
+              <summary>
+                更多篩選
+                {[filter.warehouse, filter.returns, filter.correction].filter(
+                  Boolean,
+                ).length > 0 &&
+                  `（已套用 ${[filter.warehouse, filter.returns, filter.correction].filter(Boolean).length} 項）`}
+              </summary>
+              <div>
+                {filterSelect("returns", "退貨狀態", [
+                  "無",
+                  "部分退貨",
+                  "全部退貨",
+                ])}
+                {filterSelect("correction", "更正狀態", [
+                  "無",
+                  "更正處理中",
+                  "已更正",
+                ])}
+              </div>
+            </details>
+          )}
         </div>
         <p className="purchase-status-note">
-          核對完成表示單據已核對，不代表已付款。
+          {documentType === "purchase"
+            ? "核對完成表示單據已核對，不代表已付款。"
+            : documentType === "return"
+              ? "退貨單連結原進貨單；退款、折讓與換貨收貨狀態分開追蹤。"
+              : "換貨單連結退貨單與原進貨單；收貨確認後才記錄換入資料。"}
         </p>
         {filter.start && filter.end && filter.start > filter.end && (
           <p role="alert" className="items-error">
@@ -409,170 +537,365 @@ export function PurchasesPage() {
           </p>
         )}
         <div className="purchase-list-card">
-          <div className="purchase-mobile-sort">
-            <BaseLabel htmlFor="purchase-mobile-sort">排序方式</BaseLabel>
-            <BaseNativeSelect
-              id="purchase-mobile-sort"
-              value={`${sort.key}-${sort.direction === 1 ? "asc" : "desc"}`}
-              onChange={(e) => {
-                const [key, direction] = e.target.value.split("-");
-                setSort({ key, direction: direction === "asc" ? 1 : -1 });
-              }}
-            >
-              <Option value="date-desc">收貨日期：新到舊</Option>
-              <Option value="date-asc">收貨日期：舊到新</Option>
-              <Option value="amount-desc">進貨金額：高到低</Option>
-              <Option value="amount-asc">進貨金額：低到高</Option>
-            </BaseNativeSelect>
-          </div>
-          <BaseTableFrame
-            key={tableKey}
-            tableKey={tableKey}
-            columns={9}
-            region="進貨管理列表，可左右捲動"
-            variant="sticky-actions"
-            headers={
-              <BaseTableRow>
-                {[
-                  "進貨單號",
-                  "收貨日期",
-                  "供應商",
-                  "入庫倉別",
-                  "品項數",
-                  "原始進貨金額",
-                  "核對狀態",
-                  "備註",
-                  "操作",
-                ].map((text, index) => (
-                  <BaseTableHead
-                    key={text}
-                    data-export-ignore={index === 8 ? "true" : undefined}
-                    aria-sort={
-                      (index === 1 && sort.key === "date") ||
-                      (index === 5 && sort.key === "amount")
-                        ? sort.direction === 1
-                          ? "ascending"
-                          : "descending"
-                        : undefined
-                    }
-                  >
-                    {index === 1 || index === 5 ? (
-                      <BaseButton
-                        variant="sort"
-                        size="sm"
-                        type="button"
-                        onClick={() =>
-                          setSort({
-                            key: index === 1 ? "date" : "amount",
-                            direction:
-                              sort.key === (index === 1 ? "date" : "amount")
-                                ? -sort.direction
-                                : -1,
-                          })
+          {documentType === "purchase" && (
+            <>
+              <div className="purchase-mobile-sort">
+                <BaseLabel htmlFor="purchase-mobile-sort">排序方式</BaseLabel>
+                <BaseNativeSelect
+                  id="purchase-mobile-sort"
+                  value={`${sort.key}-${sort.direction === 1 ? "asc" : "desc"}`}
+                  onChange={(e) => {
+                    const [key, direction] = e.target.value.split("-");
+                    setSort({ key, direction: direction === "asc" ? 1 : -1 });
+                  }}
+                >
+                  <Option value="date-desc">收貨日期：新到舊</Option>
+                  <Option value="date-asc">收貨日期：舊到新</Option>
+                  <Option value="amount-desc">進貨金額：高到低</Option>
+                  <Option value="amount-asc">進貨金額：低到高</Option>
+                </BaseNativeSelect>
+              </div>
+              <BaseTableFrame
+                key={tableKey}
+                tableKey={tableKey}
+                columns={9}
+                region="進貨管理列表，可左右捲動"
+                variant="sticky-actions"
+                headers={
+                  <BaseTableRow>
+                    {[
+                      "進貨單號",
+                      "收貨日期",
+                      "供應商",
+                      "入庫倉別",
+                      "品項數",
+                      "原始進貨金額",
+                      "核對狀態",
+                      "備註",
+                      "操作",
+                    ].map((text, index) => (
+                      <BaseTableHead
+                        key={text}
+                        data-export-ignore={index === 8 ? "true" : undefined}
+                        aria-sort={
+                          (index === 1 && sort.key === "date") ||
+                          (index === 5 && sort.key === "amount")
+                            ? sort.direction === 1
+                              ? "ascending"
+                              : "descending"
+                            : undefined
                         }
                       >
-                        {text}
-                        <ArrowDownUp size={12} aria-hidden="true" />
+                        {index === 1 || index === 5 ? (
+                          <BaseButton
+                            variant="sort"
+                            size="sm"
+                            type="button"
+                            onClick={() =>
+                              setSort({
+                                key: index === 1 ? "date" : "amount",
+                                direction:
+                                  sort.key === (index === 1 ? "date" : "amount")
+                                    ? -sort.direction
+                                    : -1,
+                              })
+                            }
+                          >
+                            {text}
+                            <ArrowDownUp size={12} aria-hidden="true" />
+                          </BaseButton>
+                        ) : (
+                          text
+                        )}
+                      </BaseTableHead>
+                    ))}
+                  </BaseTableRow>
+                }
+                rows={rows.map((o) => (
+                  <BaseTableRow key={o.id}>
+                    <BaseTableCell data-label="進貨單號">
+                      <BaseButton
+                        variant="record-link"
+                        size="sm"
+                        type="button"
+                        onClick={() => open("view", o.id)}
+                      >
+                        {o.number}
                       </BaseButton>
-                    ) : (
-                      text
-                    )}
-                  </BaseTableHead>
-                ))}
-              </BaseTableRow>
-            }
-            rows={rows.map((o) => (
-              <BaseTableRow key={o.id}>
-                <BaseTableCell data-label="進貨單號">
-                  <BaseButton
-                    variant="record-link"
-                    size="sm"
-                    type="button"
-                    onClick={() => open("view", o.id)}
-                  >
-                    {o.number}
-                  </BaseButton>
-                </BaseTableCell>
-                <BaseTableCell data-label="收貨日期">{o.date}</BaseTableCell>
-                <BaseTableCell data-label="供應商">{o.supplier}</BaseTableCell>
-                <BaseTableCell data-label="入庫倉別">
-                  {o.warehouse}
-                </BaseTableCell>
-                <BaseTableCell data-label="品項數">
-                  {o.lines.length}
-                </BaseTableCell>
-                <BaseTableCell variant="money" data-label="原始進貨金額">
-                  {originalAmount(o).toFixed(2)}
-                </BaseTableCell>
-                <BaseTableCell data-label="核對狀態">
-                  <span
-                    className={`items-status ${o.settlement ? "" : "warning"}`}
-                  >
-                    {reversalStatus(o) === "全部沖銷"
-                      ? "全部沖銷"
-                      : o.settlement
-                        ? "核對完成"
-                        : "待核對"}
-                  </span>
-                  <div className="purchase-status-extras">
-                    {returnStatus(o) !== "無" && (
+                    </BaseTableCell>
+                    <BaseTableCell data-label="收貨日期">
+                      {o.date}
+                    </BaseTableCell>
+                    <BaseTableCell data-label="供應商">
+                      {o.supplier}
+                    </BaseTableCell>
+                    <BaseTableCell data-label="入庫倉別">
+                      {o.warehouse}
+                    </BaseTableCell>
+                    <BaseTableCell data-label="品項數">
+                      {o.lines.length}
+                    </BaseTableCell>
+                    <BaseTableCell variant="money" data-label="原始進貨金額">
+                      {originalAmount(o).toFixed(2)}
+                    </BaseTableCell>
+                    <BaseTableCell data-label="核對狀態">
                       <span
-                        className={`items-status ${returnStatus(o) === "無" ? "neutral" : returnStatus(o) === "全部退貨" ? "danger" : "info"}`}
+                        className={`items-status ${o.settlement ? "" : "warning"}`}
                       >
-                        {returnStatus(o)}
+                        {reversalStatus(o) === "全部沖銷"
+                          ? "全部沖銷"
+                          : o.settlement
+                            ? "核對完成"
+                            : "待核對"}
                       </span>
-                    )}
-                    {correctionStatus(o) !== "無" && (
-                      <span
-                        className={`items-status ${correctionStatus(o) === "無" ? "neutral" : correctionStatus(o) === "更正處理中" ? "warning" : "info"}`}
-                      >
-                        {correctionStatus(o)}
-                      </span>
-                    )}
-                    {o.records.some((r) => r.kind === "reversal") && (
-                      <small>{reversalStatus(o)}</small>
-                    )}
-                  </div>
-                </BaseTableCell>
-                <BaseTableCell
-                  data-label="備註"
-                  className={
-                    !o.remark && !pendingAccounting(o).length
-                      ? "purchase-mobile-optional"
-                      : undefined
-                  }
-                >
-                  {pendingAccounting(o).length > 0 && (
-                    <BaseButton
-                      type="button"
-                      variant="ghost"
-                      onClick={() => open("view", o.id)}
+                    </BaseTableCell>
+                    <BaseTableCell
+                      data-label="備註"
+                      className={
+                        !o.remark && !pendingAccounting(o).length
+                          ? "purchase-mobile-optional"
+                          : undefined
+                      }
                     >
-                      待處理帳務 {pendingAccounting(o).length} 筆
+                      {pendingAccounting(o).length > 0 && (
+                        <BaseButton
+                          type="button"
+                          variant="ghost"
+                          onClick={() => open("view", o.id)}
+                        >
+                          待處理帳務 {pendingAccounting(o).length} 筆
+                        </BaseButton>
+                      )}
+                      {o.remark || "—"}
+                    </BaseTableCell>
+                    <BaseTableCell>
+                      <div className="purchase-row-actions">
+                        <BaseButton
+                          variant="outline"
+                          size="sm"
+                          aria-label={`查看進貨單 ${o.number}`}
+                          onClick={() => open("view", o.id)}
+                        >
+                          <Eye size={16} aria-hidden="true" />
+                          明細
+                        </BaseButton>
+                        <OrderActions
+                          order={o}
+                          onAction={(kind) => open(kind, o.id)}
+                        />
+                      </div>
+                    </BaseTableCell>
+                  </BaseTableRow>
+                ))}
+              />
+            </>
+          )}
+          {documentType === "return" && (
+            <BaseTableFrame
+              key={`return-list-${tab}-${JSON.stringify(filter)}`}
+              tableKey={`return-list-${tab}-${JSON.stringify(filter)}`}
+              columns={8}
+              region="退貨單列表，可左右捲動"
+              variant="sticky-actions"
+              headers={
+                <BaseTableRow>
+                  {[
+                    "退貨單號",
+                    "退貨日期",
+                    "供應商",
+                    "原進貨單",
+                    "退貨品項／數量",
+                    "退貨原成本",
+                    "處理狀態",
+                    "操作",
+                  ].map((label) => (
+                    <BaseTableHead key={label}>{label}</BaseTableHead>
+                  ))}
+                </BaseTableRow>
+              }
+              rows={returnRows.map(({ purchase, record }) => {
+                const exchange = state.exchanges.find(
+                  (item) => item.returnRecordId === record.id,
+                );
+                return (
+                  <BaseTableRow key={record.id}>
+                    <BaseTableCell data-label="退貨單號">
+                      <BaseButton
+                        variant="record-link"
+                        size="sm"
+                        onClick={() => open("view", purchase.id, record.id)}
+                      >
+                        {record.number}
+                      </BaseButton>
+                    </BaseTableCell>
+                    <BaseTableCell data-label="退貨日期">
+                      {record.date}
+                    </BaseTableCell>
+                    <BaseTableCell data-label="供應商">
+                      {purchase.supplier}
+                    </BaseTableCell>
+                    <BaseTableCell data-label="原進貨單">
+                      <BaseButton
+                        variant="record-link"
+                        size="sm"
+                        onClick={() => open("view", purchase.id)}
+                      >
+                        {purchase.number}
+                      </BaseButton>
+                    </BaseTableCell>
+                    <BaseTableCell data-label="退貨品項／數量">
+                      {record.lines
+                        .map(
+                          (line) =>
+                            `${purchase.lines.find((item) => item.id === line.lineId)?.name || "品項"} ${-line.quantityChange}`,
+                        )
+                        .join("、")}
+                    </BaseTableCell>
+                    <BaseTableCell variant="money" data-label="退貨原成本">
+                      {currency(record.amount)}
+                    </BaseTableCell>
+                    <BaseTableCell data-label="處理狀態">
+                      <span
+                        className={`items-status ${record.accountingStatus === "待處理" ? "warning" : ""}`}
+                      >
+                        {exchange?.status === "待收貨"
+                          ? "換貨待收貨"
+                          : record.accountingStatus === "待處理"
+                            ? "帳務待處理"
+                            : "已完成"}
+                      </span>
+                    </BaseTableCell>
+                    <BaseTableCell data-label="操作">
+                      <div className="purchase-row-actions">
+                        <BaseButton
+                          variant="outline"
+                          size="sm"
+                          onClick={() => open("view", purchase.id, record.id)}
+                        >
+                          退貨明細
+                        </BaseButton>
+                        {record.accountingStatus === "待處理" && (
+                          <BaseButton
+                            size="sm"
+                            onClick={() =>
+                              open("resolve", purchase.id, record.id)
+                            }
+                          >
+                            {record.resolution === "換貨"
+                              ? "登錄換貨收貨"
+                              : "處理帳務"}
+                          </BaseButton>
+                        )}
+                      </div>
+                    </BaseTableCell>
+                  </BaseTableRow>
+                );
+              })}
+            />
+          )}
+          {documentType === "exchange" && (
+            <BaseTableFrame
+              key={`exchange-list-${tab}-${JSON.stringify(filter)}`}
+              tableKey={`exchange-list-${tab}-${JSON.stringify(filter)}`}
+              columns={8}
+              region="換貨單列表，可左右捲動"
+              variant="sticky-actions"
+              headers={
+                <BaseTableRow>
+                  {[
+                    "換貨單號",
+                    "建立日期",
+                    "供應商",
+                    "退貨單／原進貨單",
+                    "預計換入品項",
+                    "收貨倉別",
+                    "收貨狀態",
+                    "操作",
+                  ].map((label) => (
+                    <BaseTableHead key={label}>{label}</BaseTableHead>
+                  ))}
+                </BaseTableRow>
+              }
+              rows={exchangeRows.map((exchange) => (
+                <BaseTableRow key={exchange.id}>
+                  <BaseTableCell data-label="換貨單號">
+                    <BaseButton
+                      variant="record-link"
+                      size="sm"
+                      onClick={() =>
+                        open(
+                          exchange.status === "待收貨" ? "resolve" : "view",
+                          exchange.purchaseId,
+                          exchange.returnRecordId,
+                        )
+                      }
+                    >
+                      {exchange.number}
                     </BaseButton>
-                  )}
-                  {o.remark || "—"}
-                </BaseTableCell>
-                <BaseTableCell>
-                  <div className="purchase-row-actions">
+                  </BaseTableCell>
+                  <BaseTableCell data-label="建立日期">
+                    {exchange.date}
+                  </BaseTableCell>
+                  <BaseTableCell data-label="供應商">
+                    {exchange.supplier}
+                  </BaseTableCell>
+                  <BaseTableCell data-label="退貨單／原進貨單">
+                    <BaseButton
+                      variant="record-link"
+                      size="sm"
+                      onClick={() =>
+                        open(
+                          "view",
+                          exchange.purchaseId,
+                          exchange.returnRecordId,
+                        )
+                      }
+                    >
+                      {exchange.returnNumber}
+                    </BaseButton>
+                    <small>{exchange.purchaseNumber}</small>
+                  </BaseTableCell>
+                  <BaseTableCell data-label="預計換入品項">
+                    {exchange.receipt
+                      ? `${exchange.receipt.code} · ${exchange.receipt.name} ${exchange.receipt.quantity} ${exchange.receipt.unit}`
+                      : exchange.expectedLines
+                          .map(
+                            (line) =>
+                              `${line.name} ${line.quantity} ${line.unit}`,
+                          )
+                          .join("、")}
+                  </BaseTableCell>
+                  <BaseTableCell data-label="收貨倉別">
+                    {exchange.receipt?.warehouse || exchange.warehouse}
+                  </BaseTableCell>
+                  <BaseTableCell data-label="收貨狀態">
+                    <span
+                      className={`items-status ${exchange.status === "待收貨" ? "warning" : ""}`}
+                    >
+                      {exchange.status}
+                    </span>
+                  </BaseTableCell>
+                  <BaseTableCell data-label="操作">
                     <BaseButton
                       variant="outline"
                       size="sm"
-                      aria-label={`查看進貨單 ${o.number}`}
-                      onClick={() => open("view", o.id)}
+                      onClick={() =>
+                        open(
+                          exchange.status === "待收貨" ? "resolve" : "view",
+                          exchange.purchaseId,
+                          exchange.returnRecordId,
+                        )
+                      }
                     >
-                      <Eye size={16} aria-hidden="true" />
-                      明細
+                      {exchange.status === "待收貨"
+                        ? "登錄收貨"
+                        : "查看換貨紀錄"}
                     </BaseButton>
-                    <OrderActions
-                      order={o}
-                      onAction={(kind) => open(kind, o.id)}
-                    />
-                  </div>
-                </BaseTableCell>
-              </BaseTableRow>
-            ))}
-          />
+                  </BaseTableCell>
+                </BaseTableRow>
+              ))}
+            />
+          )}
         </div>
       </div>
       <p className="items-sample-note">
@@ -703,7 +1026,10 @@ export function PurchasesPage() {
                         ? "確認沖銷"
                         : modal?.kind === "return"
                           ? "確認退貨"
-                          : "確認送出"}
+                          : modal?.kind === "resolve" &&
+                              record?.resolution === "換貨"
+                            ? "確認換貨收貨"
+                            : "確認送出"}
                 </BaseButton>
               </div>
             </div>
@@ -743,7 +1069,9 @@ export function PurchasesPage() {
             {modal?.kind === "view" && order && (
               <>
                 <PurchaseDetails
+                  key={`${order.id}-${modal.recordId || "purchase"}`}
                   order={order}
+                  initialTab={modal.recordId ? "history" : "lines"}
                   onSettle={() => open("settle", order.id)}
                   onResolve={(r) => open("resolve", order.id, r.id)}
                 />
@@ -823,25 +1151,59 @@ export function PurchasesPage() {
                         const count = state.orders.flatMap(
                           (o) => o.records,
                         ).length;
+                        const returnRecordId = crypto.randomUUID();
+                        const returnNumber = nextNumber(
+                          value.kind === "return"
+                            ? "PR"
+                            : value.kind === "reversal"
+                              ? "PV"
+                              : "PC",
+                          count,
+                        );
                         dispatch(
                           addPurchaseRecord({
                             id: order.id,
                             record: {
                               ...value,
-                              id: crypto.randomUUID(),
-                              number: nextNumber(
-                                value.kind === "return"
-                                  ? "PR"
-                                  : value.kind === "reversal"
-                                    ? "PV"
-                                    : "PC",
-                                count,
-                              ),
+                              id: returnRecordId,
+                              number: returnNumber,
                               operator: account,
                               createdAt: new Date().toISOString(),
                             },
                           }),
                         );
+                        if (
+                          value.kind === "return" &&
+                          value.resolution === "換貨"
+                        ) {
+                          const exchange: ExchangeOrder = {
+                            id: crypto.randomUUID(),
+                            number: nextNumber("EX", state.exchanges.length),
+                            purchaseId: order.id,
+                            purchaseNumber: order.number,
+                            returnRecordId,
+                            returnNumber,
+                            supplier: order.supplier,
+                            warehouse: order.warehouse,
+                            date: value.date,
+                            status: "待收貨",
+                            expectedLines: value.lines.map((line) => {
+                              const source = order.lines.find(
+                                (item) => item.id === line.lineId,
+                              )!;
+                              return {
+                                lineId: source.id,
+                                itemId: source.itemId,
+                                code: source.code,
+                                name: source.name,
+                                specification: source.specification,
+                                unit: source.unit,
+                                quantity: -line.quantityChange,
+                              };
+                            }),
+                          };
+                          dispatch(addExchangeOrder(exchange));
+                        }
                         complete(
                           `已記錄${operationLabels[value.kind]}（展示），原始資料與歷史成本保留。`,
                         );
@@ -853,12 +1215,13 @@ export function PurchasesPage() {
             {modal?.kind === "resolve" && order && record && (
               <ResolutionForm
                 record={record}
+                order={order}
                 onCancel={() => close()}
                 onDirty={() => setDirty(true)}
                 onSubmit={(value) =>
                   review(
                     `完成帳務處理 · ${record.number}`,
-                    `${value.resolution}；相關單號 ${value.reference}。供應商確認金額與原成本分開保存。`,
+                    `${value.resolution}；${value.reference ? `相關單號 ${value.reference}` : `未提供外部單號，使用內部追蹤單號 ${record.number}`}。供應商確認金額與原成本分開保存。`,
                     () => {
                       dispatch(
                         resolvePurchaseRecord({
