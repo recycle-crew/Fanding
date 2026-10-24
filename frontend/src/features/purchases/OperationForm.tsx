@@ -20,6 +20,7 @@ import { Field, PurchaseForm } from "./FormParts";
 import {
   currency,
   lineBalance,
+  reversalStatus,
   operationLabels,
   originalAmount,
   rounded,
@@ -90,10 +91,12 @@ export function OperationForm({
       onDirty={onDirty}
       submitText={`檢查並${kind === "return" ? "退貨" : kind === "reversal" ? "沖銷" : "更正"}`}
       submit={() => {
+        if (reversalStatus(order) === "全部沖銷")
+          return { message: "此單據已全部沖銷，無法再進行異動。" };
         if (kind === "reversal" && order.settlement)
-          return { message: "已結帳單據請使用結帳後更正。" };
+          return { message: "已核對單據請使用核對後更正。" };
         if (kind === "correction" && !order.settlement)
-          return { message: "此單據尚未核對結帳。" };
+          return { message: "此單據尚未核對。" };
         if (!draft.reason.trim())
           return { message: "請填寫處理原因。", field: "operation-reason" };
         if (kind === "return" && !draft.physical)
@@ -239,7 +242,7 @@ export function OperationForm({
             <dd>
               {order.settlement
                 ? `${order.settlement.number} · ${currency(order.settlement.amount)}`
-                : "尚未核對結帳"}
+                : "尚未核對"}
             </dd>
           </div>
         </dl>

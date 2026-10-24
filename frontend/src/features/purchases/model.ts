@@ -22,8 +22,44 @@ export function recentMonthRange(today = taipeiToday()) {
 export const operationLabels = {
   reversal: "進貨沖銷",
   return: "進貨退貨",
-  correction: "結帳後更正",
+  correction: "核對後更正",
 };
+export function reversalStatus(order: Purchase) {
+  const reversals = order.records.filter((r) => r.kind === "reversal");
+  if (!reversals.length) return "無";
+  return order.lines.length > 0 &&
+    order.lines.every(
+      (line) =>
+        -reversals
+          .flatMap((r) => r.lines)
+          .filter((l) => l.lineId === line.id)
+          .reduce((sum, l) => sum + l.quantityChange, 0) >= line.quantity,
+    )
+    ? "全部沖銷"
+    : "部分沖銷";
+}
+export const pendingAccounting = (order: Purchase) =>
+  order.records.filter((r) => r.accountingStatus === "待處理");
+
+export function reconciliationAmounts(order: Purchase) {
+  const original = originalAmount(order);
+  const reversal = rounded(
+    order.records
+      .filter((r) => r.kind === "reversal")
+      .reduce((sum, r) => sum + r.amount, 0),
+  );
+  const returns = rounded(
+    order.records
+      .filter((r) => r.kind === "return")
+      .reduce((sum, r) => sum + r.amount, 0),
+  );
+  return {
+    original,
+    reversal,
+    returns,
+    reference: rounded(original - reversal - returns),
+  };
+}
 export const currency = (value: number) =>
   `NT$ ${value.toLocaleString("zh-TW", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 export const rounded = (value: number) =>

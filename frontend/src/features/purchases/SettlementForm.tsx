@@ -7,7 +7,12 @@ import {
 } from "@/components/ui/BaseNativeSelect";
 import { taipeiToday } from "@/features/items/model";
 import { Field, PurchaseForm } from "./FormParts";
-import { currency, originalAmount, rounded } from "./model";
+import {
+  currency,
+  rounded,
+  reconciliationAmounts,
+  reversalStatus,
+} from "./model";
 import type { Purchase, Settlement } from "@/types/purchases";
 export function SettlementForm({
   order,
@@ -22,11 +27,12 @@ export function SettlementForm({
     value: Omit<Settlement, "number" | "operator" | "createdAt">,
   ) => void;
 }) {
+  const amounts = reconciliationAmounts(order);
   const [draft, setDraft] = useState({
     invoice: "",
     invoiceDate: taipeiToday(),
     tax: "免稅",
-    amount: String(originalAmount(order)),
+    amount: String(amounts.reference),
     accountingDate: taipeiToday(),
     differenceReason: "",
     remark: "",
@@ -37,9 +43,7 @@ export function SettlementForm({
     Number.isFinite(amount) &&
     amount >= 0 &&
     Math.abs(amount * 100 - Math.round(amount * 100)) < 0.000001;
-  const difference = validAmount
-    ? rounded(amount - originalAmount(order))
-    : null;
+  const difference = validAmount ? rounded(amount - amounts.reference) : null;
   const hasDifference = difference !== null && difference !== 0;
   return (
     <PurchaseForm
@@ -47,6 +51,8 @@ export function SettlementForm({
       onDirty={onDirty}
       submitText="下一步：確認內容"
       submit={() => {
+        if (reversalStatus(order) === "全部沖銷")
+          return { message: "此單據已全部沖銷，無需核對。" };
         if (!validAmount)
           return {
             message: "請輸入有效核對金額，不可為負數，最多小數 2 位。",
@@ -54,7 +60,7 @@ export function SettlementForm({
           };
         if (hasDifference && !draft.differenceReason.trim())
           return {
-            message: "核對金額與原始進貨金額不同，請填寫差異原因。",
+            message: "核對金額與應核對參考金額不同，請填寫差異原因。",
             field: "settlement-difference",
           };
         onSubmit({
@@ -70,10 +76,31 @@ export function SettlementForm({
       </div>
       <section>
         <h3>金額核對</h3>
+        <dl className="purchase-facts" aria-label="核對金額組成">
+          <div>
+            <dt>原始進貨金額</dt>
+            <dd>{currency(amounts.original)}</dd>
+          </div>
+          <div>
+            <dt>沖銷金額</dt>
+            <dd>− {currency(amounts.reversal)}</dd>
+          </div>
+          <div>
+            <dt>退貨金額（原成本）</dt>
+            <dd>− {currency(amounts.returns)}</dd>
+          </div>
+          <div>
+            <dt>應核對參考金額</dt>
+            <dd>{currency(amounts.reference)}</dd>
+          </div>
+        </dl>
+        <p className="items-note">
+          參考金額依原成本扣除沖銷與退貨；供應商實際折讓或退款不同時，請調整核對金額並填寫原因。
+        </p>
         <div className="purchase-settlement-amounts">
           <div>
-            <span className="purchase-amount-label">原始進貨金額</span>
-            <strong>{currency(originalAmount(order))}</strong>
+            <span className="purchase-amount-label">應核對參考金額</span>
+            <strong>{currency(amounts.reference)}</strong>
           </div>
           <div>
             <Field name="settlement-amount" label="實際核對金額" required>
@@ -99,10 +126,10 @@ export function SettlementForm({
               {difference === null
                 ? "請輸入有效金額"
                 : difference === 0
-                  ? "與原始進貨金額相同"
+                  ? "與應核對參考金額相同"
                   : difference > 0
-                    ? "高於原始進貨金額"
-                    : "低於原始進貨金額"}
+                    ? "高於應核對參考金額"
+                    : "低於應核對參考金額"}
             </small>
           </div>
         </div>

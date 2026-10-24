@@ -10,6 +10,7 @@ import {
 import { ChevronDown } from "lucide-react";
 import { BaseButton } from "@/components/ui/BaseButton";
 import type { Purchase } from "@/types/purchases";
+import { reversalStatus, lineBalance } from "./model";
 export type OrderAction =
   "view" | "settle" | "reversal" | "return" | "correction";
 export function OrderActions({
@@ -40,12 +41,17 @@ export function OrderActions({
               ["settle", "核對單據"],
               ["reversal", "進貨沖銷"],
               ["return", "進貨退貨"],
-              ["correction", "結帳後更正"],
+              ["correction", "核對後更正"],
             ] as const
           ).map(([key, text]) => (
             <BaseDropdownMenuItem
               key={key}
               disabled={
+                (key !== "view" && reversalStatus(order) === "全部沖銷") ||
+                ((key === "return" || key === "reversal") &&
+                  !order.lines.some(
+                    (line) => lineBalance(order, line).remaining > 0,
+                  )) ||
                 ((key === "settle" || key === "reversal") &&
                   !!order.settlement) ||
                 (key === "correction" && !order.settlement)
@@ -57,9 +63,11 @@ export function OrderActions({
           ))}
           <BaseDropdownMenuSeparator />
           <small>
-            {order.settlement
-              ? "已結帳：請透過更正保留原紀錄"
-              : "尚未結帳：可核對或處理沖銷"}
+            {reversalStatus(order) === "全部沖銷"
+              ? "全部沖銷：保留明細與歷史紀錄"
+              : order.settlement
+                ? "已核對：請透過更正保留原紀錄"
+                : "尚未核對：可核對或處理沖銷"}
           </small>
         </BaseDropdownMenuContent>
       </BaseDropdownMenuPortal>

@@ -8,6 +8,9 @@ import {
   returnStatus,
   correctionStatus,
   recentMonthRange,
+  reversalStatus,
+  reconciliationAmounts,
+  pendingAccounting,
 } from "./model";
 import type { PurchaseRecord } from "@/types/purchases";
 import { createItemsSeed } from "@/features/items/model";
@@ -24,6 +27,40 @@ describe("最近一個月日期範圍", () => {
 });
 
 describe("進貨金額、快照與可退數量", () => {
+  it("沖銷與退貨分開計算，全部沖銷只依沖銷數量判斷", () => {
+    const order = createPurchasesSeed().orders[0];
+    const line = { ...order.lines[0], quantity: 10, unitCost: 100 };
+    order.lines = [line];
+    order.records = [];
+    const record = {
+      id: "R",
+      kind: "reversal",
+      amount: 300,
+      accountingStatus: "已完成",
+      lines: [{ lineId: line.id, quantityChange: -3, amount: -300 }],
+    } as PurchaseRecord;
+    expect(reversalStatus(order)).toBe("無");
+    order.records.push(record);
+    expect(reversalStatus(order)).toBe("部分沖銷");
+    order.records.push({
+      ...record,
+      id: "T",
+      kind: "return",
+      amount: 700,
+      accountingStatus: "待處理",
+      lines: [{ lineId: line.id, quantityChange: -7, amount: -700 }],
+    });
+    expect(reversalStatus(order)).toBe("部分沖銷");
+    expect(reconciliationAmounts(order)).toEqual({
+      original: 1000,
+      reversal: 300,
+      returns: 700,
+      reference: 0,
+    });
+    expect(pendingAccounting(order)).toHaveLength(1);
+    order.records[1].kind = "reversal";
+    expect(reversalStatus(order)).toBe("全部沖銷");
+  });
   it("明細先四捨五入至分，再加總", () => {
     const order = createPurchasesSeed().orders[0];
     order.lines = [
