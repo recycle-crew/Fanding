@@ -32,7 +32,7 @@ async function action(page: Page, number: string, name: string) {
 }
 async function finish(page: Page) {
   await modal(page)
-    .getByRole("button", { name: /^(確認送出|確認核對)$/ })
+    .getByRole("button", { name: /^(確認送出|確認核對|確認入庫)$/ })
     .click();
   await expect(modal(page)).toBeHidden();
 }
@@ -42,6 +42,120 @@ test.beforeEach(async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "進貨管理", exact: true }),
   ).toBeVisible();
+});
+
+test("批號效期選填、同商品批次與固定暫計金額", async ({ page }, testInfo) => {
+  await page.getByRole("button", { name: "新增進貨單", exact: true }).click();
+  await expect(page.locator("#purchase-related-return")).toHaveCount(0);
+  await page.locator("#purchase-supplier").selectOption("明康醫藥有限公司");
+  await page.locator("#purchase-warehouse").selectOption("主倉庫");
+  await page.locator("#purchase-item-search").fill("MED0001");
+  await page.locator("#purchase-item-search").press("Enter");
+  await expect(page.locator("#purchase-item-search")).toBeFocused();
+  await modal(page)
+    .getByRole("button", { name: "填寫這筆", exact: true })
+    .click();
+  await expect(page.getByLabel("第1筆批號", { exact: true })).toBeFocused();
+  await page.getByLabel("第1筆批號", { exact: true }).fill("ORIGINAL");
+  await page.getByLabel("第1筆效期", { exact: true }).fill("2027-10-20");
+  await page.getByLabel("第1筆數量", { exact: true }).fill("3");
+  await page.getByLabel("第1筆單位成本", { exact: true }).fill("12.5");
+  await modal(page)
+    .getByRole("button", { name: "新增第1筆人工淚液的同商品批次", exact: true })
+    .click();
+  await expect(page.getByLabel("第2筆批號", { exact: true })).toBeFocused();
+  await expect(page.getByLabel("第2筆批號", { exact: true })).toHaveValue("");
+  await expect(page.getByLabel("第2筆效期", { exact: true })).toHaveValue("");
+  await expect(page.getByLabel("第2筆數量", { exact: true })).toHaveValue("1");
+  await expect(page.getByLabel("第2筆單位成本", { exact: true })).toHaveValue(
+    "12.5",
+  );
+  const total = modal(page).locator(".purchase-draft-total");
+  await expect(total).toContainText("共 2 筆");
+  await expect(total).toContainText("NT$ 50.00");
+  await page.getByLabel("第2筆數量", { exact: true }).fill("");
+  await expect(total).toContainText("1 筆數量或成本待補齊");
+  await expect(total).toContainText("NT$ 37.50");
+  await page.getByLabel("第2筆數量", { exact: true }).fill("1");
+  await modal(page)
+    .locator(".items-modal-scroll")
+    .evaluate((element) => {
+      element.scrollTop = 0;
+    });
+  await expect(total).toBeInViewport({ ratio: 1 });
+  await modal(page).screenshot({
+    path: testInfo.outputPath("purchase-draft-summary.png"),
+  });
+  await modal(page)
+    .getByRole("button", { name: "下一步：確認內容", exact: true })
+    .click();
+  await expect(
+    modal(page).getByRole("button", { name: "確認入庫", exact: true }),
+  ).toBeVisible();
+  await finish(page);
+  await action(page, "PO20261020010", "查看進貨明細");
+  const rows = modal(page).locator(".purchase-detail-lines tbody tr");
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(1).locator("td").nth(1)).toContainText("—");
+});
+
+test("新增商品欄位、手機卡片與收合備註", async ({ page }, testInfo) => {
+  await page.getByRole("button", { name: "新增進貨單", exact: true }).click();
+  for (const code of ["MED0001", "MED0002"]) {
+    await page.locator("#purchase-item-search").fill(code);
+    await page.locator("#purchase-item-search").press("Enter");
+  }
+  const rows = modal(page).locator(".purchase-lines-table tbody tr");
+  const row = rows.first();
+  await expect(row.locator("td")).toHaveCount(7);
+  await expect(page.getByLabel("第1筆批號", { exact: true })).toBeEnabled();
+  await expect(page.getByLabel("第1筆效期", { exact: true })).toBeEnabled();
+  await page.getByLabel("第1筆批號", { exact: true }).fill("CLINIC-001");
+  await page.getByLabel("第1筆效期", { exact: true }).fill("2027-10-20");
+  await page.getByLabel("第1筆數量", { exact: true }).fill("3");
+  await page.getByLabel("第1筆單位成本", { exact: true }).fill("123.4567");
+  await expect(row.locator("td").nth(5)).toContainText("NT$ 370.37");
+  await expect(page.getByLabel("第1筆數量", { exact: true })).toHaveCSS(
+    "font-size",
+    "16px",
+  );
+  await expect(page.getByLabel("第1筆備註", { exact: true })).toBeHidden();
+  await row.locator("summary").click();
+  await page.getByLabel("第1筆備註", { exact: true }).fill("分批進貨");
+  await row.locator("summary").click();
+  await page
+    .getByRole("button", { name: "移除第2筆散瞳劑", exact: true })
+    .click();
+  await expect(rows).toHaveCount(1);
+  await row.scrollIntoViewIfNeeded();
+  if (testInfo.project.name === "mobile") {
+    expect(
+      await modal(page)
+        .locator(".purchase-new-lines")
+        .evaluate((element) => element.scrollWidth <= element.clientWidth + 1),
+    ).toBe(true);
+    await expect(page.getByLabel("第1筆批號", { exact: true })).toBeInViewport({
+      ratio: 1,
+    });
+    await expect(
+      page.getByLabel("第1筆單位成本", { exact: true }),
+    ).toBeInViewport({ ratio: 1 });
+  }
+  await modal(page).screenshot({
+    path: testInfo.outputPath("new-purchase-line.png"),
+  });
+  if (testInfo.project.name === "mobile") {
+    await page.setViewportSize({ width: 320, height: 844 });
+    expect(
+      await modal(page)
+        .locator(".purchase-new-lines")
+        .evaluate((element) => element.scrollWidth <= element.clientWidth + 1),
+    ).toBe(true);
+  }
+  await row.locator("summary").click();
+  await expect(page.getByLabel("第1筆備註", { exact: true })).toHaveValue(
+    "分批進貨",
+  );
 });
 
 test("診所核對預設免稅、中文錯誤定位與備註收合", async ({ page }, testInfo) => {
@@ -101,7 +215,7 @@ test("核對差額即時更新、無效金額及二次確認", async ({ page }, 
   await amount.fill("-1");
   await expect(comparison).toContainText("請輸入有效金額");
   await amount.fill("1900");
-  await expect(comparison).toContainText("低於原始進貨金額");
+  await expect(comparison).toContainText("低於應核對參考金額");
   await expect(comparison).toContainText("NT$ -100.00");
   await expect(page.locator("#settlement-difference")).toHaveAttribute(
     "required",
@@ -115,7 +229,7 @@ test("核對差額即時更新、無效金額及二次確認", async ({ page }, 
     path: testInfo.outputPath("settlement-edit.png"),
   });
   await amount.fill("2100");
-  await expect(comparison).toContainText("高於原始進貨金額");
+  await expect(comparison).toContainText("高於應核對參考金額");
   await amount.fill("2000");
   await expect(comparison).toContainText("金額一致");
   await page.locator("#settlement-tax").selectOption("應稅");
@@ -262,7 +376,7 @@ test(
   async ({ page }) => {
     await page.getByRole("button", { name: "新增進貨單", exact: true }).click();
     await modal(page)
-      .getByRole("button", { name: "確認入庫", exact: true })
+      .getByRole("button", { name: "下一步：確認內容", exact: true })
       .click();
     await expect(modal(page).getByRole("alert")).toBeVisible();
     await page.locator("#purchase-supplier").selectOption("明康醫藥有限公司");
@@ -279,7 +393,7 @@ test(
     await page.getByLabel("第1筆數量", { exact: true }).fill("3");
     await page.getByLabel("第1筆單位成本", { exact: true }).fill("123.4567");
     await modal(page)
-      .getByRole("button", { name: "確認入庫", exact: true })
+      .getByRole("button", { name: "下一步：確認內容", exact: true })
       .click();
     await expect(modal(page)).toContainText("確認本次操作");
     await finish(page);
@@ -312,10 +426,9 @@ test(
   async ({ page }) => {
     await page.getByRole("button", { name: "新增進貨單", exact: true }).click();
     await expect(
-      modal(page).getByText(
-        "必填：供應商、入庫倉別、收貨日期，以及至少一筆進貨商品。",
-        { exact: false },
-      ),
+      modal(page).getByText("選擇供應商與倉別，再加入進貨商品。", {
+        exact: false,
+      }),
     ).toBeVisible();
     await expect(
       modal(page).getByRole("heading", {
@@ -323,11 +436,11 @@ test(
       }),
     ).toBeVisible();
     await expect(
-      modal(page).getByText("必填：至少加入一筆進貨商品。", { exact: false }),
+      modal(page).getByText("尚未加入商品，請先搜尋並加入。", { exact: false }),
     ).toBeVisible();
     await page.locator("#purchase-warehouse").selectOption("展示倉");
     await modal(page)
-      .getByRole("button", { name: "確認入庫", exact: true })
+      .getByRole("button", { name: "下一步：確認內容", exact: true })
       .click();
     const alert = modal(page).getByRole("alert");
     await expect(alert).toContainText("供應商");
@@ -350,7 +463,7 @@ test(
   async ({ page }) => {
     await page.getByRole("button", { name: "新增進貨單", exact: true }).click();
     const submit = modal(page).getByRole("button", {
-      name: "確認入庫",
+      name: "下一步：確認內容",
       exact: true,
     });
     await page.locator("#purchase-supplier").selectOption("明康醫藥有限公司");
@@ -383,15 +496,17 @@ test(
     await page.locator("#purchase-item-search").fill("MED0001");
     await page.locator("#purchase-item-search").press("Enter");
     const row = modal(page).locator(".purchase-lines-table tbody tr").first();
-    for (const column of [2, 3, 4, 6]) {
+    for (const column of [3, 4]) {
       await expect(row.locator("td").nth(column)).toContainText("必填");
     }
-    await submit.click();
-    await expect(modal(page).getByRole("alert")).toContainText("第1筆批號");
-    await page.getByLabel("第1筆批號", { exact: true }).fill("REQUIRED-001");
-    await submit.click();
-    await expect(modal(page).getByRole("alert")).toContainText("第1筆效期");
-    await page.getByLabel("第1筆效期", { exact: true }).fill("2027-10-20");
+    for (const column of [1, 2])
+      await expect(row.locator("td").nth(column)).toContainText("選填");
+    await expect(
+      page.getByLabel("第1筆批號", { exact: true }),
+    ).not.toHaveAttribute("required", "");
+    await expect(
+      page.getByLabel("第1筆效期", { exact: true }),
+    ).not.toHaveAttribute("required", "");
     for (const [label, invalid, valid] of [
       ["第1筆數量", "0", "2"],
       ["第1筆單位成本", "-1", "0"],
@@ -415,11 +530,17 @@ test(
     await finish(page);
     await expect(list(page)).toContainText("PO20261020010");
     await action(page, "PO20261020010", "查看進貨明細");
-    await expect(modal(page)).toContainText("REQUIRED-001");
+    await expect(
+      modal(page)
+        .locator(".purchase-detail-lines tbody tr")
+        .first()
+        .locator("td")
+        .nth(1),
+    ).toContainText("—");
   },
 );
 
-test("核對差異原因及已結帳入口限制", async ({ page }) => {
+test("核對差異原因及已核對入口限制", async ({ page }) => {
   await action(page, "PO20261020009", "核對單據");
   await page.locator("#settlement-tax").selectOption("應稅");
   await page.locator("#settlement-amount").fill("1900");
@@ -444,7 +565,7 @@ test("核對差異原因及已結帳入口限制", async ({ page }) => {
     page.getByRole("menuitem", { name: "進貨沖銷", exact: true }),
   ).toBeDisabled();
   await expect(
-    page.getByRole("menuitem", { name: "結帳後更正", exact: true }),
+    page.getByRole("menuitem", { name: "核對後更正", exact: true }),
   ).toBeEnabled();
 });
 
@@ -492,24 +613,15 @@ test("沖銷與退貨不可重複處理、可追溯量不足阻擋", async ({ pa
     .getByRole("button", { name: "檢查並沖銷", exact: true })
     .click();
   await finish(page);
-  await action(page, "PO20261020009", "進貨退貨");
-  await page.locator("#operation-reason").fill("重複處理");
-  await page.locator("#operation-resolution").selectOption("待確認");
-  await page
-    .getByRole("checkbox", { name: "選擇人工淚液", exact: true })
-    .check();
-  await page.getByLabel("人工淚液本次數量", { exact: true }).fill("1");
-  await page.locator("#operation-physical").check();
-  await modal(page)
-    .getByRole("button", { name: "檢查並退貨", exact: true })
-    .click();
-  await expect(modal(page).getByRole("alert")).toContainText("超過");
-  await modal(page)
-    .getByRole("button", { name: "關閉進貨視窗", exact: true })
-    .click();
-  await modal(page)
-    .getByRole("button", { name: "放棄修改", exact: true })
-    .click();
+  const row = page.getByRole("row").filter({ hasText: "PO20261020009" });
+  await expect(row).toContainText("全部沖銷");
+  await row.getByRole("button", { name: /作業/ }).click();
+  for (const name of ["核對單據", "進貨沖銷", "進貨退貨", "核對後更正"]) {
+    await expect(
+      page.getByRole("menuitem", { name, exact: true }),
+    ).toBeDisabled();
+  }
+  await page.keyboard.press("Escape");
   await action(page, "PO20261013002", "進貨退貨");
   await page.locator("#operation-reason").fill("庫存已有耗用");
   await page.locator("#operation-resolution").selectOption("退款");
@@ -525,7 +637,7 @@ test("沖銷與退貨不可重複處理、可追溯量不足阻擋", async ({ pa
 });
 
 test("純金額更正保留核對金額、帳務結果另存", async ({ page }) => {
-  await action(page, "PO20261018007", "結帳後更正");
+  await action(page, "PO20261018007", "核對後更正");
   await page.locator("#operation-type").selectOption("發票金額更正");
   await page.locator("#operation-reason").fill("核對金額修正");
   await page.locator("#operation-resolution").selectOption("折讓");
@@ -571,11 +683,66 @@ test("純金額更正保留核對金額、帳務結果另存", async ({ page }) 
   await expect(modal(page)).toContainText("NT$ -50.00");
 });
 
+test("部分沖銷後核對預填淨額並保留原始金額", async ({ page }) => {
+  await action(page, "PO20261020009", "進貨沖銷");
+  await page.locator("#operation-reason").fill("部分登錄錯誤");
+  await page
+    .getByRole("checkbox", { name: "選擇人工淚液", exact: true })
+    .check();
+  await page.getByLabel("人工淚液本次數量", { exact: true }).fill("3");
+  await modal(page)
+    .getByRole("button", { name: "檢查並沖銷", exact: true })
+    .click();
+  await finish(page);
+  await expect(
+    page.getByRole("row").filter({ hasText: "PO20261020009" }),
+  ).toContainText("部分沖銷");
+  await action(page, "PO20261020009", "核對單據");
+  await expect(page.locator("#settlement-amount")).toHaveValue("1700");
+  const breakdown = modal(page).locator('[aria-label="核對金額組成"]');
+  await expect(breakdown).toContainText("NT$ 2,000.00");
+  await expect(breakdown).toContainText("NT$ 300.00");
+  await expect(breakdown).toContainText("NT$ 1,700.00");
+  await expect(page.locator("#settlement-difference")).toHaveCount(0);
+  await modal(page).screenshot({
+    path: test.info().outputPath("reconciliation-breakdown.png"),
+  });
+});
+
+test("連續掃碼自動加入並攔截掃描器 Enter", async ({ page }) => {
+  await page.getByRole("button", { name: "新增進貨單", exact: true }).click();
+  const search = page.locator("#purchase-item-search");
+  const rows = modal(page).locator(".purchase-lines-table tbody tr");
+  await expect(search).toBeFocused();
+  await page.keyboard.type("4711234560000");
+  await expect(rows).toHaveCount(1);
+  await expect(search).toHaveValue("");
+  await expect(search).toBeFocused();
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("4711234560001");
+  await page.keyboard.press("Enter");
+  // 等待自動加入的計時器，確認尾碼 Enter 不會重複新增。
+  await page.waitForTimeout(250);
+  await expect(rows).toHaveCount(2);
+  await expect(search).toBeFocused();
+  await page.keyboard.type("4711234560000");
+  await expect(rows).toHaveCount(3);
+  await search.fill("471123456");
+  await search.press("Enter");
+  await expect(modal(page)).toContainText("找到多筆商品，請選擇正確品項。");
+  await expect(rows).toHaveCount(3);
+  await search.fill("9999999999999");
+  await search.press("Enter");
+  await expect(modal(page)).toContainText(
+    "找不到對應商品，請確認條碼或改用搜尋。",
+  );
+  await expect(rows).toHaveCount(3);
+  await expect(page.locator("#purchase-supplier")).toBeVisible();
+});
+
 test("未儲存提醒、鍵盤與版面", async ({ page }, testInfo) => {
   await page.getByRole("button", { name: "新增進貨單", exact: true }).click();
-  await expect(
-    modal(page).getByRole("heading", { name: "新增進貨單", exact: true }),
-  ).toBeFocused();
+  await expect(page.locator("#purchase-item-search")).toBeFocused();
   await expect(page.locator("#purchase-remark")).toBeHidden();
   await modal(page).locator(".purchase-optional-fields summary").click();
   await page.locator("#purchase-remark").fill("不儲存");
@@ -612,10 +779,10 @@ test("未儲存提醒、鍵盤與版面", async ({ page }, testInfo) => {
   await expect(page.getByRole("tab", { name: /^待核對/ })).toBeFocused();
 });
 
-test("數量、成本、品項與批號更正均保留原始明細", async ({ page }) => {
-  for (const type of ["數量更正", "成本更正", "品項更正", "批號更正"]) {
+for (const type of ["數量更正", "成本更正", "品項更正", "批號更正"]) {
+  test(`${type}保留原始明細`, async ({ page }) => {
     await page.goto("/purchases");
-    await action(page, "PO20261019008", "結帳後更正");
+    await action(page, "PO20261019008", "核對後更正");
     await page.locator("#operation-type").selectOption(type);
     await page.locator("#operation-reason").fill(`測試${type}`);
     await page.locator("#operation-resolution").selectOption("待確認");
@@ -651,8 +818,8 @@ test("數量、成本、品項與批號更正均保留原始明細", async ({ pa
     await modal(page)
       .getByRole("button", { name: "關閉進貨視窗", exact: true })
       .click();
-  }
-});
+  });
+}
 
 test("a11y 進貨列表、選單及所有主要視窗", async ({ page }) => {
   async function audit() {
@@ -687,7 +854,7 @@ test("a11y 進貨列表、選單及所有主要視窗", async ({ page }) => {
       .getByRole("button", { name: "關閉進貨視窗", exact: true })
       .click();
   }
-  await action(page, "PO20261018007", "結帳後更正");
+  await action(page, "PO20261018007", "核對後更正");
   await audit();
 });
 
@@ -708,3 +875,19 @@ test(
     await expect(page.locator("#workspace").first()).toBeVisible();
   },
 );
+
+test("待處理帳務集中入口與處理完成後移出", async ({ page }) => {
+  await page.getByRole("tab", { name: /^待處理帳務/ }).click();
+  const row = page.getByRole("row").filter({ hasText: "PO20261019008" });
+  await row.getByRole("button", { name: /待處理帳務/ }).click();
+  const section = modal(page).getByRole("region", { name: "待處理帳務" });
+  await section.getByRole("button", { name: /^處理帳務/ }).click();
+  await page.locator("#resolution-type").selectOption("退款");
+  await page.locator("#resolution-amount").fill("500");
+  await page.locator("#resolution-reference").fill("REF-TEST-001");
+  await modal(page)
+    .getByRole("button", { name: "確認帳務處理完成", exact: true })
+    .click();
+  await finish(page);
+  await expect(row).toHaveCount(0);
+});
