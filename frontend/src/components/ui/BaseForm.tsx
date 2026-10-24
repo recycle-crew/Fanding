@@ -21,6 +21,7 @@ import {
 } from "react-hook-form";
 import { BaseLabel } from "@/components/ui/BaseLabel";
 import { BaseButton } from "@/components/ui/BaseButton";
+import { nativeValidationMessage } from "@/helpers/formValidation";
 
 const ErrorContext = createContext<{
   field: string;
@@ -98,6 +99,8 @@ export function BaseForm<T extends FieldValues = FieldValues>({
   const activeForm = form || fallbackForm;
   const id = useId();
   const summary = useRef<HTMLParagraphElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const invalidTarget = useRef<HTMLElement | null>(null);
 
   const errors = activeForm.formState.errors;
   const firstErrorKey = Object.keys(errors)[0];
@@ -107,9 +110,20 @@ export function BaseForm<T extends FieldValues = FieldValues>({
 
   useEffect(() => {
     if (firstErrorMessage) {
-      summary.current?.focus({ preventScroll: true });
+      const namedField = Array.from(formRef.current?.elements || []).find(
+        (element) =>
+          element.getAttribute("name") === firstErrorKey ||
+          element.id === firstErrorKey,
+      ) as HTMLElement | undefined;
+      const target = namedField || invalidTarget.current;
+      if (target?.isConnected) {
+        const section = target.closest("details");
+        if (section) section.open = true;
+        target.focus({ preventScroll: true });
+        target.scrollIntoView({ block: "nearest" });
+      } else summary.current?.focus({ preventScroll: true });
     }
-  }, [firstErrorMessage]);
+  }, [firstErrorMessage, firstErrorKey]);
 
   const handleFormSubmit = activeForm.handleSubmit(async (data) => {
     if (onSubmit) {
@@ -137,6 +151,7 @@ export function BaseForm<T extends FieldValues = FieldValues>({
         }}
       >
         <form
+          ref={formRef}
           className={cn(formVariants())}
           noValidate
           onSubmit={(event) => {
@@ -148,9 +163,10 @@ export function BaseForm<T extends FieldValues = FieldValues>({
                 HTMLInputElement | HTMLSelectElement
               >(":invalid");
               if (invalid) {
+                invalidTarget.current = invalid;
                 activeForm.setError((invalid.name || "root") as FieldPath<T>, {
                   type: "native",
-                  message: `${invalid.getAttribute("aria-label") || invalid.labels?.[0]?.querySelector("span")?.textContent || "欄位"}：${invalid.validationMessage}`,
+                  message: nativeValidationMessage(invalid),
                 });
                 return;
               }
@@ -158,6 +174,7 @@ export function BaseForm<T extends FieldValues = FieldValues>({
             void handleFormSubmit(event);
           }}
           onChangeCapture={() => {
+            invalidTarget.current = null;
             activeForm.clearErrors();
             onDirty();
           }}
