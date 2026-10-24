@@ -7,9 +7,21 @@ import {
   snapshot,
   returnStatus,
   correctionStatus,
+  recentMonthRange,
 } from "./model";
 import type { PurchaseRecord } from "@/types/purchases";
 import { createItemsSeed } from "@/features/items/model";
+
+describe("最近一個月日期範圍", () => {
+  it.each([
+    ["2026-10-24", "2026-09-24"],
+    ["2026-03-31", "2026-02-28"],
+    ["2024-03-31", "2024-02-29"],
+    ["2026-01-31", "2025-12-31"],
+  ])("%s 往前推一個曆月為 %s", (today, start) => {
+    expect(recentMonthRange(today)).toEqual({ start, end: today });
+  });
+});
 
 describe("進貨金額、快照與可退數量", () => {
   it("明細先四捨五入至分，再加總", () => {

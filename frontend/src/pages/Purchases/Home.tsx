@@ -38,7 +38,7 @@ import {
   BaseTableRow,
 } from "@/components/ui/BaseTable";
 import { BaseTableFrame } from "@/components/ui/BaseDataTable";
-import { suppliers, warehouses, taipeiToday } from "@/features/items/model";
+import { suppliers, warehouses } from "@/features/items/model";
 import { moveTabFocus } from "@/features/items/tabKeyboard";
 import { NewPurchaseForm } from "@/features/purchases/NewPurchaseForm";
 import { SettlementForm } from "@/features/purchases/SettlementForm";
@@ -55,6 +55,7 @@ import {
   nextNumber,
   operationLabels,
   originalAmount,
+  recentMonthRange,
   returnStatus,
 } from "@/features/purchases/model";
 import "@/features/items/items.css";
@@ -74,7 +75,10 @@ export function PurchasesPage() {
   const account =
     useAppSelector((s) => s.workspace.currentAccount) || "demo.pharmacy";
   const dispatch = useAppDispatch();
-  const [filter, setFilter] = useState(blankFilter);
+  const [filter, setFilter] = useState(() => ({
+    ...blankFilter,
+    ...recentMonthRange(),
+  }));
   const [tab, setTab] = useState("all");
   const [sort, setSort] = useState({ key: "date", direction: -1 });
   const [modal, setModal] = useState<{
@@ -173,6 +177,28 @@ export function PurchasesPage() {
   function setField(key: keyof typeof blankFilter, value: string) {
     setFilter((current) => ({ ...current, [key]: value }));
   }
+  function filterSelect(
+    key: "supplier" | "warehouse" | "returns" | "correction",
+    text: string,
+    values: readonly string[],
+  ) {
+    return (
+      <BaseLabel key={key} htmlFor={`purchase-filter-${key}`}>
+        <span id={`purchase-filter-${key}-label`}>{text}</span>
+        <BaseNativeSelect
+          id={`purchase-filter-${key}`}
+          aria-labelledby={`purchase-filter-${key}-label`}
+          value={filter[key]}
+          onChange={(e) => setField(key, e.target.value)}
+        >
+          <Option value="">全部</Option>
+          {values.map((value) => (
+            <Option key={value}>{value}</Option>
+          ))}
+        </BaseNativeSelect>
+      </BaseLabel>
+    );
+  }
   const title =
     modal?.kind === "new"
       ? "新增進貨單"
@@ -198,7 +224,7 @@ export function PurchasesPage() {
           <Truck aria-hidden="true" />
           <div>
             <h2>進貨管理</h2>
-            <p>管理進貨單據、核對結帳與進貨明細</p>
+            <p>管理進貨單據、單據核對與進貨明細</p>
           </div>
         </div>
         <div className="items-heading-tools">
@@ -236,26 +262,25 @@ export function PurchasesPage() {
           {
             text: "待核對單據",
             value: String(rows.filter((o) => !o.settlement).length),
-            note: "入庫與核對結帳分開處理",
+            note: "入庫與單據核對分開處理",
             Icon: Clock3,
             color: "orange",
           },
           {
-            text: "已結帳單據",
+            text: "核對完成單據",
             value: String(rows.filter((o) => !!o.settlement).length),
             note: "核對完成，不代表已付款",
             Icon: CheckCircle2,
             color: "blue",
           },
         ].map(({ text, value, note, Icon, color }) => (
-          <article key={text} className={`items-stat ${color}`}>
+          <article key={text} className={`items-stat ${color}`} title={note}>
             <span className="items-stat-icon" aria-hidden="true">
-              <Icon size={23} />
+              <Icon size={18} />
             </span>
-            <div>
-              <h3>{text}</h3>
+            <div className="items-stat-content">
+              <h3 className="items-stat-title">{text}</h3>
               <strong>{value}</strong>
-              <p>{note}</p>
             </div>
           </article>
         ))}
@@ -269,7 +294,7 @@ export function PurchasesPage() {
         {[
           ["all", `全部（${filtered.length}）`],
           ["pending", `待核對（${pendingCount}）`],
-          ["settled", `已結帳（${settledCount}）`],
+          ["settled", `核對完成（${settledCount}）`],
         ].map(([key, text]) => (
           <BaseButton
             key={key}
@@ -309,29 +334,7 @@ export function PurchasesPage() {
               />
             </BaseLabel>
           ))}
-          {(
-            [
-              ["supplier", "供應商", suppliers],
-              ["warehouse", "倉別", warehouses],
-              ["returns", "退貨狀態", ["無", "部分退貨", "全部退貨"]],
-              ["correction", "更正狀態", ["無", "更正處理中", "已更正"]],
-            ] as const
-          ).map(([key, text, values]) => (
-            <BaseLabel key={key} htmlFor={`purchase-filter-${key}`}>
-              <span id={`purchase-filter-${key}-label`}>{text}</span>
-              <BaseNativeSelect
-                id={`purchase-filter-${key}`}
-                aria-labelledby={`purchase-filter-${key}-label`}
-                value={filter[key]}
-                onChange={(e) => setField(key, e.target.value)}
-              >
-                <Option value="">全部</Option>
-                {values.map((value) => (
-                  <Option key={value}>{value}</Option>
-                ))}
-              </BaseNativeSelect>
-            </BaseLabel>
-          ))}
+          {filterSelect("supplier", "供應商", suppliers)}
           <BaseButton
             variant="ghost"
             onClick={() => {
@@ -344,27 +347,66 @@ export function PurchasesPage() {
           <BaseButton
             variant="outline"
             onClick={() => {
-              const today = taipeiToday();
               setFilter((current) => ({
                 ...current,
-                start: `${today.slice(0, 7)}-01`,
-                end: today,
+                ...recentMonthRange(),
               }));
             }}
           >
-            本月至今
+            最近一個月
           </BaseButton>
+          <details className="purchase-advanced-filters">
+            <summary>
+              更多篩選
+              {[filter.warehouse, filter.returns, filter.correction].filter(
+                Boolean,
+              ).length > 0 &&
+                `（已套用 ${[filter.warehouse, filter.returns, filter.correction].filter(Boolean).length} 項）`}
+            </summary>
+            <div>
+              {filterSelect("warehouse", "倉別", warehouses)}
+              {filterSelect("returns", "退貨狀態", [
+                "無",
+                "部分退貨",
+                "全部退貨",
+              ])}
+              {filterSelect("correction", "更正狀態", [
+                "無",
+                "更正處理中",
+                "已更正",
+              ])}
+            </div>
+          </details>
         </div>
+        <p className="purchase-status-note">
+          核對完成表示單據已核對，不代表已付款。
+        </p>
         {filter.start && filter.end && filter.start > filter.end && (
           <p role="alert" className="items-error">
             收貨日期起不可晚於迄日，請調整日期條件。
           </p>
         )}
         <div className="purchase-list-card">
+          <div className="purchase-mobile-sort">
+            <BaseLabel htmlFor="purchase-mobile-sort">排序方式</BaseLabel>
+            <BaseNativeSelect
+              id="purchase-mobile-sort"
+              value={`${sort.key}-${sort.direction === 1 ? "asc" : "desc"}`}
+              onChange={(e) => {
+                const [key, direction] = e.target.value.split("-");
+                setSort({ key, direction: direction === "asc" ? 1 : -1 });
+              }}
+            >
+              <Option value="date-desc">收貨日期：新到舊</Option>
+              <Option value="date-asc">收貨日期：舊到新</Option>
+              <Option value="amount-desc">進貨金額：高到低</Option>
+              <Option value="amount-asc">進貨金額：低到高</Option>
+            </BaseNativeSelect>
+          </div>
           <BaseTableFrame
             key={tableKey}
             tableKey={tableKey}
-            columns={11}
+            columns={9}
             region="進貨管理列表，可左右捲動"
             variant="sticky-actions"
             headers={
@@ -377,14 +419,12 @@ export function PurchasesPage() {
                   "品項數",
                   "原始進貨金額",
                   "核對狀態",
-                  "退貨狀態",
-                  "更正狀態",
                   "備註",
                   "操作",
                 ].map((text, index) => (
                   <BaseTableHead
                     key={text}
-                    data-export-ignore={index === 10 ? "true" : undefined}
+                    data-export-ignore={index === 8 ? "true" : undefined}
                     aria-sort={
                       (index === 1 && sort.key === "date") ||
                       (index === 5 && sort.key === "amount")
@@ -421,7 +461,7 @@ export function PurchasesPage() {
             }
             rows={rows.map((o) => (
               <BaseTableRow key={o.id}>
-                <BaseTableCell>
+                <BaseTableCell data-label="進貨單號">
                   <BaseButton
                     variant="record-link"
                     size="sm"
@@ -431,47 +471,59 @@ export function PurchasesPage() {
                     {o.number}
                   </BaseButton>
                 </BaseTableCell>
-                <BaseTableCell>{o.date}</BaseTableCell>
-                <BaseTableCell>{o.supplier}</BaseTableCell>
-                <BaseTableCell>{o.warehouse}</BaseTableCell>
-                <BaseTableCell>{o.lines.length}</BaseTableCell>
-                <BaseTableCell variant="money">
+                <BaseTableCell data-label="收貨日期">{o.date}</BaseTableCell>
+                <BaseTableCell data-label="供應商">{o.supplier}</BaseTableCell>
+                <BaseTableCell data-label="入庫倉別">
+                  {o.warehouse}
+                </BaseTableCell>
+                <BaseTableCell data-label="品項數">
+                  {o.lines.length}
+                </BaseTableCell>
+                <BaseTableCell variant="money" data-label="原始進貨金額">
                   {originalAmount(o).toFixed(2)}
                 </BaseTableCell>
-                <BaseTableCell>
+                <BaseTableCell data-label="核對狀態">
                   <span
                     className={`items-status ${o.settlement ? "" : "warning"}`}
                   >
-                    {o.settlement ? "已結帳" : "待核對"}
+                    {o.settlement ? "核對完成" : "待核對"}
                   </span>
+                  <div className="purchase-status-extras">
+                    {returnStatus(o) !== "無" && (
+                      <span
+                        className={`items-status ${returnStatus(o) === "無" ? "neutral" : returnStatus(o) === "全部退貨" ? "danger" : "info"}`}
+                      >
+                        {returnStatus(o)}
+                      </span>
+                    )}
+                    {correctionStatus(o) !== "無" && (
+                      <span
+                        className={`items-status ${correctionStatus(o) === "無" ? "neutral" : correctionStatus(o) === "更正處理中" ? "warning" : "info"}`}
+                      >
+                        {correctionStatus(o)}
+                      </span>
+                    )}
+                    {o.records.some((r) => r.kind === "reversal") && (
+                      <small>含沖銷紀錄</small>
+                    )}
+                  </div>
                 </BaseTableCell>
-                <BaseTableCell>
-                  <span
-                    className={`items-status ${returnStatus(o) === "無" ? "neutral" : returnStatus(o) === "全部退貨" ? "danger" : "info"}`}
-                  >
-                    {returnStatus(o)}
-                  </span>
+                <BaseTableCell
+                  data-label="備註"
+                  className={!o.remark ? "purchase-mobile-optional" : undefined}
+                >
+                  {o.remark || "—"}
                 </BaseTableCell>
-                <BaseTableCell>
-                  <span
-                    className={`items-status ${correctionStatus(o) === "無" ? "neutral" : correctionStatus(o) === "更正處理中" ? "warning" : "info"}`}
-                  >
-                    {correctionStatus(o)}
-                  </span>
-                  {o.records.some((r) => r.kind === "reversal") && (
-                    <small>含沖銷紀錄</small>
-                  )}
-                </BaseTableCell>
-                <BaseTableCell>{o.remark || "—"}</BaseTableCell>
                 <BaseTableCell>
                   <div className="purchase-row-actions">
                     <BaseButton
                       variant="outline"
-                      size="icon"
+                      size="sm"
                       aria-label={`查看進貨單 ${o.number}`}
                       onClick={() => open("view", o.id)}
                     >
                       <Eye size={16} aria-hidden="true" />
+                      明細
                     </BaseButton>
                     <OrderActions
                       order={o}
@@ -628,7 +680,7 @@ export function PurchasesPage() {
                       setFilter(blankFilter);
                       setTab("all");
                       complete(
-                        "已建立進貨單（展示），待核對結帳。模組一庫存未變更。",
+                        "已建立進貨單（展示），待核對。模組一庫存未變更。",
                       );
                     },
                   )
@@ -639,6 +691,7 @@ export function PurchasesPage() {
               <>
                 <PurchaseDetails
                   order={order}
+
                   onResolve={(r) => open("resolve", order.id, r.id)}
                 />
                 <footer className="items-modal-footer">

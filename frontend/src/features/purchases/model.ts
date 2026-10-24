@@ -8,6 +8,17 @@ import {
 } from "@/features/items/model";
 import type { Item } from "@/types/items";
 
+export function recentMonthRange(today = taipeiToday()) {
+  const [year, month, day] = today.split("-").map(Number);
+  const lastDay = new Date(Date.UTC(year, month - 1, 0)).getUTCDate();
+  return {
+    start: new Date(Date.UTC(year, month - 2, Math.min(day, lastDay)))
+      .toISOString()
+      .slice(0, 10),
+    end: today,
+  };
+}
+
 export const operationLabels = {
   reversal: "進貨沖銷",
   return: "進貨退貨",

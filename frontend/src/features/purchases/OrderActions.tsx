@@ -24,9 +24,10 @@ export function OrderActions({
       <BaseDropdownMenuTrigger asChild>
         <BaseButton
           variant="outline"
-          size="icon"
+          size="sm"
           aria-label={`更多作業 ${order.number}`}
         >
+          作業
           <ChevronDown size={16} aria-hidden="true" />
         </BaseButton>
       </BaseDropdownMenuTrigger>
@@ -36,7 +37,7 @@ export function OrderActions({
           {(
             [
               ["view", "查看進貨明細"],
-              ["settle", "核對結帳"],
+              ["settle", "核對單據"],
               ["reversal", "進貨沖銷"],
               ["return", "進貨退貨"],
               ["correction", "結帳後更正"],
