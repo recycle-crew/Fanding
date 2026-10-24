@@ -51,6 +51,7 @@ import {
 } from "@/features/purchases/OrderActions";
 import {
   correctionStatus,
+  lineBalance,
   reversalStatus,
   pendingAccounting,
   currency,
@@ -698,7 +699,11 @@ export function PurchasesPage() {
                     ? "確認核對"
                     : modal?.kind === "new"
                       ? "確認入庫"
-                      : "確認送出"}
+                      : modal?.kind === "reversal"
+                        ? "確認沖銷"
+                        : modal?.kind === "return"
+                          ? "確認退貨"
+                          : "確認送出"}
                 </BaseButton>
               </div>
             </div>
@@ -795,7 +800,25 @@ export function PurchasesPage() {
                   onSubmit={(value) =>
                     review(
                       `${operationLabels[value.kind]} · ${currency(value.amount)}`,
-                      `${value.lines.length} 筆處理明細；原因：${value.reason}。原始單據不修改。`,
+                      value.kind === "return"
+                        ? `商品已交付退回；處理方式：${value.resolution}；退貨商品原成本 ${currency(value.amount)}。${value.resolution === "換貨" ? "換入商品待後續確認收貨。" : value.resolution === "退款" ? "退款金額待確認。" : value.resolution === "折讓" ? "折讓金額待確認。" : "供應商處理方式待確認。"}原因：${value.reason}。\n${value.lines
+                            .map((line) => {
+                              const source = order.lines.find(
+                                (l) => l.id === line.lineId,
+                              )!;
+                              return `${source.name}／批號 ${source.batch || "未填寫"}／效期 ${source.expiry || "未填寫"}：${-line.quantityChange} ${source.unit}，${currency(-line.amount)}`;
+                            })
+                            .join("\n")}`
+                        : value.kind === "reversal"
+                          ? `${order.lines.every((line) => lineBalance(order, line).remaining + (value.lines.find((l) => l.lineId === line.id)?.quantityChange ?? 0) === 0) ? "本次沖銷後無剩餘量" : "本次為部分沖銷"}；原因：${value.reason}。\n${value.lines
+                              .map((line) => {
+                                const source = order.lines.find(
+                                  (l) => l.id === line.lineId,
+                                )!;
+                                return `${source.name}／批號 ${source.batch || "未填寫"}／效期 ${source.expiry || "未填寫"}：${-line.quantityChange} ${source.unit}，${currency(-line.amount)}`;
+                              })
+                              .join("\n")}\n原始單據與歷史成本保留。`
+                          : `${value.lines.length} 筆處理明細；原因：${value.reason}。原始單據不修改。`,
                       () => {
                         const count = state.orders.flatMap(
                           (o) => o.records,

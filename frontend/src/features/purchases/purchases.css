@@ -193,6 +193,96 @@
 .purchase-table-scroll {
   overflow-x: auto;
 }
+.purchase-review-description,
+#purchase-review-description {
+  white-space: pre-line;
+}
+.purchase-reversal-lines .purchase-lines-table {
+  min-width: 820px;
+  font-size: 16px;
+}
+.purchase-reversal-lines .purchase-lines-table th {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+.purchase-reversal-lines .purchase-lines-table small {
+  font-size: 13px;
+}
+.purchase-reversal-lines .purchase-lines-table input {
+  font-size: 16px;
+}
+.purchase-reversal-selection,
+.purchase-reversal-selection > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.purchase-reversal-selection {
+  justify-content: space-between;
+  margin: -2px 0 12px;
+  color: #53647d;
+  font-size: 14px;
+}
+.purchase-reversal-selection > div {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+@media (max-width: 767px) {
+  .purchase-return-lines .purchase-lines-table td:first-child {
+    align-self: start;
+    padding-top: 3px;
+  }
+  .purchase-reversal-selection {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .purchase-reversal-selection > div {
+    justify-content: flex-start;
+  }
+  .purchase-reversal-lines :is(table, tbody) {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+  .purchase-reversal-lines thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .purchase-reversal-lines tbody tr {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    padding: 12px;
+    gap: 12px;
+    border: 1px solid #dfe8f4;
+    border-radius: 7px;
+    margin-bottom: 12px;
+  }
+  .purchase-reversal-lines .purchase-lines-table td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .purchase-reversal-lines td:nth-child(n + 3) {
+    grid-column: 2;
+  }
+  .purchase-reversal-lines td:nth-child(n + 3)::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 13px;
+    color: #53647d;
+    margin-bottom: 5px;
+  }
+  .purchase-reversal-lines .purchase-lines-table input {
+    max-width: none;
+  }
+}
 .purchase-lines-table {
   min-width: 940px;
   border-collapse: collapse;

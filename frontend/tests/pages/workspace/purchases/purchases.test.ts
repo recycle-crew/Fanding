@@ -32,7 +32,9 @@ async function action(page: Page, number: string, name: string) {
 }
 async function finish(page: Page) {
   await modal(page)
-    .getByRole("button", { name: /^(確認送出|確認核對|確認入庫)$/ })
+    .getByRole("button", {
+      name: /^(確認送出|確認核對|確認入庫|確認沖銷|確認退貨)$/,
+    })
     .click();
   await expect(modal(page)).toBeHidden();
 }
@@ -577,12 +579,12 @@ test("部分退貨、實體確認、上限與二次確認", async ({ page }) => 
   await page.getByLabel("散瞳劑本次數量", { exact: true }).fill("16");
   await page.locator("#operation-physical").check();
   await modal(page)
-    .getByRole("button", { name: "檢查並退貨", exact: true })
+    .getByRole("button", { name: "下一步：確認退貨", exact: true })
     .click();
   await expect(modal(page).getByRole("alert")).toContainText("超過");
   await page.getByLabel("散瞳劑本次數量", { exact: true }).fill("2");
   await modal(page)
-    .getByRole("button", { name: "檢查並退貨", exact: true })
+    .getByRole("button", { name: "下一步：確認退貨", exact: true })
     .click();
   await expect(modal(page)).toContainText("確認本次操作");
   await modal(page)
@@ -592,7 +594,7 @@ test("部分退貨、實體確認、上限與二次確認", async ({ page }) => 
     "2",
   );
   await modal(page)
-    .getByRole("button", { name: "檢查並退貨", exact: true })
+    .getByRole("button", { name: "下一步：確認退貨", exact: true })
     .click();
   await finish(page);
   await action(page, "PO20261019008", "查看進貨明細");
@@ -610,7 +612,7 @@ test("沖銷與退貨不可重複處理、可追溯量不足阻擋", async ({ pa
     .check();
   await page.getByLabel("人工淚液本次數量", { exact: true }).fill("20");
   await modal(page)
-    .getByRole("button", { name: "檢查並沖銷", exact: true })
+    .getByRole("button", { name: "下一步：確認沖銷", exact: true })
     .click();
   await finish(page);
   const row = page.getByRole("row").filter({ hasText: "PO20261020009" });
@@ -629,7 +631,7 @@ test("沖銷與退貨不可重複處理、可追溯量不足阻擋", async ({ pa
   await page.getByLabel("散瞳劑本次數量", { exact: true }).fill("3");
   await page.locator("#operation-physical").check();
   await modal(page)
-    .getByRole("button", { name: "檢查並退貨", exact: true })
+    .getByRole("button", { name: "下一步：確認退貨", exact: true })
     .click();
   await expect(modal(page).getByRole("alert")).toContainText(
     "可追溯剩餘量不足",
@@ -691,7 +693,7 @@ test("部分沖銷後核對預填淨額並保留原始金額", async ({ page }) 
     .check();
   await page.getByLabel("人工淚液本次數量", { exact: true }).fill("3");
   await modal(page)
-    .getByRole("button", { name: "檢查並沖銷", exact: true })
+    .getByRole("button", { name: "下一步：確認沖銷", exact: true })
     .click();
   await finish(page);
   await expect(
@@ -890,4 +892,63 @@ test("待處理帳務集中入口與處理完成後移出", async ({ page }) => 
     .click();
   await finish(page);
   await expect(row).toHaveCount(0);
+});
+
+test("沖銷五欄、數量帶入、固定摘要及手機卡片", async ({ page }, testInfo) => {
+  await action(page, "PO20261020009", "進貨沖銷");
+  await expect(
+    modal(page).getByText("原核對紀錄", { exact: true }),
+  ).toHaveCount(0);
+  await expect(page.locator("#operation-remark")).toBeHidden();
+  const table = modal(page).locator(".purchase-reversal-lines");
+  await expect(table.locator("thead th")).toHaveCount(5);
+  await expect(table.locator("tbody td").first()).toHaveCSS(
+    "font-size",
+    "16px",
+  );
+  await page.locator("#operation-reason").fill("登錄重複");
+  await table.getByRole("button", { name: "全選可沖銷商品" }).click();
+  await expect(table.getByText("可沖銷 1 項 · 已選 1 項")).toBeVisible();
+  const itemCheckbox = table.getByRole("checkbox", {
+    name: "選擇人工淚液",
+    exact: true,
+  });
+  await expect(itemCheckbox).toBeChecked();
+  await table.getByRole("button", { name: "清除選取" }).click();
+  await expect(itemCheckbox).not.toBeChecked();
+  await page
+    .getByRole("checkbox", { name: "選擇人工淚液", exact: true })
+    .check();
+  const qty = page.getByLabel("人工淚液本次數量", { exact: true });
+  await expect(qty).toBeFocused();
+  await page
+    .getByRole("button", { name: "帶入人工淚液可沖銷量", exact: true })
+    .click();
+  await expect(qty).toHaveValue("20");
+  await expect(qty).toHaveAttribute("max", "20");
+  const total = modal(page).locator(".purchase-draft-total");
+  await expect(total).toContainText("NT$ 2,000.00");
+  await qty.fill("21");
+  await expect(total).toContainText("數量待確認");
+  await qty.fill("3");
+  await expect(total).toContainText("NT$ 300.00");
+  await expect(total).toBeInViewport({ ratio: 1 });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await qty.scrollIntoViewIfNeeded();
+  expect(
+    await table.evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
+  ).toBe(true);
+  await modal(page).screenshot({
+    path: testInfo.outputPath("reversal-mobile.png"),
+  });
+  await modal(page)
+    .getByRole("button", { name: "下一步：確認沖銷", exact: true })
+    .click();
+  await expect(modal(page)).toContainText("本次為部分沖銷");
+  await expect(modal(page)).toContainText("人工淚液／批號 B0010");
+  await expect(modal(page)).toContainText("3 瓶");
+  await expect(
+    modal(page).getByRole("button", { name: "確認沖銷", exact: true }),
+  ).toBeVisible();
+  await finish(page);
 });

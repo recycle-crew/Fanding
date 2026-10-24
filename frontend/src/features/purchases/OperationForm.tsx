@@ -1,6 +1,7 @@
 import { BaseCheckbox } from "@/components/ui/BaseCheckbox";
 import { BaseLabel } from "@/components/ui/BaseLabel";
 import { useState } from "react";
+import { BaseButton } from "@/components/ui/BaseButton";
 import { BaseInput } from "@/components/ui/BaseInput";
 import {
   BaseNativeSelect,
@@ -71,8 +72,21 @@ export function OperationForm({
   const costOnly = kind === "correction" && draft.type === "成本更正";
   const replacement =
     kind === "correction" && ["品項更正", "批號更正"].includes(draft.type);
+  const reversal = kind === "reversal";
   const chosenItem = items.find((i) => i.id === draft.replacementId);
   const choices = order.lines.filter((l) => selected[l.id]);
+  const reversalLimit = (line: Purchase["lines"][number]) => {
+    const balance = lineBalance(order, line);
+    return Math.min(balance.remaining, balance.traceable);
+  };
+  const returnLimit = (line: Purchase["lines"][number]) =>
+    Math.min(
+      lineBalance(order, line).remaining,
+      lineBalance(order, line).traceable,
+    );
+  const selectableLines = reversal
+    ? order.lines.filter((line) => reversalLimit(line) > 0)
+    : [];
   const estimatedAmount = monetary
     ? Number(draft.amount)
     : choices.reduce(
@@ -85,11 +99,77 @@ export function OperationForm({
                 : -Number(quantities[l.id] || 0)) * l.unitCost),
         0,
       );
+  const invalidReversals = choices.filter((line) => {
+    const qty = Number(quantities[line.id]);
+    return !Number.isFinite(qty) || qty <= 0 || qty > reversalLimit(line);
+  });
+  const reversalTotal = rounded(
+    choices.reduce((sum, line) => {
+      const qty = Number(quantities[line.id]);
+      return (
+        sum +
+        (Number.isFinite(qty) && qty > 0 && qty <= reversalLimit(line)
+          ? rounded(qty * line.unitCost)
+          : 0)
+      );
+    }, 0),
+  );
+  const invalidReturns = choices.filter((line) => {
+    const quantity = Number(quantities[line.id]);
+    return (
+      !Number.isFinite(quantity) ||
+      quantity <= 0 ||
+      quantity > returnLimit(line)
+    );
+  });
+  const returnTotal = rounded(
+    choices.reduce((sum, line) => {
+      const quantity = Number(quantities[line.id]);
+      return (
+        sum +
+        (Number.isFinite(quantity) &&
+        quantity > 0 &&
+        quantity <= returnLimit(line)
+          ? rounded(quantity * line.unitCost)
+          : 0)
+      );
+    }, 0),
+  );
   return (
     <PurchaseForm
       onCancel={onCancel}
       onDirty={onDirty}
-      submitText={`檢查並${kind === "return" ? "退貨" : kind === "reversal" ? "沖銷" : "更正"}`}
+      footerSummary={
+        reversal || kind === "return" ? (
+          <div className="purchase-draft-total" role="status">
+            <span>
+              已選 {choices.length} 筆
+              {(reversal ? invalidReversals : invalidReturns).length > 0 &&
+                ` · ${(reversal ? invalidReversals : invalidReturns).length} 筆數量待確認`}
+            </span>
+            <strong>
+              {reversal
+                ? `本次沖銷金額 ${currency(reversalTotal)}`
+                : `退貨商品原成本 ${currency(returnTotal)} · ${
+                    draft.resolution === "換貨"
+                      ? "換貨收貨待追蹤"
+                      : draft.resolution === "退款"
+                        ? "退款金額待確認"
+                        : draft.resolution === "折讓"
+                          ? "折讓金額待確認"
+                          : "供應商處理方式待確認"
+                  }`}
+            </strong>
+          </div>
+        ) : undefined
+      }
+      submitText={
+        reversal
+          ? "下一步：確認沖銷"
+          : kind === "return"
+            ? "下一步：確認退貨"
+            : "檢查並更正"
+      }
       submit={() => {
         if (reversalStatus(order) === "全部沖銷")
           return { message: "此單據已全部沖銷，無法再進行異動。" };
@@ -237,14 +317,16 @@ export function OperationForm({
             <dt>原始進貨金額</dt>
             <dd>{currency(originalAmount(order))}</dd>
           </div>
-          <div>
-            <dt>原核對紀錄</dt>
-            <dd>
-              {order.settlement
-                ? `${order.settlement.number} · ${currency(order.settlement.amount)}`
-                : "尚未核對"}
-            </dd>
-          </div>
+          {kind === "correction" && (
+            <div>
+              <dt>原核對紀錄</dt>
+              <dd>
+                {order.settlement
+                  ? `${order.settlement.number} · ${currency(order.settlement.amount)}`
+                  : "尚未核對"}
+              </dd>
+            </div>
+          )}
         </dl>
       </section>
       <section>
@@ -331,15 +413,412 @@ export function OperationForm({
               />
             </Field>
           )}
-          <Field name="operation-remark" label="備註">
-            <BaseInput
-              value={draft.remark}
-              onChange={(e) => setDraft({ ...draft, remark: e.target.value })}
-            />
-          </Field>
+          {!reversal && (
+            <>
+              <Field name="operation-remark" label="備註">
+                <BaseInput
+                  value={draft.remark}
+                  onChange={(e) =>
+                    setDraft({ ...draft, remark: e.target.value })
+                  }
+                />
+              </Field>
+            </>
+          )}
         </div>
       </section>
-      {!monetary && (
+      {reversal && (
+        <>
+          <p className="purchase-callout">
+            登錄錯誤請使用沖銷；商品實際退回供應商請使用進貨退貨。原始單據與歷史成本會保留。
+          </p>
+          <section className="purchase-reversal-lines">
+            <h3>選擇沖銷商品</h3>
+            <div className="purchase-reversal-selection">
+              <span>
+                可沖銷 {selectableLines.length} 項 · 已選 {choices.length} 項
+              </span>
+              <div>
+                <BaseButton
+                  type="button"
+                  variant="outline"
+                  disabled={
+                    !selectableLines.length ||
+                    choices.length === selectableLines.length
+                  }
+                  onClick={() => {
+                    setSelected(
+                      Object.fromEntries(
+                        selectableLines.map((line) => [line.id, true]),
+                      ),
+                    );
+                    onDirty();
+                    requestAnimationFrame(() => {
+                      document
+                        .getElementById(
+                          `reversal-quantity-${selectableLines[0].id}`,
+                        )
+                        ?.focus();
+                    });
+                  }}
+                >
+                  全選可沖銷商品
+                </BaseButton>
+                <BaseButton
+                  type="button"
+                  variant="ghost"
+                  disabled={!choices.length}
+                  onClick={() => {
+                    setSelected({});
+                    setQuantities({});
+                    onDirty();
+                  }}
+                >
+                  清除選取
+                </BaseButton>
+              </div>
+            </div>
+            <div className="purchase-table-scroll">
+              <BaseTable variant="lines">
+                <BaseTableHeader>
+                  <BaseTableRow>
+                    {[
+                      "選擇",
+                      "商品／批次",
+                      "數量摘要",
+                      "本次沖銷數量",
+                      "沖銷金額",
+                    ].map((text) => (
+                      <BaseTableHead key={text}>{text}</BaseTableHead>
+                    ))}
+                  </BaseTableRow>
+                </BaseTableHeader>
+                <BaseTableBody>
+                  {order.lines.map((line) => {
+                    const balance = lineBalance(order, line);
+                    const limit = reversalLimit(line);
+                    const qty = Number(quantities[line.id]);
+                    const invalid =
+                      !!selected[line.id] &&
+                      (!Number.isFinite(qty) || qty <= 0 || qty > limit);
+                    const inputId = `reversal-quantity-${line.id}`;
+                    return (
+                      <BaseTableRow key={line.id}>
+                        <BaseTableCell data-label="選擇">
+                          <BaseCheckbox
+                            aria-label={`選擇${line.name}`}
+                            disabled={limit <= 0}
+                            checked={!!selected[line.id]}
+                            onCheckedChange={(checked) => {
+                              setSelected((current) => ({
+                                ...current,
+                                [line.id]: checked === true,
+                              }));
+                              onDirty();
+                              if (checked === true)
+                                requestAnimationFrame(() =>
+                                  document.getElementById(inputId)?.focus(),
+                                );
+                            }}
+                          />
+                        </BaseTableCell>
+                        <BaseTableCell data-label="商品／批次">
+                          <strong>{line.name}</strong>
+                          <small>
+                            {line.code} · {line.specification}
+                          </small>
+                          <small>
+                            批號 {line.batch || "未填寫"} · 效期{" "}
+                            {line.expiry || "未填寫"}
+                          </small>
+                        </BaseTableCell>
+                        <BaseTableCell data-label="數量摘要">
+                          <span>
+                            原數量 {line.quantity} {line.unit}
+                          </span>
+                          <small>
+                            已處理 {balance.processed} · 剩餘{" "}
+                            {balance.remaining}
+                          </small>
+                          <small>
+                            {limit > 0
+                              ? `本次最多可沖銷 ${limit} ${line.unit}`
+                              : balance.remaining <= 0
+                                ? "無剩餘可沖銷量"
+                                : "可追溯量不足，無法沖銷"}
+                          </small>
+                        </BaseTableCell>
+                        <BaseTableCell data-label="本次沖銷數量">
+                          <BaseInput
+                            id={inputId}
+                            aria-label={`${line.name}本次數量`}
+                            aria-describedby={`${inputId}-hint`}
+                            type="number"
+                            min="0.001"
+                            step="0.001"
+                            disabled={!selected[line.id]}
+                            required={!!selected[line.id]}
+                            value={quantities[line.id] ?? ""}
+                            onChange={(e) =>
+                              setQuantities((current) => ({
+                                ...current,
+                                [line.id]: e.target.value,
+                              }))
+                            }
+                          />
+                          <small id={`${inputId}-hint`}>
+                            {selected[line.id] && invalid
+                              ? `請填寫大於 0 且不超過 ${limit} 的數量`
+                              : `單位：${line.unit}`}
+                          </small>
+                          <BaseButton
+                            type="button"
+                            variant="ghost"
+                            disabled={!selected[line.id] || limit <= 0}
+                            aria-label={`帶入${line.name}可沖銷量`}
+                            onClick={() => {
+                              setQuantities((current) => ({
+                                ...current,
+                                [line.id]: String(limit),
+                              }));
+                              onDirty();
+                              document.getElementById(inputId)?.focus();
+                            }}
+                          >
+                            帶入可沖銷量
+                          </BaseButton>
+                        </BaseTableCell>
+                        <BaseTableCell data-label="沖銷金額">
+                          <strong>
+                            {selected[line.id] && !invalid
+                              ? currency(rounded(qty * line.unitCost))
+                              : "—"}
+                          </strong>
+                          <small>原單位成本 {line.unitCost.toFixed(4)}</small>
+                        </BaseTableCell>
+                      </BaseTableRow>
+                    );
+                  })}
+                </BaseTableBody>
+              </BaseTable>
+            </div>
+          </section>
+          <details className="purchase-optional-fields">
+            <summary>備註（選填）{draft.remark && " · 已填寫"}</summary>
+            <Field name="operation-remark" label="備註">
+              <BaseInput
+                value={draft.remark}
+                onChange={(e) => setDraft({ ...draft, remark: e.target.value })}
+              />
+            </Field>
+          </details>
+        </>
+      )}
+      {kind === "return" && (
+        <>
+          <p className="purchase-callout">
+            退貨代表商品已實際交付供應商；本次原成本只作數量與成本參考，退款或折讓金額待供應商確認後另行記錄。
+          </p>
+          <section className="purchase-reversal-lines purchase-return-lines">
+            <h3>選擇退貨商品</h3>
+            <div className="purchase-reversal-selection">
+              <span>
+                可退貨{" "}
+                {order.lines.filter((line) => returnLimit(line) > 0).length} 項
+                · 已選 {choices.length} 項
+              </span>
+              <div>
+                <BaseButton
+                  type="button"
+                  variant="outline"
+                  disabled={
+                    !order.lines.some((line) => returnLimit(line) > 0) ||
+                    choices.length ===
+                      order.lines.filter((line) => returnLimit(line) > 0).length
+                  }
+                  onClick={() => {
+                    const lines = order.lines.filter(
+                      (line) => returnLimit(line) > 0,
+                    );
+                    setSelected(
+                      Object.fromEntries(lines.map((line) => [line.id, true])),
+                    );
+                    onDirty();
+                    if (lines[0])
+                      requestAnimationFrame(() =>
+                        document
+                          .getElementById(`return-quantity-${lines[0].id}`)
+                          ?.focus(),
+                      );
+                  }}
+                >
+                  全選可退貨商品
+                </BaseButton>
+                <BaseButton
+                  type="button"
+                  variant="ghost"
+                  disabled={!choices.length}
+                  onClick={() => {
+                    setSelected({});
+                    setQuantities({});
+                    onDirty();
+                  }}
+                >
+                  清除選取
+                </BaseButton>
+              </div>
+            </div>
+            <div className="purchase-table-scroll">
+              <BaseTable variant="lines">
+                <BaseTableHeader>
+                  <BaseTableRow>
+                    {[
+                      "選擇",
+                      "商品／批次",
+                      "數量摘要",
+                      "本次退貨數量",
+                      "退貨商品原成本",
+                    ].map((text) => (
+                      <BaseTableHead key={text}>{text}</BaseTableHead>
+                    ))}
+                  </BaseTableRow>
+                </BaseTableHeader>
+                <BaseTableBody>
+                  {order.lines.map((line) => {
+                    const balance = lineBalance(order, line);
+                    const limit = returnLimit(line);
+                    const quantity = Number(quantities[line.id]);
+                    const invalid =
+                      !!selected[line.id] &&
+                      (!Number.isFinite(quantity) ||
+                        quantity <= 0 ||
+                        quantity > limit);
+                    const inputId = `return-quantity-${line.id}`;
+                    return (
+                      <BaseTableRow key={line.id}>
+                        <BaseTableCell data-label="選擇">
+                          <BaseCheckbox
+                            aria-label={`選擇${line.name}`}
+                            disabled={limit <= 0}
+                            checked={!!selected[line.id]}
+                            onCheckedChange={(checked) => {
+                              setSelected((current) => ({
+                                ...current,
+                                [line.id]: checked === true,
+                              }));
+                              onDirty();
+                              if (checked === true)
+                                requestAnimationFrame(() =>
+                                  document.getElementById(inputId)?.focus(),
+                                );
+                            }}
+                          />
+                        </BaseTableCell>
+                        <BaseTableCell data-label="商品／批次">
+                          <strong>{line.name}</strong>
+                          <small>
+                            {line.code} · {line.specification}
+                          </small>
+                          <small>
+                            批號 {line.batch || "未填寫"} · 效期{" "}
+                            {line.expiry || "未填寫"}
+                          </small>
+                        </BaseTableCell>
+                        <BaseTableCell data-label="數量摘要">
+                          <span>
+                            原數量 {line.quantity} {line.unit}
+                          </span>
+                          <small>
+                            已退／沖銷 {balance.processed} · 剩餘{" "}
+                            {balance.remaining}
+                          </small>
+                          <small>
+                            {limit > 0
+                              ? `本次最多可退 ${limit} ${line.unit}`
+                              : balance.remaining <= 0
+                                ? "無剩餘可退數量"
+                                : "可追溯量不足，無法退貨"}
+                          </small>
+                        </BaseTableCell>
+                        <BaseTableCell data-label="本次退貨數量">
+                          <BaseInput
+                            id={inputId}
+                            aria-label={`${line.name}本次數量`}
+                            aria-describedby={`${inputId}-hint`}
+                            type="number"
+                            min="0.001"
+                            max={limit}
+                            step="0.001"
+                            disabled={!selected[line.id]}
+                            required={!!selected[line.id]}
+                            value={quantities[line.id] ?? ""}
+                            onChange={(e) =>
+                              setQuantities((current) => ({
+                                ...current,
+                                [line.id]: e.target.value,
+                              }))
+                            }
+                          />
+                          <small id={`${inputId}-hint`}>
+                            {selected[line.id] && invalid
+                              ? `請填寫大於 0 且不超過 ${limit} 的數量`
+                              : `單位：${line.unit}`}
+                          </small>
+                          <BaseButton
+                            type="button"
+                            variant="ghost"
+                            disabled={!selected[line.id] || limit <= 0}
+                            aria-label={`帶入${line.name}可退貨量`}
+                            onClick={() => {
+                              setQuantities((current) => ({
+                                ...current,
+                                [line.id]: String(limit),
+                              }));
+                              onDirty();
+                              document.getElementById(inputId)?.focus();
+                            }}
+                          >
+                            帶入可退貨量
+                          </BaseButton>
+                        </BaseTableCell>
+                        <BaseTableCell data-label="退貨商品原成本">
+                          <strong>
+                            {selected[line.id] && !invalid
+                              ? currency(rounded(quantity * line.unitCost))
+                              : "—"}
+                          </strong>
+                          <small>原單位成本 {line.unitCost.toFixed(4)}</small>
+                        </BaseTableCell>
+                      </BaseTableRow>
+                    );
+                  })}
+                </BaseTableBody>
+              </BaseTable>
+            </div>
+          </section>
+          <BaseLabel variant="check-inline">
+            <BaseCheckbox
+              id="operation-physical"
+              checked={draft.physical}
+              onCheckedChange={(checked) => {
+                setDraft({ ...draft, physical: checked === true });
+                onDirty();
+              }}
+            />
+            已確認商品實際交付退回供應商
+          </BaseLabel>
+          <details className="purchase-optional-fields">
+            <summary>備註（選填）{draft.remark && " · 已填寫"}</summary>
+            <Field name="operation-remark" label="備註">
+              <BaseInput
+                value={draft.remark}
+                onChange={(e) => setDraft({ ...draft, remark: e.target.value })}
+              />
+            </Field>
+          </details>
+        </>
+      )}
+      {!monetary && !reversal && kind !== "return" && (
         <section>
           <h3>選擇處理商品</h3>
           <div
@@ -481,45 +960,35 @@ export function OperationForm({
           </div>
         </section>
       )}
-      {kind === "return" && (
-        <BaseLabel variant="check-inline">
-          <BaseCheckbox
-            id="operation-physical"
-            checked={draft.physical}
-            onCheckedChange={(checked) =>
-              setDraft({ ...draft, physical: checked === true })
-            }
-          />
-          已確認商品實際交付退回供應商（展示確認）
-        </BaseLabel>
+      {!reversal && kind !== "return" && (
+        <div className="purchase-total">
+          <span>
+            {monetary || costOnly
+              ? "僅更正金額，不異動數量"
+              : replacement
+                ? "原資料反向處理，另記正確商品／批次"
+                : "原始明細與歷史成本會保留"}
+          </span>
+          <strong>
+            {kind === "correction" ? "本次更正金額" : "原成本處理金額"}{" "}
+            {currency(
+              Number.isFinite(estimatedAmount) && !replacement
+                ? kind === "correction"
+                  ? estimatedAmount
+                  : -estimatedAmount
+                : 0,
+            )}
+          </strong>
+        </div>
       )}
-      <div className="purchase-total">
-        <span>
-          {monetary || costOnly
-            ? "僅更正金額，不異動數量"
-            : replacement
-              ? "原資料反向處理，另記正確商品／批次"
-              : "原始明細與歷史成本會保留"}
-        </span>
-        <strong>
-          {kind === "correction" ? "本次更正金額" : "原成本處理金額"}{" "}
-          {currency(
-            Number.isFinite(estimatedAmount) && !replacement
-              ? kind === "correction"
-                ? estimatedAmount
-                : -estimatedAmount
-              : 0,
-          )}
-        </strong>
-      </div>
-      <p className="purchase-callout">
-        {kind === "reversal"
-          ? "沖銷用於登錄錯誤，與實際商品退貨分開處理。"
-          : kind === "return"
+      {!reversal && (
+        <p className="purchase-callout">
+          {kind === "return"
             ? "退貨成本與供應商最後同意的折讓／退款金額分開保存，物流完成不代表帳務完成。"
             : "保留原進貨與核對紀錄，庫存更正與帳務確認分開追蹤。"}
-        本頁僅展示單據流程，不連動模組一庫存。
-      </p>
+          本頁僅展示單據流程，不連動模組一庫存。
+        </p>
+      )}
     </PurchaseForm>
   );
 }
