@@ -141,33 +141,42 @@ export function NewPurchaseForm({
               onChange={(e) => setHeader({ ...header, date: e.target.value })}
             />
           </Field>
-          <Field
-            name="purchase-related-return"
-            label="關聯換貨退貨單"
-            hint="換貨採原商品退貨與替換商品入庫兩筆紀錄。"
-          >
-            <BaseNativeSelect
-              value={header.relatedReturn}
-              onChange={(e) =>
-                setHeader({ ...header, relatedReturn: e.target.value })
-              }
-            >
-              <Option value="">一般進貨，不關聯退貨單</Option>
-              {returnRecords.map((r) => (
-                <Option key={r.value} value={r.value}>
-                  {r.label}
-                </Option>
-              ))}
-            </BaseNativeSelect>
-          </Field>
-          <Field name="purchase-remark" label="備註">
-            <BaseInput
-              value={header.remark}
-              onChange={(e) => setHeader({ ...header, remark: e.target.value })}
-              placeholder="本次進貨說明（選填）"
-            />
-          </Field>
         </div>
+        <details className="purchase-optional-fields">
+          <summary>
+            其他資料<span>關聯換貨退貨單、備註（選填）</span>
+          </summary>
+          <div className="items-form-grid">
+            <Field
+              name="purchase-related-return"
+              label="關聯換貨退貨單"
+              hint="換貨採原商品退貨與替換商品入庫兩筆紀錄。"
+            >
+              <BaseNativeSelect
+                value={header.relatedReturn}
+                onChange={(e) =>
+                  setHeader({ ...header, relatedReturn: e.target.value })
+                }
+              >
+                <Option value="">一般進貨，不關聯退貨單</Option>
+                {returnRecords.map((r) => (
+                  <Option key={r.value} value={r.value}>
+                    {r.label}
+                  </Option>
+                ))}
+              </BaseNativeSelect>
+            </Field>
+            <Field name="purchase-remark" label="備註">
+              <BaseInput
+                value={header.remark}
+                onChange={(e) =>
+                  setHeader({ ...header, remark: e.target.value })
+                }
+                placeholder="本次進貨說明（選填）"
+              />
+            </Field>
+          </div>
+        </details>
       </section>
       <section>
         <h3>進貨商品（必填，至少加入一筆）</h3>
