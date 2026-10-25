@@ -5,9 +5,29 @@ import type {
 
 let libraryPromise: Promise<SpreadsheetLibrary> | null = null;
 const numericColumns = new Set([
-  "已盤品項", "我已盤品項", "帳面快照", "期間異動", "預期數量", "採用輪次", "實盤數量", "差異數量",
-  "原始成交金額", "已退款金額", "待退款金額", "淨銷售金額",
-  "淨耗用量", "有效筆數", "目前可用庫存", "原始數量", "換算比例", "讀取", "新增套用", "略過重複", "失敗",
+  "已盤品項",
+  "我已盤品項",
+  "帳面快照",
+  "期間異動",
+  "預期數量",
+  "採用輪次",
+  "實盤數量",
+  "差異數量",
+  "原始成交金額",
+  "已退款金額",
+  "待退款金額",
+  "淨銷售金額",
+  "應退款金額",
+  "退貨品項數",
+  "淨耗用量",
+  "有效筆數",
+  "目前可用庫存",
+  "原始數量",
+  "換算比例",
+  "讀取",
+  "新增套用",
+  "略過重複",
+  "失敗",
   "品項數",
   "原始進貨金額",
   "原進貨數量",
@@ -90,14 +110,17 @@ export async function downloadTable(table: HTMLTableElement): Promise<number> {
       included.map((index) => {
         const cell = row.cells[index];
         if (!cell) return "";
-        const copy = cell.cloneNode(true) as HTMLElement;
-        copy
-          .querySelectorAll(
-            "button,input,select,textarea,.actions,.field-access",
-          )
-          .forEach((control) => control.remove());
-        copy.querySelectorAll("br").forEach((line) => line.replaceWith("\n"));
-        const text = copy.textContent.trim();
+        let text = cell.dataset.exportValue;
+        if (text === undefined) {
+          const copy = cell.cloneNode(true) as HTMLElement;
+          copy
+            .querySelectorAll(
+              "button,input,select,textarea,.actions,.field-access",
+            )
+            .forEach((control) => control.remove());
+          copy.querySelectorAll("br").forEach((line) => line.replaceWith("\n"));
+          text = copy.textContent.trim();
+        }
         return numericColumns.has(headers[index]) &&
           /^[+-]?\d+(\.\d+)?$/.test(text) &&
           Number.isFinite(Number(text))

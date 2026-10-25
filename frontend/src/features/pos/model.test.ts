@@ -22,8 +22,34 @@ import {
   saleActionReason,
   saleStatus,
   walkIn,
+  nextSaleReturnNumber,
+  saleReturnRefundStatus,
+  saleReturnPending,
 } from "./model";
 import { createItemsSeed, available } from "@/features/items/model";
+
+it("退貨單依建立日期跨銷售單編號，退款以各退貨單關聯計算", () => {
+  const sales = createPosSeed().sales;
+  const sale = structuredClone(sales[1]);
+  const record = sale.returns[0];
+  expect(record.saleId).toBe(sale.id);
+  expect(record.createdAt).toBeTruthy();
+  expect(nextSaleReturnNumber([], "2026-10-20")).toBe("SR20261020-0001");
+  record.number = "SR20261020-0009";
+  expect(nextSaleReturnNumber([sale], "2026-10-20")).toBe("SR20261020-0010");
+  expect(nextSaleReturnNumber([sale], "2026-10-21")).toBe("SR20261021-0001");
+  const pending = saleReturnPending(sale, record);
+  sale.refunds.push({
+    ...sale.refunds[0],
+    id: "other",
+    sourceId: "other-return",
+    amount: 999,
+  });
+  expect(saleReturnPending(sale, record)).toBe(pending);
+  expect(saleReturnRefundStatus(sale, record)).toBe("待退款");
+  sale.refunds[0].status = "已退款";
+  expect(saleReturnRefundStatus(sale, record)).toBe("已退款");
+});
 
 it("交易狀態獨立於退款進度，待退款金額以分計算", () => {
   const sales = createPosSeed().sales;
@@ -167,8 +193,10 @@ describe("POS 展示金額、批次、退貨與防重複", () => {
       professional: false,
       confirmed: true,
     };
-    expect(store.dispatch(returnPos(input)).error).toBe("");
-    expect(store.dispatch(returnPos(input)).error).toBe("");
+    const firstReturn = store.dispatch(returnPos(input));
+    expect(firstReturn.error).toBe("");
+    expect(firstReturn.returnNumber).toMatch(/^SR\d{8}-\d{4}$/);
+    expect(store.dispatch(returnPos(input))).toEqual(firstReturn);
     expect(
       store.getState().pos.batches.reduce((sum, row) => sum + row.quantity, 0),
     ).toBe(originalStock + 1);
@@ -192,6 +220,11 @@ describe("POS 展示金額、批次、退貨與防重複", () => {
         .error,
     ).toBe("");
     const full = store.getState().pos.sales.find((row) => row.id === sale.id)!;
+    expect(full.returns).toHaveLength(2);
+    expect(full.returns[0].number).not.toBe(full.returns[1].number);
+    expect(full.returns.every((record) => record.saleId === sale.id)).toBe(
+      true,
+    );
     expect(saleStatus(full)).toBe("全部退貨");
     expect(pendingRefund(full)).toBe(sale.total);
     expect(
@@ -264,6 +297,9 @@ describe("POS 展示金額、批次、退貨與防重複", () => {
     expect(result.error).toBe("");
     const sale = store.getState().pos.sales[0];
     expect(sale.lines[0].allocations).toHaveLength(2);
+    expect(sale.invoiceStatus).toBe("不開立");
+    expect(sale.receiptType).toBe(input.receiptType);
+    expect(sale.sellerTaxId).toBe("");
     const count = store.getState().pos.sales.length,
       remaining = store
         .getState()

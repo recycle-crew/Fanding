@@ -111,7 +111,11 @@ test("@critical 折扣、多批次結帳、歷史與部分退貨待退款／確�
   await page.getByLabel("葉黃素膠囊單品折扣", { exact: true }).fill("10");
   await page.getByLabel("整單折扣金額", { exact: true }).fill("3.01");
   const dialog = await checkout(page);
-  await expect(dialog).toContainText("整單分攤 $3.01");
+  await expect(
+    dialog
+      .getByRole("table", { name: "已售商品明細", exact: true })
+      .locator('[data-label="整單分攤"]'),
+  ).toContainText("$3.01");
   await expect(dialog.getByText("批次與效期", { exact: true })).toHaveCount(0);
   await dialog.getByRole("button", { name: "銷售退貨", exact: true }).click();
   await dialog.getByLabel("葉黃素膠囊本次退貨數量", { exact: true }).fill("5");
@@ -123,12 +127,12 @@ test("@critical 折扣、多批次結帳、歷史與部分退貨待退款／確�
     })
     .check();
   await dialog
-    .getByRole("button", { name: "建立退貨與待退款紀錄", exact: true })
+    .getByRole("button", { name: "建立退貨單", exact: true })
     .click();
   await expect(dialog.getByRole("alert")).toBeVisible();
   await dialog.getByLabel("葉黃素膠囊本次退貨數量", { exact: true }).fill("1");
   await dialog
-    .getByRole("button", { name: "建立退貨與待退款紀錄", exact: true })
+    .getByRole("button", { name: "建立退貨單", exact: true })
     .click();
   await expect(dialog).toContainText("部分退貨");
   await expect(dialog).toContainText("尚未實際退款");
@@ -479,5 +483,7 @@ test("@critical 無需 Enter 自動加入、避免重複成交與櫃檯折扣", 
   await expect(
     dialog.getByRole("heading", { name: "銷售明細與交易憑證", exact: true }),
   ).toBeVisible();
-  await expect(dialog.getByText("原成交 $695", { exact: true })).toBeVisible();
+  await expect(
+    dialog.locator(".sale-detail-totals > div").filter({ hasText: "原成交" }),
+  ).toContainText("$695");
 });

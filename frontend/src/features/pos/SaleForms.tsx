@@ -24,7 +24,7 @@ type Callbacks = {
   sale: Sale;
   onCancel: () => void;
   onDirty: () => void;
-  onDone: () => void;
+  onDone: (returnId?: string) => void;
   authorized: boolean;
 };
 export function SaleReturnForm({
@@ -65,7 +65,7 @@ export function SaleReturnForm({
     ) / 100;
   return (
     <BaseForm
-      submitText="建立退貨與待退款紀錄"
+      submitText="建立退貨單"
       onCancel={onCancel}
       onDirty={onDirty}
       submit={() => {
@@ -87,7 +87,7 @@ export function SaleReturnForm({
         );
         if (result.error) return { message: result.error };
         submitted.current = true;
-        onDone();
+        onDone(result.returnId);
       }}
     >
       <div className="pos-operation-summary">

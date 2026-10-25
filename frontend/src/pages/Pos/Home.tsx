@@ -20,6 +20,8 @@ import { useBaseDataOptions } from "@/features/base-data/useBaseDataOptions";
 import { CheckoutForm } from "@/features/pos/CheckoutForm";
 import { PosPolicyForm } from "@/features/pos/PosPolicyForm";
 import { SaleDetails } from "@/features/pos/SaleDetails";
+import { SalesReturnList } from "@/features/pos/SalesReturnList";
+import { SaleReturnDetails } from "@/features/pos/SaleReturnDetails";
 import { SalesList } from "@/features/pos/SalesList";
 import {
   SaleReturnForm,
@@ -36,6 +38,7 @@ import {
 } from "@/features/pos/model";
 import { SaleLines } from "@/features/pos/SaleLines";
 import { ProductPicker } from "@/features/pos/ProductPicker";
+import type { SaleDetailTab } from "@/types/pos";
 import "@/features/items/items.css";
 import "@/features/purchases/purchases.css";
 import "@/features/pos/pos.css";
@@ -45,12 +48,15 @@ type View = {
     | "checkout"
     | "policy"
     | "sale"
+    | "return-record"
     | "return"
     | "refund"
     | "void"
     | "clear";
   id?: string;
   refundId?: string;
+  returnId?: string;
+  detailTab?: SaleDetailTab;
 };
 export function PosPage() {
   const dispatch = useAppDispatch(),
@@ -59,10 +65,17 @@ export function PosPage() {
   const state = useAppSelector((root) => root.pos),
     items = useAppSelector((root) => root.items.items);
   const options = useBaseDataOptions();
-  const salesView = location.pathname.replace(/\/+$/, "") === "/sales";
+  const returnsView =
+    location.pathname.replace(/\/+$/, "") === "/sales/returns";
+  const salesView =
+    returnsView || location.pathname.replace(/\/+$/, "") === "/sales";
   useEffect(() => {
     if (location.state?.focusSalesTab)
-      document.getElementById(salesView ? "pos-sales" : "pos-pos")?.focus();
+      document
+        .getElementById(
+          returnsView ? "pos-returns" : salesView ? "pos-sales" : "pos-pos",
+        )
+        ?.focus();
   }, [salesView, location.key, location.state]);
   const [cart, setCart] = usePosDraft("cart"),
     [orderDiscount, setOrderDiscount] = usePosDraft("orderDiscount"),
@@ -185,10 +198,17 @@ export function PosPage() {
     setDirty(false);
     setDiscard(false);
   }
-  function done() {
+  function done(returnId?: string) {
     const completed = view?.kind;
     setDirty(false);
-    setView(sale ? { kind: "sale", id: sale.id } : null);
+    const selectedReturnId = returnId || view?.returnId;
+    setView(
+      sale
+        ? selectedReturnId
+          ? { kind: "return-record", id: sale.id, returnId: selectedReturnId }
+          : { kind: "sale", id: sale.id, detailTab: "history" }
+        : null,
+    );
     setNotice(
       completed === "refund"
         ? "已確認退款完成。"
@@ -198,21 +218,23 @@ export function PosPage() {
     );
   }
   const title =
-    view?.kind === "products"
-      ? "挑選商品"
-      : view?.kind === "checkout"
-        ? "POS 結帳確認"
-        : view?.kind === "policy"
-          ? "POS 商品設定（展示）"
-          : view?.kind === "return"
-            ? "銷售退貨"
-            : view?.kind === "refund"
-              ? "確認退款"
-              : view?.kind === "void"
-                ? "作廢交易"
-                : view?.kind === "clear"
-                  ? "清空購物車"
-                  : "銷售明細與交易憑證";
+    view?.kind === "return-record"
+      ? "退貨單明細"
+      : view?.kind === "products"
+        ? "挑選商品"
+        : view?.kind === "checkout"
+          ? "POS 結帳確認"
+          : view?.kind === "policy"
+            ? "POS 商品設定（展示）"
+            : view?.kind === "return"
+              ? "銷售退貨"
+              : view?.kind === "refund"
+                ? "確認退款"
+                : view?.kind === "void"
+                  ? "作廢交易"
+                  : view?.kind === "clear"
+                    ? "清空購物車"
+                    : "銷售明細與交易憑證";
   return (
     <div
       className={`items-page pos-page${salesView ? "" : " pos-register-page"}`}
@@ -221,7 +243,13 @@ export function PosPage() {
         <div className="items-title">
           <ShoppingCart aria-hidden="true" />
           <div>
-            <h2>{salesView ? "銷售紀錄" : "POS 銷售收銀"}</h2>
+            <h2>
+              {returnsView
+                ? "退貨紀錄"
+                : salesView
+                  ? "銷售紀錄"
+                  : "POS 銷售收銀"}
+            </h2>
             <p>商品銷售、付款與退貨追蹤的前端展示</p>
           </div>
         </div>
@@ -254,24 +282,30 @@ export function PosPage() {
       <BaseTabs
         id="pos"
         label="銷售工作區"
-        value={salesView ? "sales" : "pos"}
+        value={returnsView ? "returns" : salesView ? "sales" : "pos"}
         options={[
           {
             value: "pos",
             label: `收銀${cart.length ? `（${cart.length} 項未結帳）` : ""}`,
           },
           { value: "sales", label: "銷售紀錄" },
+          { value: "returns", label: "退貨紀錄" },
         ]}
         onChange={(value) =>
-          navigate(`/${value}${location.search}`, {
-            state: { focusSalesTab: true },
-          })
+          navigate(
+            `/${value === "returns" ? "sales/returns" : value}${location.search}`,
+            {
+              state: { focusSalesTab: true },
+            },
+          )
         }
       />
       <div
         id="pos-panel"
         role="tabpanel"
-        aria-labelledby={salesView ? "pos-sales" : "pos-pos"}
+        aria-labelledby={
+          returnsView ? "pos-returns" : salesView ? "pos-sales" : "pos-pos"
+        }
         tabIndex={0}
       >
         {salesView && cart.length > 0 && (
@@ -279,7 +313,14 @@ export function PosPage() {
             購物車已暫存，切換頁面可繼續收銀；重新整理即重置。
           </p>
         )}
-        {salesView ? (
+        {returnsView ? (
+          <SalesReturnList
+            onView={(id, returnId) =>
+              setView({ kind: "return-record", id, returnId })
+            }
+            onViewSale={(id) => setView({ kind: "sale", id })}
+          />
+        ) : salesView ? (
           <SalesList
             authorized={authorized}
             onView={(id) => setView({ kind: "sale", id })}
@@ -577,6 +618,10 @@ export function PosPage() {
           {view?.kind === "sale" && sale && (
             <SaleDetails
               sale={sale}
+              initialTab={view.detailTab}
+              onViewReturn={(returnId) =>
+                setView({ kind: "return-record", id: sale.id, returnId })
+              }
               authorized={authorized}
               onClose={() => close()}
               onReturn={() => setView({ kind: "return", id: sale.id })}
@@ -586,6 +631,29 @@ export function PosPage() {
               }
             />
           )}
+          {view?.kind === "return-record" &&
+            sale &&
+            sale.returns.find((record) => record.id === view.returnId) && (
+              <SaleReturnDetails
+                sale={sale}
+                record={sale.returns.find(
+                  (record) => record.id === view.returnId,
+                )!}
+                authorized={authorized}
+                onClose={() => close()}
+                onViewSale={() =>
+                  setView({ kind: "sale", id: sale.id, detailTab: "history" })
+                }
+                onRefund={(refundId) =>
+                  setView({
+                    kind: "refund",
+                    id: sale.id,
+                    refundId,
+                    returnId: view.returnId,
+                  })
+                }
+              />
+            )}
           {view?.kind === "return" && sale && (
             <SaleReturnForm
               sale={sale}

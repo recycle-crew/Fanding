@@ -7,6 +7,7 @@ import type {
   Sale,
   PosState,
   SaleAction,
+  SaleReturn,
 } from "@/types/pos";
 import {
   available,
@@ -225,6 +226,49 @@ export function saleActionReason(
     return "商品已全部退貨";
   return "";
 }
+export function saleReturnAmount(record: SaleReturn) {
+  return record.lines.reduce((sum, line) => sum + cents(line.refund), 0) / 100;
+}
+export function saleReturnRefunded(sale: Sale, record: SaleReturn) {
+  return (
+    sale.refunds
+      .filter(
+        (refund) => refund.sourceId === record.id && refund.status === "已退款",
+      )
+      .reduce((sum, refund) => sum + cents(refund.amount), 0) / 100
+  );
+}
+export function saleReturnPending(sale: Sale, record: SaleReturn) {
+  return (
+    sale.refunds
+      .filter(
+        (refund) => refund.sourceId === record.id && refund.status === "待退款",
+      )
+      .reduce((sum, refund) => sum + cents(refund.amount), 0) / 100
+  );
+}
+export function saleReturnRefundStatus(sale: Sale, record: SaleReturn) {
+  if (saleReturnAmount(record) === 0) return "無須退款";
+  if (saleReturnPending(sale, record) > 0)
+    return saleReturnRefunded(sale, record) > 0 ? "部分已退款" : "待退款";
+  return saleReturnRefunded(sale, record) >= saleReturnAmount(record)
+    ? "已退款"
+    : "待退款";
+}
+export function nextSaleReturnNumber(
+  sales: readonly Sale[],
+  date = taipeiToday(),
+) {
+  const prefix = `SR${date.replaceAll("-", "")}-`;
+  let sequence = 0;
+  for (const sale of sales)
+    for (const record of sale.returns) {
+      if (!record.number?.startsWith(prefix)) continue;
+      const suffix = record.number.slice(prefix.length);
+      if (/^\d+$/.test(suffix)) sequence = Math.max(sequence, Number(suffix));
+    }
+  return `${prefix}${String(sequence + 1).padStart(4, "0")}`;
+}
 export function createPosSeed(): PosState {
   const seed = createItemsSeed();
   const state: PosState = {
@@ -305,8 +349,8 @@ export function createPosSeed(): PosState {
         confirmed: true,
       },
       receiptType: "一般銷售憑證",
-      invoiceStatus: "未開立（未串接）",
-      remark: "歷史展示資料；批次是當時快照。",
+      invoiceStatus: "不開立",
+      remark: "",
       authorization: "主管（展示）",
       returns: [],
       refunds: [],
@@ -317,7 +361,10 @@ export function createPosSeed(): PosState {
       const amount = returnAmount(sale, line, index === 1 ? 1 : 2);
       sale.returns.push({
         id: `RET-SEED${index}`,
-        date: sale.date,
+        number: `SR${sale.date.slice(0, 10).replaceAll("-", "")}-0001`,
+        saleId: sale.id,
+        createdAt: sale.date,
+        date: sale.date.slice(0, 10),
         reason: "展示退貨",
         actor: "王小明",
         method: "現金",

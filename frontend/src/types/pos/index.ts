@@ -3,6 +3,7 @@ import type { paymentMethods } from "@/features/pos/model";
 
 export type PaymentMethod = (typeof paymentMethods)[number];
 export type SaleAction = "return" | "void" | "refund";
+export type SaleDetailTab = "lines" | "payment" | "history";
 
 export interface PosPolicy {
   sellable: boolean;
@@ -63,6 +64,9 @@ export interface Customer {
 
 export interface SaleReturn {
   id: string;
+  number: string;
+  saleId: string;
+  createdAt: string;
   date: string;
   reason: string;
   actor: string;
@@ -94,6 +98,7 @@ export interface Sale {
   date: string;
   warehouse: string;
   seller: string;
+  /** 單據擴充欄位，現行銷售流程不要求輸入。 */
   sellerTaxId: string;
   customer: Customer;
   cashier: string;
@@ -109,6 +114,7 @@ export interface Sale {
     confirmed: boolean;
   };
   receiptType: string;
+  /** 現行流程為不開立；保留以支援後續發票整合。 */
   invoiceStatus: string;
   remark: string;
   authorization: string;

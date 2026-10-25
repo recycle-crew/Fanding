@@ -17,6 +17,7 @@ import {
   qty,
   returnAmount,
   returnedQuantity,
+  nextSaleReturnNumber,
 } from "@/features/pos/model";
 import type {
   CartLine,
@@ -28,7 +29,12 @@ import type {
   SaleReturn,
 } from "@/types/pos";
 import { available, taipeiToday } from "@/features/items/model";
-type Result = { error: string; saleId?: string };
+type Result = {
+  error: string;
+  saleId?: string;
+  returnId?: string;
+  returnNumber?: string;
+};
 type PosThunk = ThunkAction<Result, RootState, unknown, UnknownAction>;
 const slice = createSlice({
   name: "pos",
@@ -89,6 +95,7 @@ const slice = createSlice({
       const sale = state.sales.find((row) => row.id === payload.saleId);
       if (
         !sale ||
+        payload.record.saleId !== sale.id ||
         sale.void ||
         sale.returns.some((row) => row.id === payload.record.id)
       )
@@ -119,7 +126,7 @@ const slice = createSlice({
           state.movements.push({
             id: `${payload.record.id}-${batch.id}`,
             saleId: sale.id,
-            reference: payload.record.id,
+            reference: payload.record.number,
             itemId: batch.itemId,
             batchId: batch.id,
             quantity: allocation.quantity,
@@ -285,7 +292,7 @@ export const checkoutPos =
           confirmed: true,
         },
         receiptType: input.receiptType,
-        invoiceStatus: "未開立（未串接）",
+        invoiceStatus: "不開立",
         remark: input.remark.trim(),
         authorization: input.authorized
           ? "主管展示授權：修改售價"
@@ -310,8 +317,16 @@ export const returnPos =
     const state = getState(),
       sale = state.pos.sales.find((row) => row.id === input.saleId);
     if (!sale || sale.void) return { error: "作廢或不存在的銷售單無法退貨。" };
-    if (sale.returns.some((record) => record.id === input.requestId))
-      return { error: "", saleId: sale.id };
+    const existing = sale.returns.find(
+      (record) => record.id === input.requestId,
+    );
+    if (existing)
+      return {
+        error: "",
+        saleId: sale.id,
+        returnId: existing.id,
+        returnNumber: existing.number,
+      };
     if (
       !input.reason.trim() ||
       !input.date ||
@@ -375,6 +390,9 @@ export const returnPos =
         saleId: sale.id,
         record: {
           id: input.requestId,
+          number: nextSaleReturnNumber(state.pos.sales),
+          saleId: sale.id,
+          createdAt: nowTaipei(),
           date: input.date,
           actor: "王小明（展示）",
           reason: input.reason.trim(),
@@ -383,7 +401,17 @@ export const returnPos =
         },
       }),
     );
-    return { error: "", saleId: sale.id };
+    const created = getState()
+      .pos.sales.find((row) => row.id === sale.id)
+      ?.returns.find((record) => record.id === input.requestId);
+    return created
+      ? {
+          error: "",
+          saleId: sale.id,
+          returnId: created.id,
+          returnNumber: created.number,
+        }
+      : { error: "退貨單未建立，請重新確認。" };
   };
 export const voidPos =
   (input: {

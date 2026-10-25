@@ -11,6 +11,82 @@ async function salesAction(page: Page, number: string, action: string) {
   await page.getByRole("menuitem", { name: action, exact: true }).click();
 }
 
+test("@critical 銷售明細分頁、目前不開發票與列印內容", async ({
+  page,
+}, testInfo) => {
+  await page.clock.setFixedTime(new Date("2026-10-20T08:00:00Z"));
+  await page.goto("/sales");
+  await page
+    .getByRole("button", { name: "查看銷售 SO20261020-0001", exact: true })
+    .click();
+  const dialog = page.getByRole("dialog");
+  await expect(
+    dialog.getByRole("table", { name: "已售商品明細", exact: true }),
+  ).toBeVisible();
+  await expect(
+    dialog.getByText(/找零|未串接|待串接|未提供／不適用/),
+  ).toHaveCount(0);
+  await expect(
+    dialog.getByRole("region", { name: "交易金額摘要", exact: true }),
+  ).toContainText("$680");
+  await page.screenshot({
+    path: testInfo.outputPath("sale-details-lines.png"),
+  });
+  const tabs = dialog.getByRole("tablist", {
+    name: "銷售明細內容",
+    exact: true,
+  });
+  await tabs.getByRole("tab", { name: "付款資訊", exact: true }).click();
+  await expect(dialog.getByText("已收款", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("發票處理", { exact: true })).toBeHidden();
+  await dialog.getByText("單據資訊", { exact: true }).click();
+  await expect(dialog.getByText("不開立", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("一般銷售憑證", { exact: true })).toBeVisible();
+  await page.screenshot({
+    path: testInfo.outputPath("sale-details-payment.png"),
+  });
+  await tabs.getByRole("tab", { name: "商品明細", exact: true }).focus();
+  await page.keyboard.press("End");
+  await expect(
+    tabs.getByRole("tab", { name: "退貨與退款", exact: true }),
+  ).toBeFocused();
+  await expect(dialog.getByText("尚無退貨。", { exact: true })).toBeVisible();
+  await page.addScriptTag({ content: axe.source });
+  expect(
+    await page.evaluate(
+      async () =>
+        (
+          await window.axe.run(document.querySelector('[role="dialog"]'), {
+            runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"] },
+          })
+        ).violations,
+    ),
+  ).toEqual([]);
+  await page.emulateMedia({ media: "print" });
+  const receipt = page.locator("#pos-receipt");
+  await expect(
+    receipt.getByRole("table", { name: "已售商品明細", exact: true }),
+  ).toBeVisible();
+  await expect(receipt.getByText("已收款", { exact: true })).toBeVisible();
+  await expect(receipt.getByText("單據資訊", { exact: true })).toBeHidden();
+  await page.emulateMedia({ media: "screen" });
+  if (testInfo.project.name === "desktop") {
+    await page.setViewportSize({ width: 320, height: 900 });
+    await tabs.getByRole("tab", { name: "商品明細", exact: true }).click();
+    await expect(
+      dialog.getByRole("button", { name: "關閉", exact: true }),
+    ).toBeInViewport();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth + 1,
+      ),
+    ).toBeTruthy();
+    await page.screenshot({
+      path: testInfo.outputPath("sale-details-320.png"),
+    });
+  }
+});
+
 test("@critical 列表部分退貨、可售回庫、確認退款與剩餘全退", async ({
   page,
 }, testInfo) => {
@@ -29,7 +105,7 @@ test("@critical 列表部分退貨、可售回庫、確認退款與剩餘全退"
     .getByLabel("退貨原因", { exact: true })
     .fill("顧客退回未使用商品");
   await dialog
-    .getByRole("button", { name: "建立退貨與待退款紀錄", exact: true })
+    .getByRole("button", { name: "建立退貨單", exact: true })
     .click();
   await expect(dialog.getByRole("alert")).toBeVisible();
   await quantity.fill("1");
@@ -37,7 +113,7 @@ test("@critical 列表部分退貨、可售回庫、確認退款與剩餘全退"
     .getByLabel("商品處理方式", { exact: true })
     .selectOption("可售回庫");
   await dialog
-    .getByRole("button", { name: "建立退貨與待退款紀錄", exact: true })
+    .getByRole("button", { name: "建立退貨單", exact: true })
     .click();
   await expect(dialog.getByRole("alert")).toContainText("實體退貨");
   await dialog
@@ -49,7 +125,7 @@ test("@critical 列表部分退貨、可售回庫、確認退款與剩餘全退"
   await expect(dialog.getByText(/原出庫批次/)).toHaveCount(0);
   await page.screenshot({ path: testInfo.outputPath("sales-return.png") });
   await dialog
-    .getByRole("button", { name: "建立退貨與待退款紀錄", exact: true })
+    .getByRole("button", { name: "建立退貨單", exact: true })
     .click();
   await expect(dialog).toContainText("部分退貨");
   await expect(dialog).toContainText("待退款 $340");
@@ -64,7 +140,11 @@ test("@critical 列表部分退貨、可售回庫、確認退款與剩餘全退"
   await dialog
     .getByRole("button", { name: "確認退款完成", exact: true })
     .click();
-  await expect(dialog).toContainText("已實際退款 $340");
+  await expect(
+    dialog
+      .locator(".sale-detail-totals > div")
+      .filter({ hasText: "已實際退款" }),
+  ).toContainText("$340");
   await dialog.getByRole("button", { name: "關閉", exact: true }).click();
   await salesAction(page, number, "銷售退貨");
   await dialog
@@ -79,7 +159,7 @@ test("@critical 列表部分退貨、可售回庫、確認退款與剩餘全退"
     })
     .check();
   await dialog
-    .getByRole("button", { name: "建立退貨與待退款紀錄", exact: true })
+    .getByRole("button", { name: "建立退貨單", exact: true })
     .click();
   await expect(dialog).toContainText("全部退貨");
   await dialog.getByRole("button", { name: "關閉", exact: true }).click();
