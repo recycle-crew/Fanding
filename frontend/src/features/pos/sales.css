@@ -1,6 +1,72 @@
 .sales-list {
   min-width: 0;
 }
+.sales-action-menu {
+  min-width: 230px;
+}
+.sales-action-menu small {
+  display: block;
+  font-size: 11px;
+  margin-top: 2px;
+}
+.sales-action-menu > p {
+  margin: 6px 8px;
+  max-width: 240px;
+  color: #53647d;
+  font-size: 12px;
+}
+.pos-operation-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  margin-bottom: 18px;
+  background: #f2f7fd;
+  border: 1px solid #dce6f0;
+  border-radius: 8px;
+}
+.pos-operation-summary span,
+.pos-operation-summary small,
+.pos-operation-summary strong {
+  display: block;
+}
+.pos-operation-summary small {
+  color: #53647d;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.pos-operation-summary > div:last-child {
+  text-align: right;
+  flex-shrink: 0;
+}
+.pos-operation-summary strong {
+  font-size: 26px;
+  color: #0758cf;
+}
+.pos-return-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+.pos-return-tools h3 {
+  flex: 1;
+  margin: 0 !important;
+}
+.pos-operation-note {
+  color: #53647d;
+  font-size: 13px;
+  margin-top: 12px;
+}
+@media (max-width: 380px) {
+  .pos-operation-summary {
+    flex-direction: column;
+  }
+  .pos-operation-summary > div:last-child {
+    text-align: left;
+  }
+}
 .sales-summary {
   flex-wrap: wrap;
 }

@@ -21,6 +21,7 @@ export interface CheckoutInput {
 }
 
 export interface ReturnInput {
+  authorized: boolean;
   saleId: string;
   requestId: string;
   date: string;

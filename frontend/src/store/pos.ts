@@ -306,6 +306,7 @@ export const checkoutPos =
 export const returnPos =
   (input: ReturnInput): PosThunk =>
   (dispatch, getState) => {
+    if (!input.authorized) return { error: "退貨需主管展示授權。" };
     const state = getState(),
       sale = state.pos.sales.find((row) => row.id === input.saleId);
     if (!sale || sale.void) return { error: "作廢或不存在的銷售單無法退貨。" };

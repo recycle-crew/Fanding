@@ -80,6 +80,7 @@ export interface BaseFormProps<T extends FieldValues = FieldValues> {
   children: ReactNode;
   footerSummary?: ReactNode;
   submitText: string;
+  submitVariant?: "default" | "destructive";
   onCancel: () => void;
   onDirty: () => void;
   form?: UseFormReturn<T>;
@@ -91,6 +92,7 @@ export function BaseForm<T extends FieldValues = FieldValues>({
   children,
   footerSummary,
   submitText,
+  submitVariant = "default",
   onCancel,
   onDirty,
   form,
@@ -201,6 +203,7 @@ export function BaseForm<T extends FieldValues = FieldValues>({
             </BaseButton>
             <BaseButton
               type="submit"
+              variant={submitVariant}
               disabled={activeForm.formState.isSubmitting}
             >
               {submitText}

@@ -6,6 +6,7 @@ import {
   refundStatus,
   refunded,
   saleStatus,
+  saleActionReason,
 } from "./model";
 import type { Sale } from "@/types/pos";
 export function SaleDetails({
@@ -196,18 +197,16 @@ export function SaleDetails({
         </BaseButton>
         <BaseButton
           variant="outline"
-          disabled={
-            !authorized || Boolean(sale.void) || saleStatus(sale) === "全部退貨"
-          }
+          disabled={Boolean(saleActionReason(sale, "return", authorized))}
+          title={saleActionReason(sale, "return", authorized) || undefined}
           onClick={onReturn}
         >
           銷售退貨
         </BaseButton>
         <BaseButton
           variant="outline"
-          disabled={
-            !authorized || Boolean(sale.void) || Boolean(sale.returns.length)
-          }
+          disabled={Boolean(saleActionReason(sale, "void", authorized))}
+          title={saleActionReason(sale, "void", authorized) || undefined}
           onClick={onVoid}
         >
           作廢交易

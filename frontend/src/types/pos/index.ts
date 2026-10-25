@@ -2,6 +2,7 @@ import type { InventoryBatch } from "@/types/items";
 import type { paymentMethods } from "@/features/pos/model";
 
 export type PaymentMethod = (typeof paymentMethods)[number];
+export type SaleAction = "return" | "void" | "refund";
 
 export interface PosPolicy {
   sellable: boolean;

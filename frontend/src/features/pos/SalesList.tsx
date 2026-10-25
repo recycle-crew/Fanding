@@ -1,5 +1,7 @@
 import { useSearchParams } from "react-router";
 import "./sales.css";
+import { SaleActions } from "./SaleActions";
+import type { SaleAction } from "@/types/pos";
 import { ArrowDownUp, Clock3, Eye } from "lucide-react";
 import { BaseField as Field } from "@/components/ui/BaseForm";
 import { BaseInput } from "@/components/ui/BaseInput";
@@ -33,7 +35,15 @@ const initial = () => ({
   cashier: "",
   refund: "",
 });
-export function SalesList({ onView }: { onView: (id: string) => void }) {
+export function SalesList({
+  onView,
+  onAction,
+  authorized,
+}: {
+  onView: (id: string) => void;
+  onAction: (id: string, action: SaleAction) => void;
+  authorized: boolean;
+}) {
   const sales = useAppSelector((root) => root.pos.sales);
   const [params, setParams] = useSearchParams();
   const defaults = initial();
@@ -395,6 +405,11 @@ export function SalesList({ onView }: { onView: (id: string) => void }) {
                       <Eye size={16} aria-hidden="true" />
                       明細
                     </BaseButton>
+                    <SaleActions
+                      sale={sale}
+                      authorized={authorized}
+                      onAction={(action) => onAction(sale.id, action)}
+                    />
                   </div>
                 </BaseTableCell>
               </BaseTableRow>

@@ -6,6 +6,7 @@ import type {
   Customer,
   Sale,
   PosState,
+  SaleAction,
 } from "@/types/pos";
 import {
   available,
@@ -208,6 +209,22 @@ export function saleStatus(sale: Sale) {
     ? "全部退貨"
     : "部分退貨";
 }
+export function saleActionReason(
+  sale: Sale,
+  action: SaleAction,
+  authorized: boolean,
+) {
+  if (!authorized) return "需主管／財務權限";
+  if (action === "refund")
+    return sale.refunds.some((refund) => refund.status === "待退款")
+      ? ""
+      : "無待退款紀錄";
+  if (sale.void) return "此交易已作廢";
+  if (action === "void" && sale.returns.length) return "已有退貨紀錄，無法作廢";
+  if (action === "return" && saleStatus(sale) === "全部退貨")
+    return "商品已全部退貨";
+  return "";
+}
 export function createPosSeed(): PosState {
   const seed = createItemsSeed();
   const state: PosState = {
@@ -343,6 +360,19 @@ export function createPosSeed(): PosState {
       });
     }
     state.sales.push(sale);
+    // 已售出的展示批次保留零庫存，供退貨與作廢追溯；不增加初始可售量。
+    for (const allocation of line.allocations) {
+      state.batches.push({
+        id: allocation.batchId,
+        itemId: item.id,
+        warehouse: sale.warehouse,
+        batchNumber: allocation.batchNumber,
+        expiryDate: allocation.expiry,
+        quantity: 0,
+        unavailable: 0,
+        receivedAt: sale.date.slice(0, 10),
+      });
+    }
   }
   return state;
 }

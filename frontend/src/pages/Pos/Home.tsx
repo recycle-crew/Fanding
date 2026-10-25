@@ -186,9 +186,16 @@ export function PosPage() {
     setDiscard(false);
   }
   function done() {
+    const completed = view?.kind;
     setDirty(false);
     setView(sale ? { kind: "sale", id: sale.id } : null);
-    setNotice("展示作業已完成；庫存與退款歷史保留，未更新模組一。");
+    setNotice(
+      completed === "refund"
+        ? "已確認退款完成。"
+        : completed === "void"
+          ? "交易已作廢，可在明細查看退款狀態。"
+          : "退貨已建立，可在明細查看退款狀態。",
+    );
   }
   const title =
     view?.kind === "products"
@@ -273,7 +280,19 @@ export function PosPage() {
           </p>
         )}
         {salesView ? (
-          <SalesList onView={(id) => setView({ kind: "sale", id })} />
+          <SalesList
+            authorized={authorized}
+            onView={(id) => setView({ kind: "sale", id })}
+            onAction={(id, action) => {
+              if (action === "refund") {
+                const refund = state.sales
+                  .find((record) => record.id === id)
+                  ?.refunds.find((record) => record.status === "待退款");
+                if (refund)
+                  setView({ kind: "refund", id, refundId: refund.id });
+              } else setView({ kind: action, id });
+            }}
+          />
         ) : (
           <div className="pos-register">
             <section className="pos-card pos-transaction" aria-label="交易資料">
@@ -489,7 +508,13 @@ export function PosPage() {
         {discard && (
           <div className="items-modal-scroll">
             <h3>尚有未儲存變更</h3>
-            <p>確定放棄此視窗的修改？購物車仍會保留。</p>
+            <p>
+              {view?.kind === "return" ||
+              view?.kind === "void" ||
+              view?.kind === "refund"
+                ? "確定放棄本次操作？原交易紀錄不會變更。"
+                : "確定放棄此視窗的修改？購物車仍會保留。"}
+            </p>
             <div className="pos-actions">
               <BaseButton
                 autoFocus

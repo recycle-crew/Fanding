@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { BaseForm, BaseField as Field } from "@/components/ui/BaseForm";
 import { BaseInput } from "@/components/ui/BaseInput";
 import { BaseTextarea } from "@/components/ui/BaseTextarea";
+import { BaseButton } from "@/components/ui/BaseButton";
 import {
   BaseNativeSelect as Select,
   BaseNativeSelectOption as Option,
@@ -10,7 +11,14 @@ import { BaseCheckField } from "@/components/ui/BaseCheckField";
 import { useAppDispatch } from "@/store/hooks";
 import { returnPos, refundPos, voidPos } from "@/store/pos";
 import { taipeiToday } from "@/features/items/model";
-import { money, paymentMethods, returnAmount, returnedQuantity } from "./model";
+import {
+  cents,
+  money,
+  paymentMethods,
+  returnAmount,
+  returnedQuantity,
+  qty,
+} from "./model";
 import type { PaymentMethod, Sale, SaleRefund } from "@/types/pos";
 type Callbacks = {
   sale: Sale;
@@ -36,11 +44,25 @@ export function SaleReturnForm({
     [disposition, setDisposition] = useState<"可售回庫" | "不可售">("不可售"),
     [confirmed, setConfirmed] = useState(false),
     [professional, setProfessional] = useState(false);
-  const amount = sale.lines.reduce(
-    (sum, line) =>
-      sum + returnAmount(sale, line, Number(quantities[line.id] || 0)),
-    0,
-  );
+  const amount =
+    sale.lines.reduce(
+      (sum, line) =>
+        sum +
+        cents(
+          returnAmount(
+            sale,
+            line,
+            Math.max(
+              0,
+              Math.min(
+                qty(line.quantity - returnedQuantity(sale, line.id)),
+                Number(quantities[line.id]) || 0,
+              ),
+            ),
+          ),
+        ),
+      0,
+    ) / 100;
   return (
     <BaseForm
       submitText="建立退貨與待退款紀錄"
@@ -51,6 +73,7 @@ export function SaleReturnForm({
         if (!authorized) return { message: "退貨需主管展示授權。" };
         const result = dispatch(
           returnPos({
+            authorized,
             saleId: sale.id,
             requestId: requestId.current,
             date,
@@ -67,11 +90,41 @@ export function SaleReturnForm({
         onDone();
       }}
     >
-      <section>
-        <h3>{sale.number}　銷售退貨</h3>
-        <p>
-          原成交 {money(sale.total)}
-          ；退款依歷史淨成交額計算，已含單品與整單折扣。
+      <div className="pos-operation-summary">
+        <div>
+          <span>{sale.number}</span>
+          <small>
+            {sale.customer.name}・原成交 {money(sale.total)}
+          </small>
+        </div>
+        <div>
+          <span>本次應退</span>
+          <strong>{money(amount)}</strong>
+        </div>
+      </div>
+      <section className="pos-return-editor">
+        <div className="pos-return-tools">
+          <h3>退貨品項</h3>
+          <BaseButton
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setQuantities(
+                Object.fromEntries(
+                  sale.lines.map((line) => [
+                    line.id,
+                    qty(line.quantity - returnedQuantity(sale, line.id)),
+                  ]),
+                ),
+              );
+              onDirty();
+            }}
+          >
+            全部可退數量
+          </BaseButton>
+        </div>
+        <p className="pos-operation-note">
+          退款依原成交與折扣計算，可辦理部分或全部退貨。
         </p>
         {sale.lines.map((line) => (
           <div className="pos-return-line" key={line.id}>
@@ -80,8 +133,8 @@ export function SaleReturnForm({
             </strong>
             <p>
               原銷售 {line.quantity} {line.unit}，已退{" "}
-              {returnedQuantity(sale, line.id)} {line.unit}，成交單價{" "}
-              {money(line.price)}，原明細淨額 {money(line.net)}
+              {returnedQuantity(sale, line.id)} {line.unit}，可退{" "}
+              {qty(line.quantity - returnedQuantity(sale, line.id))} {line.unit}
             </p>
             <Field
               name={`return-${line.id}`}
@@ -91,7 +144,8 @@ export function SaleReturnForm({
                 type="number"
                 min="0"
                 step="0.001"
-                max={line.quantity - returnedQuantity(sale, line.id)}
+                max={qty(line.quantity - returnedQuantity(sale, line.id))}
+                disabled={line.quantity <= returnedQuantity(sale, line.id)}
                 value={quantities[line.id] || 0}
                 onChange={(event) =>
                   setQuantities({
@@ -101,15 +155,6 @@ export function SaleReturnForm({
                 }
               />
             </Field>
-            <small>
-              原出庫批次：
-              {line.allocations
-                .map(
-                  (allocation) =>
-                    `${allocation.batchNumber} ${allocation.quantity} ${line.unit}`,
-                )
-                .join("、")}
-            </small>
           </div>
         ))}
       </section>
@@ -164,7 +209,7 @@ export function SaleReturnForm({
         <BaseCheckField
           label={
             disposition === "可售回庫"
-              ? "已收到退貨，實際批次及數量與原出庫順序一致、商品狀態可售（展示）"
+              ? "已收到退貨，確認商品狀態可售並回庫（展示）"
               : "已收到實體退貨，確認不可售且不增加可用庫存（展示）"
           }
           checked={confirmed}
@@ -173,9 +218,11 @@ export function SaleReturnForm({
         {disposition === "可售回庫" && (
           <>
             <p>
-              回庫沿原出庫批次順序，實際批次不同時請勿勾選，改列不可售並人工核對；無法追溯或過期批次會阻擋。
+              系統會依原交易處理回庫；無法核對時，請改列不可售並交由庫存管理處理。
             </p>
-            {sale.lines.some((line) => line.medicine) && (
+            {sale.lines.some(
+              (line) => line.medicine && quantities[line.id] > 0,
+            ) && (
               <BaseCheckField
                 label="藥品退回可售庫存已由專業人員確認（展示）"
                 checked={professional}
@@ -198,23 +245,38 @@ export function SaleVoidForm({
   const dispatch = useAppDispatch(),
     [reason, setReason] = useState(""),
     [notDelivered, setNotDelivered] = useState(false);
+  const submitted = useRef(false);
   return (
     <BaseForm
       submitText="確認作廢並建立待退款"
+      submitVariant="destructive"
       onCancel={onCancel}
       onDirty={onDirty}
       submit={() => {
+        if (submitted.current) return;
         const result = dispatch(
           voidPos({ saleId: sale.id, reason, notDelivered, authorized }),
         );
         if (result.error) return { message: result.error };
+        submitted.current = true;
         onDone();
       }}
     >
+      <div className="pos-operation-summary">
+        <div>
+          <span>{sale.number}</span>
+          <small>
+            {sale.customer.name}・{sale.lines.length} 項商品
+          </small>
+        </div>
+        <div>
+          <span>作廢應退</span>
+          <strong>{money(sale.total)}</strong>
+        </div>
+      </div>
       <section>
-        <h3>{sale.number}</h3>
         <p>
-          作廢適用錯誤交易且商品未交付。原單與發票狀態保留，建立反向庫存異動；作廢不代表退款完成。
+          適用於輸入錯誤、商品尚未交付的整筆交易。作廢會回復庫存並保留原單；退款需另外確認完成。
         </p>
         <Field name="void-reason" label="作廢原因" required>
           <BaseTextarea

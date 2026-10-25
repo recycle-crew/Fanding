@@ -19,6 +19,7 @@ import {
   refunded,
   pendingRefund,
   refundStatus,
+  saleActionReason,
   saleStatus,
   walkIn,
 } from "./model";
@@ -88,6 +89,115 @@ function checkoutInput(
   };
 }
 describe("POS 展示金額、批次、退貨與防重複", () => {
+  it("退貨與作廢的可操作狀態一致，禁止無權限及無剩餘可退量", () => {
+    const sales = createPosSeed().sales;
+    expect(saleActionReason(sales[0], "return", false)).toContain("權限");
+    expect(saleActionReason(sales[0], "return", true)).toBe("");
+    expect(saleActionReason(sales[1], "return", true)).toBe("");
+    expect(saleActionReason(sales[1], "void", true)).toContain("已有退貨");
+    expect(saleActionReason(sales[2], "return", true)).toContain("全部退貨");
+    expect(saleActionReason(sales[3], "return", true)).toContain("已作廢");
+    expect(saleActionReason(sales[3], "refund", true)).toBe("");
+  });
+  it("歷史銷售作廢可反向回庫，重複作廢與未授權退貨不變更帳務", () => {
+    const store = freshStore();
+    const sale = store
+      .getState()
+      .pos.sales.find((row) => row.id === "SALE-SEED0")!;
+    const originalStock = store
+      .getState()
+      .pos.batches.reduce((sum, row) => sum + row.quantity, 0);
+    const originalItems = store.getState().items;
+    const request = {
+      authorized: false,
+      saleId: sale.id,
+      requestId: "unauthorized-return",
+      date: sale.date.slice(0, 10),
+      reason: "測試",
+      method: "現金" as const,
+      quantities: { [sale.lines[0].id]: 1 },
+      disposition: "不可售" as const,
+      professional: false,
+      confirmed: true,
+    };
+    expect(store.dispatch(returnPos(request)).error).toContain("授權");
+    expect(
+      store.getState().pos.sales.find((row) => row.id === sale.id)!.returns,
+    ).toHaveLength(0);
+    const voidRequest = {
+      saleId: sale.id,
+      reason: "重複交易",
+      notDelivered: true,
+      authorized: true,
+    };
+    expect(
+      store.dispatch(voidPos({ ...voidRequest, authorized: false })).error,
+    ).not.toBe("");
+    expect(store.dispatch(voidPos(voidRequest)).error).toBe("");
+    expect(
+      store.getState().pos.batches.reduce((sum, row) => sum + row.quantity, 0),
+    ).toBe(originalStock + 2);
+    const updated = store
+      .getState()
+      .pos.sales.find((row) => row.id === sale.id)!;
+    expect(pendingRefund(updated)).toBe(sale.total);
+    expect(store.dispatch(voidPos(voidRequest)).error).not.toBe("");
+    expect(
+      store.getState().pos.batches.reduce((sum, row) => sum + row.quantity, 0),
+    ).toBe(originalStock + 2);
+    expect(store.getState().items).toEqual(originalItems);
+  });
+  it("歷史商品可部分及全部退回可售庫存，重試同識別碼不重複退款", () => {
+    const store = freshStore();
+    const sale = store
+      .getState()
+      .pos.sales.find((row) => row.id === "SALE-SEED0")!;
+    const originalStock = store
+      .getState()
+      .pos.batches.reduce((sum, row) => sum + row.quantity, 0);
+    const input = {
+      authorized: true,
+      saleId: sale.id,
+      requestId: "partial-return",
+      date: sale.date.slice(0, 10),
+      reason: "退回未使用商品",
+      method: "現金" as const,
+      quantities: { [sale.lines[0].id]: 1 },
+      disposition: "可售回庫" as const,
+      professional: false,
+      confirmed: true,
+    };
+    expect(store.dispatch(returnPos(input)).error).toBe("");
+    expect(store.dispatch(returnPos(input)).error).toBe("");
+    expect(
+      store.getState().pos.batches.reduce((sum, row) => sum + row.quantity, 0),
+    ).toBe(originalStock + 1);
+    const partial = store
+      .getState()
+      .pos.sales.find((row) => row.id === sale.id)!;
+    expect(partial.refunds).toHaveLength(1);
+    expect(saleStatus(partial)).toBe("部分退貨");
+    expect(
+      store.dispatch(
+        voidPos({
+          saleId: sale.id,
+          reason: "重複交易",
+          notDelivered: true,
+          authorized: true,
+        }),
+      ).error,
+    ).not.toBe("");
+    expect(
+      store.dispatch(returnPos({ ...input, requestId: "remaining-return" }))
+        .error,
+    ).toBe("");
+    const full = store.getState().pos.sales.find((row) => row.id === sale.id)!;
+    expect(saleStatus(full)).toBe("全部退貨");
+    expect(pendingRefund(full)).toBe(sale.total);
+    expect(
+      store.getState().pos.batches.reduce((sum, row) => sum + row.quantity, 0),
+    ).toBe(originalStock + 2);
+  });
   it("櫃檯可使用單品及整單折扣，改售價仍需主管權限", () => {
     const store = freshStore();
     const input = checkoutInput(store, 2);
@@ -188,6 +298,7 @@ describe("POS 展示金額、批次、退貨與防重複", () => {
       const amount = returnAmount(sale, line, 1);
       const result = store.dispatch(
         returnPos({
+          authorized: true,
           saleId: sale.id,
           requestId: `R${i}`,
           date: sale.date.slice(0, 10),
@@ -214,6 +325,7 @@ describe("POS 展示金額、批次、退貨與防重複", () => {
     expect(
       store.dispatch(
         returnPos({
+          authorized: true,
           saleId: sale.id,
           requestId: "over",
           date: sale.date.slice(0, 10),
