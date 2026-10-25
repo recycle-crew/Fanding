@@ -1,6 +1,60 @@
 .base-data-summary {
-  margin: 20px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 16px 0 12px;
   color: #385476;
+}
+.base-data-summary strong {
+  color: #142346;
+  font-variant-numeric: tabular-nums;
+}
+.base-data-heading-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+.base-data-demo-note {
+  color: #5b6878;
+  font-size: 13px;
+}
+.base-data-table-hint {
+  margin: 14px 0 8px;
+  color: #61728a;
+  font-size: 13px;
+}
+.base-data-notice {
+  margin: 12px 0 0;
+  padding: 9px 12px;
+  color: #24533b;
+  background: #effaf3;
+  border: 1px solid #cce8d5;
+  border-radius: 6px;
+}
+.base-data-supplier-primary {
+  display: grid;
+  gap: 3px;
+  min-width: 200px;
+}
+.base-data-supplier-primary small {
+  color: #5d6c80;
+  white-space: normal;
+}
+.base-data-supplier-cards {
+  display: none;
+}
+.base-data-form-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  font-weight: 600;
+}
+.base-data-form-hint {
+  margin: 4px 0 12px;
+  color: #61728a;
+  font-size: 13px;
 }
 .base-data-page .items-title h1 {
   margin: 0;
@@ -11,6 +65,47 @@
 .base-data-page .table-wrap {
   background: white;
   border-radius: 8px;
+}
+.base-data-page [data-slot="table-head"] {
+  color: #111;
+  background: #eaf3fb;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 13px 9px;
+  white-space: nowrap;
+}
+.base-data-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.base-data-status.is-active {
+  color: #23623f;
+  background: #eaf7ee;
+}
+.base-data-status.is-inactive {
+  color: #667085;
+  background: #edf0f3;
+}
+.base-data-modal-delete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid #e5eaf0;
+  color: #64748b;
+  font-size: 13px;
+}
+.base-data-modal-delete p {
+  flex-basis: 100%;
+  margin: 0;
 }
 .base-data-filters {
   display: flex;
@@ -47,11 +142,96 @@
   gap: 16px;
 }
 @media (max-width: 640px) {
+  .base-data-heading-actions {
+    align-items: flex-end;
+    flex-direction: column-reverse;
+    gap: 6px;
+  }
+  .base-data-demo-note {
+    text-align: right;
+    font-size: 12px;
+  }
   .base-data-form-grid {
     grid-template-columns: 1fr;
   }
   .base-data-filters {
     align-items: stretch;
     flex-direction: column;
+  }
+}
+@media (max-width: 760px) {
+  .base-data-supplier-table {
+    display: none;
+  }
+  .base-data-supplier-cards {
+    display: grid;
+    gap: 12px;
+  }
+  .base-data-supplier-card {
+    padding: 14px;
+    background: #fff;
+    border: 1px solid #dce6f0;
+    border-radius: 8px;
+  }
+  .base-data-supplier-card > header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .base-data-supplier-card h3 {
+    margin: 0 0 5px;
+    color: #142346;
+    font-size: 16px;
+  }
+  .base-data-supplier-card .is-active,
+  .base-data-supplier-card .is-inactive {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 12px;
+  }
+  .base-data-supplier-card .is-active {
+    color: #23623f;
+    background: #eaf7ee;
+  }
+  .base-data-supplier-card .is-inactive {
+    color: #6c7480;
+    background: #edf0f3;
+  }
+  .base-data-supplier-card dl {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+    margin: 14px 0;
+  }
+  .base-data-supplier-card dl > div {
+    min-width: 0;
+  }
+  .base-data-supplier-card dt {
+    color: #65748a;
+    font-size: 12px;
+  }
+  .base-data-supplier-card dd {
+    overflow-wrap: anywhere;
+    margin: 2px 0 0;
+    color: #24344d;
+  }
+  .base-data-supplier-card .base-data-card-address {
+    grid-column: 1 / -1;
+  }
+  .base-data-supplier-card > footer {
+    justify-content: flex-end;
+    padding-top: 10px;
+    border-top: 1px solid #e8eef5;
+  }
+  .base-data-empty {
+    margin: 0;
+    padding: 22px;
+    color: #64748b;
+    text-align: center;
+    background: #fff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
   }
 }

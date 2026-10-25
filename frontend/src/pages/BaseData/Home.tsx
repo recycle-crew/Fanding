@@ -14,12 +14,7 @@ import { BaseWorkspaceModal } from "@/components/ui/BaseWorkspaceModal";
 import { BaseField, BaseForm } from "@/components/ui/BaseForm";
 import { BaseTabs } from "@/components/ui/BaseTabs";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import {
-  blankBaseData,
-  saveBaseData,
-  deleteBaseData,
-  toggleBaseData,
-} from "@/store/baseData";
+import { blankBaseData, saveBaseData, deleteBaseData } from "@/store/baseData";
 import type { BaseDataKind, BaseDataRecord } from "@/types/base-data";
 import { useWorkspaceDirty } from "@/features/workspace/useWorkspaceDirty";
 import "@/features/items/items.css";
@@ -121,18 +116,23 @@ export function BaseDataPage() {
           <Building2 aria-hidden="true" />
           <div>
             <h1>基礎資料管理</h1>
-            <p>維護倉別與供應商，建立共用資料的展示畫面</p>
+            <p>維護倉別與供應商共用資料</p>
           </div>
         </div>
-        <BaseButton
-          onClick={() => {
-            setDraft(blankBaseData());
-            setNotice("");
-          }}
-        >
-          <Plus aria-hidden="true" />
-          新增{noun}
-        </BaseButton>
+        <div className="base-data-heading-actions">
+          <span className="base-data-demo-note">
+            展示模式｜重新整理後資料會重置
+          </span>
+          <BaseButton
+            onClick={() => {
+              setDraft(blankBaseData());
+              setNotice("");
+            }}
+          >
+            <Plus aria-hidden="true" />
+            新增{noun}
+          </BaseButton>
+        </div>
       </header>
       <BaseTabs
         id="base-data"
@@ -154,10 +154,17 @@ export function BaseDataPage() {
         aria-labelledby={`base-data-${kind}`}
         tabIndex={0}
       >
-        <p className="base-data-summary">
-          共 {records[kind].length} 筆{noun}　使用中 {activeCount} 筆　停用{" "}
-          {records[kind].length - activeCount} 筆
-        </p>
+        <div className="base-data-summary" aria-live="polite">
+          <span>
+            共 <strong>{records[kind].length}</strong> 筆{noun}
+          </span>
+          <span>
+            使用中 <strong>{activeCount}</strong>
+          </span>
+          <span>
+            停用 <strong>{records[kind].length - activeCount}</strong>
+          </span>
+        </div>
         <div className="base-data-filters">
           <BaseLabel>
             搜尋{noun}
@@ -193,80 +200,178 @@ export function BaseDataPage() {
             清除
           </BaseButton>
         </div>
-        <p role="status" aria-live="polite">
-          {notice}
+        {notice && (
+          <p className="base-data-notice" role="status" aria-live="polite">
+            {notice}
+          </p>
+        )}
+        <p className="base-data-table-hint">
+          列表開關可快速啟用或停用；編輯按鈕可修改資料內容。
         </p>
-        <BaseDataTable
-          tableKey={`base-data-${kind}`}
-          headers={
-            kind === "warehouses"
-              ? ["倉別代碼", "倉別名稱", "位置", "備註", "啟用", "操作"]
-              : [
-                  "供應商名稱",
+        {kind === "warehouses" ? (
+          <BaseDataTable
+            tableKey="base-data-warehouses"
+            headers={["倉別代碼", "倉別名稱", "位置", "備註", "狀態", "操作"]}
+            rows={rows.map((row) => [
+              row.code,
+              row.name,
+              row.location || "—",
+              row.remark || "—",
+              <span
+                className={`base-data-status ${row.active ? "is-active" : "is-inactive"}`}
+              >
+                {row.active ? "使用中" : "停用"}
+              </span>,
+              <div className="base-data-actions">
+                <BaseButton
+                  variant="outline"
+                  onClick={() => {
+                    setDraft({ ...row });
+                    setNotice("");
+                  }}
+                  aria-label={`編輯${row.name}`}
+                >
+                  編輯
+                </BaseButton>
+              </div>,
+            ])}
+          />
+        ) : (
+          <>
+            <div className="base-data-supplier-table">
+              <BaseDataTable
+                tableKey="base-data-suppliers"
+                headers={[
+                  "供應商",
                   "統一編號",
                   "聯絡人",
                   "電話",
-                  "Email",
-                  "地址",
-                  "備註",
-                  "啟用",
+                  "狀態",
                   "操作",
-                ]
-          }
-          rows={rows.map((row) => [
-            ...(kind === "warehouses"
-              ? [row.code, row.name, row.location || "—", row.remark || "—"]
-              : [
-                  row.name,
+                ]}
+                rows={rows.map((row) => [
+                  <div className="base-data-supplier-primary">
+                    <strong>{row.name}</strong>
+                    <small>{row.email || "未提供 Email"}</small>
+                    {row.address && <small>{row.address}</small>}
+                  </div>,
                   row.taxId || "—",
                   row.contact || "—",
                   row.phone || "—",
-                  row.email || "—",
-                  row.address || "—",
-                  row.remark || "—",
-                ]),
-            <BaseSwitch
-              checked={row.active}
-              aria-label={`${row.active ? "停用" : "啟用"}${row.name}`}
-              onClick={() => {
-                dispatch(toggleBaseData({ kind, id: row.id }));
-                setNotice(
-                  `${row.name}已${row.active ? "停用" : "啟用"}；歷史紀錄保留。`,
-                );
-              }}
-            />,
-            <div className="base-data-actions">
-              <BaseButton
-                variant="outline"
-                onClick={() => {
-                  setDraft({ ...row });
-                  setNotice("");
-                }}
-                aria-label={`編輯${row.name}`}
-              >
-                編輯
-              </BaseButton>
-              <BaseButton
-                variant="outline"
-                onClick={() => setDeleting(row)}
-                aria-label={`刪除${row.name}`}
-              >
-                刪除
-              </BaseButton>
-            </div>,
-          ])}
-        />
+                  <span
+                    className={`base-data-status ${row.active ? "is-active" : "is-inactive"}`}
+                  >
+                    {row.active ? "使用中" : "停用"}
+                  </span>,
+                  <div className="base-data-actions">
+                    <BaseButton
+                      variant="outline"
+                      onClick={() => {
+                        setDraft({ ...row });
+                        setNotice("");
+                      }}
+                      aria-label={`編輯${row.name}`}
+                    >
+                      編輯
+                    </BaseButton>
+                  </div>,
+                ])}
+              />
+            </div>
+            <div className="base-data-supplier-cards" aria-label="供應商列表">
+              {rows.length ? (
+                rows.map((row) => (
+                  <article className="base-data-supplier-card" key={row.id}>
+                    <header>
+                      <div>
+                        <h3>{row.name}</h3>
+                        <span
+                          className={row.active ? "is-active" : "is-inactive"}
+                        >
+                          {row.active ? "使用中" : "停用"}
+                        </span>
+                      </div>
+                    </header>
+                    <dl>
+                      <div>
+                        <dt>統一編號</dt>
+                        <dd>{row.taxId || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>聯絡人</dt>
+                        <dd>{row.contact || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>電話</dt>
+                        <dd>{row.phone || "—"}</dd>
+                      </div>
+                      <div>
+                        <dt>Email</dt>
+                        <dd>{row.email || "—"}</dd>
+                      </div>
+                      <div className="base-data-card-address">
+                        <dt>地址</dt>
+                        <dd>{row.address || "—"}</dd>
+                      </div>
+                    </dl>
+                    <footer className="base-data-actions">
+                      <BaseButton
+                        variant="outline"
+                        onClick={() => {
+                          setDraft({ ...row });
+                          setNotice("");
+                        }}
+                      >
+                        編輯
+                      </BaseButton>
+                    </footer>
+                  </article>
+                ))
+              ) : (
+                <p className="base-data-empty">沒有符合條件的供應商。</p>
+              )}
+            </div>
+          </>
+        )}
       </div>
       <p className="base-data-footnote">
-        展示模式：資料儲存於本次工作階段，重新整理即重置。已引用的資料保留歷史，請以停用取代刪除；既有單據快照不隨主檔變更。
+        已引用的資料保留歷史，請以停用取代刪除；既有單據快照不隨主檔變更。
       </p>
       <BaseWorkspaceModal
         open={Boolean(draft)}
-        title={`${draft?.id ? "編輯" : "新增"}${noun}`}
-        description="請填寫基本資料；＊ 為必填，取消不會更新資料。"
-        onClose={() => close()}
+        title={
+          deleting ? `確認刪除${noun}` : `${draft?.id ? "編輯" : "新增"}${noun}`
+        }
+        description={
+          deleting
+            ? "刪除後無法復原，未儲存的編輯內容也會一併放棄。"
+            : "請填寫基本資料；＊ 為必填，取消不會更新資料。"
+        }
+        onClose={() => (deleting ? setDeleting(null) : close())}
       >
-        {discard ? (
+        {deleting ? (
+          <div className="items-modal-scroll">
+            <p>
+              確定刪除「{deleting.name}」？此操作會移除這筆未被引用的基礎資料。
+            </p>
+            <footer className="items-modal-footer">
+              <BaseButton variant="outline" onClick={() => setDeleting(null)}>
+                返回編輯
+              </BaseButton>
+              <BaseButton
+                variant="destructive"
+                onClick={() => {
+                  dispatch(deleteBaseData({ kind, id: deleting.id }));
+                  setNotice(`${deleting.name}已刪除。`);
+                  setDeleting(null);
+                  close(true);
+                }}
+              >
+                確認刪除
+              </BaseButton>
+            </footer>
+          </div>
+        ) : discard ? (
           <div className="items-modal-scroll">
             <h3>尚有未儲存變更</h3>
             <p>確定放棄目前的修改？</p>
@@ -361,11 +466,11 @@ export function BaseDataPage() {
                   </BaseField>
                 </div>
               </section>
-              <BaseLabel className="base-data-actions">
-                啟用狀態
+              <BaseLabel className="base-data-form-status">
+                表單狀態
                 <BaseSwitch
                   checked={draft.active}
-                  aria-label="啟用狀態"
+                  aria-label="表單啟用狀態"
                   onClick={() => {
                     setDraft({ ...draft, active: !draft.active });
                     setDirty(true);
@@ -373,46 +478,35 @@ export function BaseDataPage() {
                 />
                 {draft.active ? "使用中" : "停用"}
               </BaseLabel>
+              <p className="base-data-form-hint">
+                儲存時一併套用；列表開關則可快速切換狀態。
+              </p>
               {draft.used && (
                 <p>此資料已被引用，可編輯與停用；歷史單據維持原快照。</p>
+              )}
+              {draft.id && (
+                <div className="base-data-modal-delete">
+                  {draft.used ? (
+                    <p>
+                      此資料已被引用，無法刪除；如需停止使用，請將狀態設為停用。
+                    </p>
+                  ) : (
+                    <>
+                      <span>刪除後，此資料將無法用於新單據。</span>
+                      <BaseButton
+                        type="button"
+                        variant="destructive"
+                        onClick={() => setDeleting(draft)}
+                      >
+                        刪除此{noun}
+                      </BaseButton>
+                    </>
+                  )}
+                </div>
               )}
             </BaseForm>
           )
         )}
-      </BaseWorkspaceModal>
-      <BaseWorkspaceModal
-        open={Boolean(deleting)}
-        title={`刪除${noun}`}
-        description="刪除前檢查資料引用狀態。"
-        onClose={() => setDeleting(null)}
-      >
-        <div className="items-modal-scroll">
-          {deleting?.used ? (
-            <p>
-              「{deleting.name}
-              」已有庫存或單據引用，無法刪除。請回到列表停用，以保留歷史追溯。
-            </p>
-          ) : (
-            <p>確定刪除「{deleting?.name}」？</p>
-          )}
-        </div>
-        <footer className="items-modal-footer">
-          <BaseButton variant="outline" onClick={() => setDeleting(null)}>
-            {deleting?.used ? "關閉" : "取消"}
-          </BaseButton>
-          {!deleting?.used && (
-            <BaseButton
-              onClick={() => {
-                if (deleting)
-                  dispatch(deleteBaseData({ kind, id: deleting.id }));
-                setNotice(`${deleting?.name}已刪除。`);
-                setDeleting(null);
-              }}
-            >
-              確認刪除
-            </BaseButton>
-          )}
-        </footer>
       </BaseWorkspaceModal>
     </div>
   );
