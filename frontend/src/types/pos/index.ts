@@ -20,6 +20,14 @@ export interface CartLine {
   batchId: string;
 }
 
+export interface PosDraft {
+  cart: CartLine[];
+  orderDiscount: number;
+  warehouse: string;
+  customer: Customer;
+  authorized: boolean;
+}
+
 export interface Allocation {
   batchId: string;
   batchNumber: string;

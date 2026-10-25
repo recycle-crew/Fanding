@@ -43,7 +43,10 @@ it("交易狀態獨立於退款進度，待退款金額以分計算", () => {
 function freshStore() {
   const initial: RootState = rootStore.getState();
   return configureStore({
-    reducer: (state: RootState = initial, action: UnknownAction): RootState => ({
+    reducer: (
+      state: RootState = initial,
+      action: UnknownAction,
+    ): RootState => ({
       ...state,
       items: itemsReducer(state.items, action),
       pos: posReducer(state.pos, action),
@@ -85,6 +88,28 @@ function checkoutInput(
   };
 }
 describe("POS 展示金額、批次、退貨與防重複", () => {
+  it("櫃檯可使用單品及整單折扣，改售價仍需主管權限", () => {
+    const store = freshStore();
+    const input = checkoutInput(store, 2);
+    input.authorized = false;
+    input.cart[0].discount = 10;
+    input.orderDiscount = 5;
+    const expected = priceCart(input.cart, input.orderDiscount).total;
+    expect(store.dispatch(checkoutPos(input)).error).toBe("");
+    expect(store.getState().pos.sales[0].total).toBe(expected);
+    const changedPrice = checkoutInput(store);
+    changedPrice.authorized = false;
+    changedPrice.cart[0].price += 1;
+    expect(store.dispatch(checkoutPos(changedPrice)).error).toContain(
+      "修改售價需主管",
+    );
+    const invalidDiscount = checkoutInput(store);
+    invalidDiscount.authorized = false;
+    invalidDiscount.orderDiscount = 999999;
+    expect(store.dispatch(checkoutPos(invalidDiscount)).error).toContain(
+      "整單折扣不可超過",
+    );
+  });
   it("整單折扣按分攤餘數分配到分，合計精確且不負值", () => {
     const result = priceCart(
       [1, 2, 3].map((i) => ({

@@ -23,6 +23,7 @@ import type {
   Customer,
   PaymentMethod,
   PosPolicy,
+  PosDraft,
   Sale,
   SaleReturn,
 } from "@/types/pos";
@@ -31,8 +32,20 @@ type Result = { error: string; saleId?: string };
 type PosThunk = ThunkAction<Result, RootState, unknown, UnknownAction>;
 const slice = createSlice({
   name: "pos",
-  initialState: createPosSeed(),
+  initialState: {
+    ...createPosSeed(),
+    draft: {
+      cart: [],
+      orderDiscount: 0,
+      warehouse: "主倉庫",
+      customer: { id: "", name: "散客", phone: "" },
+      authorized: false,
+    } as PosDraft,
+  },
   reducers: {
+    updatePosDraft(state, { payload }: PayloadAction<Partial<PosDraft>>) {
+      Object.assign(state.draft, payload);
+    },
     savePosPolicy(
       state,
       { payload }: PayloadAction<{ itemId: string; policy: PosPolicy }>,
@@ -173,7 +186,7 @@ const slice = createSlice({
     },
   },
 });
-export const { savePosPolicy } = slice.actions;
+export const { savePosPolicy, updatePosDraft } = slice.actions;
 export default slice.reducer;
 
 export const checkoutPos =
@@ -207,12 +220,9 @@ export const checkoutPos =
       if (invalid) return { error: `${item.name}：${invalid}。` };
       if (
         !input.authorized &&
-        (cents(entry.price) !== cents(policy.price) ||
-          entry.discount > 0 ||
-          input.orderDiscount > 0 ||
-          entry.batchId)
+        (cents(entry.price) !== cents(policy.price) || entry.batchId)
       )
-        return { error: "售價、折扣與指定批次需主管展示授權。" };
+        return { error: "修改售價需主管展示授權。" };
       if (
         (policy.prescription && !input.prescription) ||
         (policy.professional && !input.professional)
@@ -227,7 +237,7 @@ export const checkoutPos =
       );
       if (!allocations)
         return {
-          error: `${item.name}：可用庫存不足或指定批次不足，過期與不可用批次已排除。`,
+          error: `${item.name}：可用庫存不足，請調整銷售數量。`,
         };
       lines.push({
         id: crypto.randomUUID(),
@@ -278,8 +288,8 @@ export const checkoutPos =
         invoiceStatus: "未開立（未串接）",
         remark: input.remark.trim(),
         authorization: input.authorized
-          ? "主管展示授權：售價／折扣／實際批次"
-          : "櫃檯原價銷售",
+          ? "主管展示授權：修改售價"
+          : "櫃檯銷售（可輸入折扣）",
         returns: [],
         refunds: [],
         void: null,
