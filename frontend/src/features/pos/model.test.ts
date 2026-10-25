@@ -17,10 +17,29 @@ import {
   priceCart,
   returnAmount,
   refunded,
+  pendingRefund,
+  refundStatus,
   saleStatus,
   walkIn,
 } from "./model";
 import { createItemsSeed, available } from "@/features/items/model";
+
+it("交易狀態獨立於退款進度，待退款金額以分計算", () => {
+  const sales = createPosSeed().sales;
+  expect(refundStatus(sales[0])).toBe("無須退款");
+  expect(refundStatus(sales[1])).toBe("待退款");
+  expect(refundStatus(sales[2])).toBe("已退款");
+  expect(saleStatus(sales[3])).toBe("作廢");
+  expect(refundStatus(sales[3])).toBe("待退款");
+  const mixed = structuredClone(sales[1]);
+  mixed.refunds = [
+    { ...mixed.refunds[0], id: "pending-a", amount: 0.1 },
+    { ...mixed.refunds[0], id: "pending-b", amount: 0.2 },
+    { ...mixed.refunds[0], id: "paid", amount: 20, status: "已退款" },
+  ];
+  expect(pendingRefund(mixed)).toBe(0.3);
+  expect(refundStatus(mixed)).toBe("部分已退款");
+});
 function freshStore() {
   const initial: RootState = rootStore.getState();
   return configureStore({

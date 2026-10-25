@@ -181,6 +181,20 @@ export function refunded(sale: Sale) {
     .filter((refund) => refund.status === "已退款")
     .reduce((sum, refund) => sum + refund.amount, 0);
 }
+export function pendingRefund(sale: Sale) {
+  return (
+    sale.refunds
+      .filter((refund) => refund.status === "待退款")
+      .reduce((sum, refund) => sum + cents(refund.amount), 0) / 100
+  );
+}
+
+export function refundStatus(sale: Sale) {
+  if (!sale.refunds.length) return "無須退款";
+  if (pendingRefund(sale) > 0)
+    return refunded(sale) > 0 ? "部分已退款" : "待退款";
+  return "已退款";
+}
 export function saleStatus(sale: Sale) {
   if (sale.void) return "作廢";
   const returned = sale.lines.reduce(

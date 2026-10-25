@@ -1,6 +1,12 @@
 import { BaseButton } from "@/components/ui/BaseButton";
 import { useAppSelector } from "@/store/hooks";
-import { money, refunded, saleStatus } from "./model";
+import {
+  money,
+  pendingRefund,
+  refundStatus,
+  refunded,
+  saleStatus,
+} from "./model";
 import type { Sale } from "@/types/pos";
 export function SaleDetails({
   sale,
@@ -27,6 +33,21 @@ export function SaleDetails({
         <p>
           {sale.number} ／ {saleStatus(sale)} ／ {sale.date}
         </p>
+        <p
+          className={pendingRefund(sale) > 0 ? "pos-refund-pending" : undefined}
+        >
+          退款狀態：{refundStatus(sale)}；待退款 {money(pendingRefund(sale))}
+        </p>
+        {pendingRefund(sale) > 0 && (
+          <p>退貨或作廢已登記，仍需確認實際退款；請於下方退款紀錄處理。</p>
+        )}
+        <p>退貨適用於商品已交付後退回；作廢適用於輸入錯誤且商品尚未交付。</p>
+        {!authorized && <p>退貨、作廢與確認退款需主管／財務權限。</p>}
+        {sale.void ? (
+          <p>此交易已作廢，無法再次退貨或作廢。</p>
+        ) : (
+          sale.returns.length > 0 && <p>此交易已有退貨紀錄，無法作廢。</p>
+        )}
         <p>
           顧客：{sale.customer.name}　{sale.customer.phone || "—"}
           <br />
@@ -46,19 +67,6 @@ export function SaleDetails({
               ；單品折扣 {money(line.discount)}，整單分攤{" "}
               {money(line.orderShare)}，明細淨額 {money(line.net)}
             </p>
-            <ul>
-              {line.allocations.map((allocation) => (
-                <li key={allocation.batchId}>
-                  {allocation.batchNumber || "無批號"} ／ 效期{" "}
-                  {allocation.expiry || "不追蹤"} ／ 出庫 {allocation.quantity}{" "}
-                  {line.unit}
-                  <small>
-                    　歷史出庫估值 {money(allocation.estimatedCost)}
-                    ／單位（展示估值，非毛利報表）
-                  </small>
-                </li>
-              ))}
-            </ul>
           </article>
         ))}
         <p>
