@@ -167,21 +167,27 @@ export function BaseSidebar(props: BaseSidebarProps) {
         >
           耗用查詢（新版）
         </BaseButton>
-        {(["pos", "sales", "stocktakes"] as const).map((key) => (
+        {(["pos", "stocktakes"] as const).map((key) => (
           <BaseButton
             key={key}
-            variant={s.activeModule === key ? "module-active" : "module"}
+            variant={
+              s.activeModule === key ||
+              (key === "pos" && s.activeModule === "sales")
+                ? "module-active"
+                : "module"
+            }
             className="mb-4 h-auto w-full whitespace-normal py-3 text-left"
-            aria-current={s.activeModule === key ? "page" : undefined}
+            aria-current={
+              s.activeModule === key ||
+              (key === "pos" && s.activeModule === "sales")
+                ? "page"
+                : undefined
+            }
             onClick={() =>
               navigate(`${workspaceModulePaths[key]}${location.search}`)
             }
           >
-            {key === "pos"
-              ? "POS 銷售（新版）"
-              : key === "sales"
-                ? "銷售紀錄（新版）"
-                : "盤點管理（新版）"}
+            {key === "pos" ? "銷售管理（新版）" : "盤點管理（新版）"}
           </BaseButton>
         ))}
         <BaseButton
@@ -263,7 +269,9 @@ export function BaseSidebar(props: BaseSidebarProps) {
                     s.activeModule === module.key ? "page" : undefined
                   }
                   onClick={() =>
-                    navigate(`${workspaceModulePaths[module.key]}${location.search}`)
+                    navigate(
+                      `${workspaceModulePaths[module.key]}${location.search}`,
+                    )
                   }
                 >
                   <span>{module.label}</span>

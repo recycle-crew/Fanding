@@ -1,19 +1,20 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { ShoppingCart, Package, Plus, Settings2, Trash2 } from "lucide-react";
+import { ShoppingCart, Plus } from "lucide-react";
 import { BaseButton } from "@/components/ui/BaseButton";
+import { BaseTabs } from "@/components/ui/BaseTabs";
 import { BaseInput } from "@/components/ui/BaseInput";
 import { BaseField as Field } from "@/components/ui/BaseForm";
 import {
   BaseNativeSelect as Select,
   BaseNativeSelectOption as Option,
 } from "@/components/ui/BaseNativeSelect";
-import { BaseCheckField } from "@/components/ui/BaseCheckField";
 import { BaseWorkspaceModal } from "@/components/ui/BaseWorkspaceModal";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { savePosPolicy } from "@/store/pos";
 import { useWorkspaceDirty } from "@/features/workspace/useWorkspaceDirty";
-import { available, taipeiToday } from "@/features/items/model";
+import { usePosDraft } from "@/features/pos/usePosDraft";
+import { available } from "@/features/items/model";
 import type { Item } from "@/types/items";
 import { useBaseDataOptions } from "@/features/base-data/useBaseDataOptions";
 import { CheckoutForm } from "@/features/pos/CheckoutForm";
@@ -33,12 +34,21 @@ import {
   policyFor,
   priceCart,
 } from "@/features/pos/model";
-import type { CartLine, Customer } from "@/types/pos";
+import { SaleLines } from "@/features/pos/SaleLines";
+import { ProductPicker } from "@/features/pos/ProductPicker";
 import "@/features/items/items.css";
 import "@/features/purchases/purchases.css";
 import "@/features/pos/pos.css";
 type View = {
-  kind: "checkout" | "policy" | "sale" | "return" | "refund" | "void" | "clear";
+  kind:
+    | "products"
+    | "checkout"
+    | "policy"
+    | "sale"
+    | "return"
+    | "refund"
+    | "void"
+    | "clear";
   id?: string;
   refundId?: string;
 };
@@ -49,22 +59,41 @@ export function PosPage() {
   const state = useAppSelector((root) => root.pos),
     items = useAppSelector((root) => root.items.items);
   const options = useBaseDataOptions();
-  const salesView = location.pathname === "/sales";
-  const [cart, setCart] = useState<CartLine[]>([]),
-    [orderDiscount, setOrderDiscount] = useState(0),
-    [warehouse, setWarehouse] = useState("主倉庫");
-  const [customer, setCustomer] = useState<Customer>(walkIn),
+  const salesView = location.pathname.replace(/\/+$/, "") === "/sales";
+  useEffect(() => {
+    if (location.state?.focusSalesTab)
+      document.getElementById(salesView ? "pos-sales" : "pos-pos")?.focus();
+  }, [salesView, location.key, location.state]);
+  const [cart, setCart] = usePosDraft("cart"),
+    [orderDiscount, setOrderDiscount] = usePosDraft("orderDiscount"),
+    [warehouse, setWarehouse] = usePosDraft("warehouse");
+  const [customer, setCustomer] = usePosDraft("customer"),
     [customerSearch, setCustomerSearch] = useState("");
-  const [search, setSearch] = useState(""),
-    [category, setCategory] = useState(""),
-    [favorites, setFavorites] = useState(true),
-    [authorized, setAuthorized] = useState(false);
+  const [search, setSearch] = useState("");
+  const [recentItemId, setRecentItemId] = useState("");
+  const [composing, setComposing] = useState(false);
+  const [authorized, setAuthorized] = usePosDraft("authorized");
   const [view, setView] = useState<View | null>(null),
     [dirty, setDirty] = useState(false),
     [discard, setDiscard] = useState(false),
     [notice, setNotice] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
-  useWorkspaceDirty(cart.length > 0 || dirty);
+  const lastAutoScan = useRef("");
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(""), 6000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+  useWorkspaceDirty(dirty);
+  useEffect(() => {
+    if (!cart.length) return;
+    const warnOnRefresh = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warnOnRefresh);
+    return () => window.removeEventListener("beforeunload", warnOnRefresh);
+  }, [cart.length]);
   const priced = priceCart(cart, orderDiscount),
     sale = state.sales.find((record) => record.id === view?.id),
     selected = items.find((item) => item.id === view?.id);
@@ -72,27 +101,14 @@ export function PosPage() {
     state.batches
       .filter((batch) => batch.itemId === id && batch.warehouse === warehouse)
       .reduce((sum, batch) => sum + available(batch), 0);
-  const noStockReason = (id: string) =>
-    state.batches.some(
-      (batch) =>
-        batch.itemId === id &&
-        batch.warehouse === warehouse &&
-        batch.quantity > 0 &&
-        batch.expiryDate &&
-        batch.expiryDate < taipeiToday(),
-    )
-      ? "批次已過期，不可銷售"
-      : "無可用庫存";
+  const noStockReason = (_id: string) => "無可用庫存";
   const policy = (item: Item) => state.policies[item.id] || policyFor(item);
   const matching = items
-    .filter(
-      (item) =>
-        (!category || item.category === category) &&
-        (!favorites || search.trim() || policy(item).favorite) &&
-        [item.code, item.name, item.englishName, item.barcode, item.nhiCode]
-          .join(" ")
-          .toLowerCase()
-          .includes(search.trim().toLowerCase()),
+    .filter((item) =>
+      [item.code, item.name, item.englishName, item.barcode, item.nhiCode]
+        .join(" ")
+        .toLowerCase()
+        .includes(search.trim().toLowerCase()),
     )
     .sort((a, b) => policy(a).sort - policy(b).sort);
   function add(item: Item) {
@@ -125,9 +141,41 @@ export function PosPage() {
           ],
     );
     setSearch("");
-    setNotice(`已加入 ${item.name}；購物車尚未扣庫存。`);
+    setRecentItemId(item.id);
+    setNotice(
+      `已加入 ${item.name}，本單數量 ${(existing?.quantity || 0) + 1} ${item.unit}。`,
+    );
     searchRef.current?.focus();
   }
+  useEffect(() => {
+    if (!search.trim()) {
+      lastAutoScan.current = "";
+      return;
+    }
+    if (composing || salesView || view || lastAutoScan.current === search)
+      return;
+    const exact = items.filter((item) =>
+      [item.code, item.barcode].some(
+        (value) => value && value.toLowerCase() === search.trim().toLowerCase(),
+      ),
+    );
+    if (exact.length !== 1) return;
+    const timer = window.setTimeout(() => {
+      lastAutoScan.current = search;
+      add(exact[0]);
+    }, 200);
+    return () => window.clearTimeout(timer);
+  }, [
+    search,
+    composing,
+    salesView,
+    view,
+    warehouse,
+    cart,
+    items,
+    state.policies,
+    state.batches,
+  ]);
   function close(force = false) {
     if (dirty && !force) {
       setDiscard(true);
@@ -143,21 +191,25 @@ export function PosPage() {
     setNotice("展示作業已完成；庫存與退款歷史保留，未更新模組一。");
   }
   const title =
-    view?.kind === "checkout"
-      ? "POS 結帳確認"
-      : view?.kind === "policy"
-        ? "POS 商品設定（展示）"
-        : view?.kind === "return"
-          ? "銷售退貨"
-          : view?.kind === "refund"
-            ? "確認退款"
-            : view?.kind === "void"
-              ? "作廢交易"
-              : view?.kind === "clear"
-                ? "清空購物車"
-                : "銷售明細與交易憑證";
+    view?.kind === "products"
+      ? "挑選商品"
+      : view?.kind === "checkout"
+        ? "POS 結帳確認"
+        : view?.kind === "policy"
+          ? "POS 商品設定（展示）"
+          : view?.kind === "return"
+            ? "銷售退貨"
+            : view?.kind === "refund"
+              ? "確認退款"
+              : view?.kind === "void"
+                ? "作廢交易"
+                : view?.kind === "clear"
+                  ? "清空購物車"
+                  : "銷售明細與交易憑證";
   return (
-    <div className="items-page pos-page">
+    <div
+      className={`items-page pos-page${salesView ? "" : " pos-register-page"}`}
+    >
       <header className="items-heading">
         <div className="items-title">
           <ShoppingCart aria-hidden="true" />
@@ -167,12 +219,6 @@ export function PosPage() {
           </div>
         </div>
         <div className="pos-actions">
-          <BaseButton
-            variant="outline"
-            onClick={() => navigate(salesView ? "/pos" : "/sales")}
-          >
-            {salesView ? "前往 POS" : "銷售紀錄"}
-          </BaseButton>
           <Field name="pos-role" label="展示角色">
             <Select
               value={authorized ? "manager" : "cashier"}
@@ -186,11 +232,9 @@ export function PosPage() {
                       price: policy(
                         items.find((item) => item.id === line.itemId)!,
                       ).price,
-                      discount: 0,
                       batchId: "",
                     })),
                   );
-                  setOrderDiscount(0);
                 }
               }}
             >
@@ -200,324 +244,246 @@ export function PosPage() {
           </Field>
         </div>
       </header>
-      <p role="status" aria-live="polite" className="pos-feedback">
-        {notice}
-      </p>
-      {salesView ? (
-        <SalesList onView={(id) => setView({ kind: "sale", id })} />
-      ) : (
-        <div className="pos-layout">
-          <section className="pos-catalog" aria-label="商品選擇">
-            <div className="pos-card">
+      <BaseTabs
+        id="pos"
+        label="銷售工作區"
+        value={salesView ? "sales" : "pos"}
+        options={[
+          {
+            value: "pos",
+            label: `收銀${cart.length ? `（${cart.length} 項未結帳）` : ""}`,
+          },
+          { value: "sales", label: "銷售紀錄" },
+        ]}
+        onChange={(value) =>
+          navigate(`/${value}${location.search}`, {
+            state: { focusSalesTab: true },
+          })
+        }
+      />
+      <div
+        id="pos-panel"
+        role="tabpanel"
+        aria-labelledby={salesView ? "pos-sales" : "pos-pos"}
+        tabIndex={0}
+      >
+        {salesView && cart.length > 0 && (
+          <p className="pos-draft-note">
+            購物車已暫存，切換頁面可繼續收銀；重新整理即重置。
+          </p>
+        )}
+        {salesView ? (
+          <SalesList onView={(id) => setView({ kind: "sale", id })} />
+        ) : (
+          <div className="pos-register">
+            <section className="pos-card pos-transaction" aria-label="交易資料">
+              <Field name="pos-customer-search" label="搜尋顧客">
+                <BaseInput
+                  placeholder="姓名、電話或顧客編號"
+                  value={customerSearch}
+                  onChange={(event) => setCustomerSearch(event.target.value)}
+                />
+              </Field>
+              <Field name="pos-customer" label="顧客">
+                <Select
+                  value={customer.id}
+                  onChange={(event) =>
+                    setCustomer(
+                      customers.find(
+                        (entry) => entry.id === event.target.value,
+                      ) || walkIn,
+                    )
+                  }
+                >
+                  <Option value="">散客</Option>
+                  {customers
+                    .filter(
+                      (entry) =>
+                        entry.id === customer.id ||
+                        [entry.id, entry.name, entry.phone]
+                          .join(" ")
+                          .toLowerCase()
+                          .includes(customerSearch.toLowerCase()),
+                    )
+                    .map((entry) => (
+                      <Option key={entry.id} value={entry.id}>
+                        {entry.id} {entry.name} {entry.phone}
+                      </Option>
+                    ))}
+                </Select>
+              </Field>
+              <Field name="pos-warehouse" label="銷售倉別">
+                <Select
+                  value={warehouse}
+                  onChange={(event) => setWarehouse(event.target.value)}
+                >
+                  {options.warehouses.map((value) => (
+                    <Option key={value}>{value}</Option>
+                  ))}
+                </Select>
+              </Field>
+            </section>
+            <section className="pos-card pos-sale-sheet" aria-label="銷售單">
               <form
+                className="pos-scan"
                 onSubmit={(event) => {
                   event.preventDefault();
-                  if (matching.length === 1) add(matching[0]);
+                  if (!search.trim()) {
+                    return;
+                  }
+                  const exact = matching.find((item) =>
+                    [item.code, item.barcode, item.nhiCode].some(
+                      (value) =>
+                        value &&
+                        value.toLowerCase() === search.trim().toLowerCase(),
+                    ),
+                  );
+                  if (exact || matching.length === 1) add(exact || matching[0]);
+                  else if (matching.length) setView({ kind: "products" });
                   else
                     setNotice(
-                      matching.length
-                        ? "符合多筆商品，請在下方選擇。"
-                        : "查無符合商品，請確認條碼或料號。",
+                      "查無符合商品。請確認條碼或料號，或使用挑選商品搜尋。",
                     );
                 }}
               >
                 <Field name="pos-search" label="掃碼／搜尋商品">
                   <BaseInput
                     ref={searchRef}
-                    placeholder="條碼、料號、品名、英文名、健保碼；Enter 加入"
+                    placeholder="掃描條碼自動加入；亦可輸入料號或品名搜尋"
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
+                    onCompositionStart={() => setComposing(true)}
+                    onCompositionEnd={() => setComposing(false)}
                   />
                 </Field>
                 <BaseButton type="submit" variant="outline">
-                  掃碼加入
+                  搜尋商品
+                </BaseButton>
+                <BaseButton
+                  type="button"
+                  variant="outline"
+                  onClick={() => setView({ kind: "products" })}
+                >
+                  <Plus aria-hidden="true" />
+                  挑選商品
                 </BaseButton>
               </form>
-              <div className="pos-form-grid">
-                <Field name="pos-category" label="商品分類">
-                  <Select
-                    value={category}
-                    onChange={(event) => setCategory(event.target.value)}
-                  >
-                    <Option value="">全部分類</Option>
-                    {[...new Set(items.map((item) => item.category))].map(
-                      (value) => (
-                        <Option key={value}>{value}</Option>
-                      ),
-                    )}
-                  </Select>
-                </Field>
-                <Field name="pos-warehouse" label="銷售倉別">
-                  <Select
-                    value={warehouse}
-                    onChange={(event) => setWarehouse(event.target.value)}
-                  >
-                    {options.warehouses.map((value) => (
-                      <Option key={value}>{value}</Option>
-                    ))}
-                  </Select>
-                </Field>
+              <div className="pos-actions pos-lines-heading">
+                <h3>
+                  銷售明細{" "}
+                  <span className="pos-item-count">{cart.length} 項</span>
+                </h3>
+                <small>掃碼自動加入；折扣欄填寫折讓金額</small>
+                <BaseButton
+                  variant="outline"
+                  disabled={!cart.length}
+                  onClick={() => setView({ kind: "clear" })}
+                >
+                  清空
+                </BaseButton>
               </div>
-              <BaseCheckField
-                label="只看常用商品（搜尋時顯示全部符合項目）"
-                checked={favorites}
-                onChange={setFavorites}
+              <SaleLines
+                cart={cart}
+                items={items}
+                batches={state.batches}
+                warehouse={warehouse}
+                authorized={authorized}
+                recentItemId={recentItemId}
+                onChange={setCart}
               />
-            </div>
-            <h3>{search ? "搜尋結果" : favorites ? "常用商品" : "商品列表"}</h3>
-            <div className="pos-products">
-              {matching.map((item) => {
-                const settings = policy(item),
-                  invalid = eligible(item, settings);
-                return (
-                  <article className="pos-product" key={item.id}>
-                    <BaseButton
-                      variant="product"
-                      disabled={Boolean(invalid) || stock(item.id) <= 0}
-                      onClick={() => add(item)}
-                      aria-label={`加入${item.name}`}
-                    >
-                      <Package aria-hidden="true" />
-                      <strong>{item.name}</strong>
-                      <span>
-                        {item.code} ／ {item.specification}
-                      </span>
-                      <span>
-                        {money(settings.price)}／{item.unit}
-                      </span>
-                      <span>
-                        {invalid ||
-                          (stock(item.id)
-                            ? `可用 ${stock(item.id)} ${item.unit}`
-                            : noStockReason(item.id))}
-                      </span>
-                      {(settings.professional || settings.prescription) && (
-                        <small>
-                          結帳需{settings.prescription ? "處方及" : ""}專業確認
-                        </small>
-                      )}
-                    </BaseButton>
-                    {authorized && (
-                      <BaseButton
-                        variant="outline"
-                        aria-label={`設定${item.name} POS`}
-                        onClick={() => setView({ kind: "policy", id: item.id })}
-                      >
-                        <Settings2 aria-hidden="true" />
-                        POS 設定
-                      </BaseButton>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
-            {!matching.length && <p className="pos-card">查無符合商品。</p>}
-          </section>
-          <section className="pos-card pos-cart" aria-label="購物車">
-            <div className="pos-actions">
-              <h3>購物車（{cart.length} 項）</h3>
+            </section>
+            <section className="pos-card pos-settlement" aria-label="結帳摘要">
+              <div className="pos-summary-heading">
+                <h3>本筆交易</h3>
+                <span>待結帳</span>
+              </div>
+              <div className="pos-amount">
+                <small>應收金額</small>
+                <strong>{money(priced.total)}</strong>
+                <span>{cart.length} 項商品</span>
+              </div>
+              <div className="pos-settlement-subtotal">
+                <span>
+                  商品小計 <strong>{money(priced.subtotal)}</strong>
+                </span>
+                <small>顧客：{customer.name}</small>
+              </div>
+              <Field name="pos-order-discount" label="整單折扣金額">
+                <BaseInput
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={orderDiscount}
+                  onChange={(event) =>
+                    setOrderDiscount(Number(event.target.value))
+                  }
+                />
+              </Field>
+              {priced.error && cart.length > 0 && (
+                <p role="alert" className="items-error pos-settlement-error">
+                  {priced.error}
+                </p>
+              )}
               <BaseButton
-                variant="outline"
-                disabled={!cart.length}
-                onClick={() => setView({ kind: "clear" })}
+                className="pos-checkout"
+                disabled={!cart.length || Boolean(priced.error)}
+                onClick={() => setView({ kind: "checkout" })}
               >
-                清空
+                前往結帳
               </BaseButton>
+              <small className="pos-settlement-hint">
+                切換查單保留明細；確認結帳後出庫。
+              </small>
+            </section>
+          </div>
+        )}
+        {!salesView && (
+          <details className="pos-recent-sales">
+            <summary>最近交易・查單與補印</summary>
+            <div className="pos-actions">
+              {[...state.sales]
+                .sort((a, b) => b.date.localeCompare(a.date))
+                .slice(0, 3)
+                .map((record) => (
+                  <BaseButton
+                    key={record.id}
+                    variant="outline"
+                    onClick={() => setView({ kind: "sale", id: record.id })}
+                  >
+                    {record.number}・{money(record.total)}
+                  </BaseButton>
+                ))}
             </div>
-            <Field name="pos-customer-search" label="搜尋顧客">
-              <BaseInput
-                placeholder="姓名、電話或顧客編號"
-                value={customerSearch}
-                onChange={(event) => setCustomerSearch(event.target.value)}
-              />
-            </Field>
-            <Field name="pos-customer" label="顧客">
-              <Select
-                value={customer.id}
-                onChange={(event) =>
-                  setCustomer(
-                    customers.find(
-                      (entry) => entry.id === event.target.value,
-                    ) || walkIn,
-                  )
-                }
-              >
-                <Option value="">散客</Option>
-                {customers
-                  .filter(
-                    (entry) =>
-                      entry.id === customer.id ||
-                      [entry.id, entry.name, entry.phone]
-                        .join(" ")
-                        .toLowerCase()
-                        .includes(customerSearch.toLowerCase()),
-                  )
-                  .map((entry) => (
-                    <Option key={entry.id} value={entry.id}>
-                      {entry.id} {entry.name} {entry.phone}
-                    </Option>
-                  ))}
-              </Select>
-            </Field>
-            <p>已選：{customer.name}；顧客為展示資料，不查詢 HIS 病歷。</p>
-            {!cart.length && (
-              <p className="pos-empty">請從左側加入商品，或掃碼後按 Enter。</p>
-            )}
-            {cart.map((line) => {
-              const item = items.find((entry) => entry.id === line.itemId)!;
-              function change(key: keyof CartLine, value: string | number) {
-                setCart(
-                  cart.map((entry) =>
-                    entry.itemId === line.itemId
-                      ? { ...entry, [key]: value }
-                      : entry,
-                  ),
-                );
-              }
-              return (
-                <article className="pos-cart-line" key={line.itemId}>
-                  <div className="pos-actions">
-                    <strong>{item.name}</strong>
-                    <BaseButton
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`移除${item.name}`}
-                      onClick={() =>
-                        setCart(
-                          cart.filter((entry) => entry.itemId !== line.itemId),
-                        )
-                      }
-                    >
-                      <Trash2 aria-hidden="true" />
-                    </BaseButton>
-                  </div>
-                  <small>
-                    {item.specification} ／ 可用 {stock(item.id)} {item.unit}
-                  </small>
-                  <div className="pos-form-grid">
-                    <Field name={`qty-${item.id}`} label={`${item.name}數量`}>
-                      <BaseInput
-                        type="number"
-                        min="0.001"
-                        step="0.001"
-                        value={line.quantity}
-                        onChange={(event) =>
-                          change("quantity", Number(event.target.value))
-                        }
-                      />
-                    </Field>
-                    <Field
-                      name={`price-${item.id}`}
-                      label={`${item.name}成交單價`}
-                    >
-                      <BaseInput
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        readOnly={!authorized}
-                        value={line.price}
-                        onChange={(event) =>
-                          change("price", Number(event.target.value))
-                        }
-                      />
-                    </Field>
-                    {authorized && (
-                      <>
-                        <Field
-                          name={`discount-${item.id}`}
-                          label={`${item.name}單品折扣`}
-                        >
-                          <BaseInput
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={line.discount}
-                            onChange={(event) =>
-                              change("discount", Number(event.target.value))
-                            }
-                          />
-                        </Field>
-                        <Field
-                          name={`batch-${item.id}`}
-                          label={`${item.name}實際批次`}
-                        >
-                          <Select
-                            value={line.batchId}
-                            onChange={(event) =>
-                              change("batchId", event.target.value)
-                            }
-                          >
-                            <Option value="">自動 FEFO（可跨批次）</Option>
-                            {state.batches
-                              .filter(
-                                (batch) =>
-                                  batch.itemId === item.id &&
-                                  batch.warehouse === warehouse &&
-                                  available(batch) > 0,
-                              )
-                              .map((batch) => (
-                                <Option key={batch.id} value={batch.id}>
-                                  {batch.batchNumber || "無批號"} ／{" "}
-                                  {batch.expiryDate || "不追蹤效期"} ／{" "}
-                                  {available(batch)} {item.unit}
-                                </Option>
-                              ))}
-                          </Select>
-                        </Field>
-                      </>
-                    )}
-                  </div>
-                  <p>
-                    明細小計{" "}
-                    {money(
-                      Math.max(0, line.quantity * line.price - line.discount),
-                    )}
-                  </p>
-                </article>
-              );
-            })}
-            <Field name="pos-order-discount" label="整單折扣金額">
-              <BaseInput
-                type="number"
-                min="0"
-                step="0.01"
-                readOnly={!authorized}
-                value={orderDiscount}
-                onChange={(event) =>
-                  setOrderDiscount(Number(event.target.value))
-                }
-              />
-            </Field>
-            <p>
-              商品小計 {money(priced.subtotal)} ／ 折扣 {money(orderDiscount)}
-            </p>
-            <strong className="pos-total">應收 {money(priced.total)}</strong>
-            {priced.error && cart.length > 0 && (
-              <p role="alert" className="items-error">
-                {priced.error}
-              </p>
-            )}
+          </details>
+        )}
+        {!salesView && !view && cart.length > 0 && (
+          <div className="pos-mobile-checkout" aria-label="快速結帳">
+            <div>
+              <small>{cart.length} 項商品</small>
+              <strong>應收 {money(priced.total)}</strong>
+            </div>
             <BaseButton
-              className="pos-checkout"
-              disabled={!cart.length || Boolean(priced.error)}
+              disabled={Boolean(priced.error)}
               onClick={() => setView({ kind: "checkout" })}
             >
-              <Plus aria-hidden="true" />
-              前往結帳
+              結帳
             </BaseButton>
-            <small>購物車不預扣；確認結帳才更新本模組展示庫存。</small>
-          </section>
-        </div>
-      )}
-      <p className="pos-note">
-        展示模式：付款、授權與銷售資格皆為人工情境；僅更新 POS
-        記憶體庫存，不更新模組一、不連線金流或
-        HIS，重新整理即重置。正式跨系統扣庫與權限待後續串接。
-      </p>
+          </div>
+        )}
+        <p className="pos-note">
+          展示模式：付款、授權與銷售資格皆為人工情境；僅更新 POS
+          記憶體庫存，不更新模組一、不連線金流或
+          HIS，重新整理即重置。正式跨系統扣庫與權限待後續串接。
+        </p>
+      </div>
       <BaseWorkspaceModal
         open={Boolean(view)}
         title={title}
-        description="前端展示操作；不執行正式收付款。"
+        description={
+          view?.kind === "checkout"
+            ? "核對應收金額與付款方式後完成結帳。"
+            : "前端展示操作；不執行正式收付款。"
+        }
         onClose={() => close()}
       >
         {discard && (
@@ -537,6 +503,20 @@ export function PosPage() {
           </div>
         )}
         <div className="pos-modal-slot" hidden={discard}>
+          {view?.kind === "products" && (
+            <ProductPicker
+              items={items}
+              cart={cart}
+              initialSearch={search}
+              authorized={authorized}
+              stock={stock}
+              policy={policy}
+              noStockReason={noStockReason}
+              onAdd={add}
+              onPolicy={(id) => setView({ kind: "policy", id })}
+              onClose={() => close()}
+            />
+          )}
           {view?.kind === "checkout" && (
             <CheckoutForm
               cart={cart}
@@ -635,6 +615,11 @@ export function PosPage() {
           )}
         </div>
       </BaseWorkspaceModal>
+      {notice && (
+        <div className="items-toast" role="status">
+          {notice}
+        </div>
+      )}
     </div>
   );
 }

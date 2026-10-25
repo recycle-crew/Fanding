@@ -20,14 +20,6 @@ async function scan(page: Page, code: string) {
 async function checkout(page: Page, { medicine = false } = {}) {
   await page.getByRole("button", { name: "前往結帳", exact: true }).click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByLabel("銷售主體統一編號", { exact: true }).fill("12345678");
-  await dialog.getByLabel("實收金額", { exact: true }).fill("10000");
-  await dialog
-    .getByRole("checkbox", {
-      name: "已確認銷售主體具備該品項及單據資格（展示）",
-      exact: true,
-    })
-    .check();
   if (medicine)
     await dialog
       .getByRole("checkbox", {
@@ -43,7 +35,7 @@ async function checkout(page: Page, { medicine = false } = {}) {
   ).toBeVisible();
   return dialog;
 }
-test("@critical 結帳必填與確認事項可見，漏填阻擋並保留購物車，補齊成交", async ({
+test("@critical 精簡結帳與非現金付款確認，未確認時保留銷售明細", async ({
   page,
 }) => {
   await scan(page, "OTC0001");
@@ -53,43 +45,18 @@ test("@critical 結帳必填與確認事項可見，漏填阻擋並保留購物�
     name: "確認完成結帳",
     exact: true,
   });
-  await expect(
-    dialog.getByText("必填確認：銷售資格；非現金付款須確認外部付款成功。", {
-      exact: true,
-    }),
-  ).toBeVisible();
-  const received = dialog.getByLabel("實收金額", { exact: true });
-  await received.fill("");
-  await expect(received).toHaveAttribute("required", "");
-  await expect(dialog.locator('label[for="checkout-received"]')).toContainText(
-    "*",
+  await expect(dialog.getByRole("region", { name: "結帳金額" })).toContainText(
+    "$355",
   );
-  await submit.click();
-  await expect(dialog.getByRole("alert")).toContainText("實收金額");
-  await expect(received).toHaveAttribute("aria-invalid", "true");
-  await received.fill("10000");
-  await submit.click();
-  await expect(dialog.getByRole("alert")).toContainText("確認銷售資格");
-  await dialog
-    .getByRole("checkbox", {
-      name: "已確認銷售主體具備該品項及單據資格（展示）",
-      exact: true,
-    })
-    .check();
-  await received.fill("0");
-  await submit.click();
-  await expect(dialog.getByRole("alert")).toContainText(
-    "現金實收不可小於應收金額",
-  );
+  await expect(dialog.getByLabel("實收金額", { exact: true })).toHaveCount(0);
+  await expect(dialog.getByText(/找零|展示失敗|折扣分攤/)).toHaveCount(0);
   await dialog.getByLabel("付款方式", { exact: true }).selectOption("信用卡");
   await submit.click();
   await expect(dialog.getByRole("alert")).toContainText("請先確認外部付款成功");
   await expect(
     dialog.getByRole("heading", { name: "銷售明細與交易憑證", exact: true }),
   ).toHaveCount(0);
-  await expect(
-    page.getByText("購物車（1 項）", { exact: true }),
-  ).toBeAttached();
+  await expect(page.locator(".pos-lines-heading")).toContainText("1 項");
   await dialog
     .getByRole("checkbox", { name: "已確認外部付款成功（展示）", exact: true })
     .check();
@@ -120,16 +87,20 @@ test("@critical 掃碼合併、禁止品項、無庫存、搜尋與清空", asyn
   await scan(page, "no-result");
   await scan(page, "OTC0003");
   await expect(
-    page.getByRole("status").filter({ hasText: "批次已過期" }),
+    page.getByRole("status").filter({ hasText: "無可用庫存" }),
   ).toBeVisible();
   await scan(page, "no-result");
-  await expect(page.getByText("查無符合商品。", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("status").filter({ hasText: "查無符合商品" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "清空", exact: true }).click();
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "確認清空", exact: true })
     .click();
-  await expect(page.getByText("購物車（0 項）", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "銷售明細 0 項", exact: true }),
+  ).toBeVisible();
 });
 test("@critical 折扣、多批次結帳、歷史與部分退貨待退款／確認退款", async ({
   page,
@@ -140,9 +111,8 @@ test("@critical 折扣、多批次結帳、歷史與部分退貨待退款／確�
   await page.getByLabel("葉黃素膠囊單品折扣", { exact: true }).fill("10");
   await page.getByLabel("整單折扣金額", { exact: true }).fill("3.01");
   const dialog = await checkout(page);
-  await expect(dialog).toContainText("銷售主體統一編號：12345678");
   await expect(dialog).toContainText("整單分攤 $3.01");
-  await expect(dialog).toContainText("A081-B");
+  await expect(dialog.getByText("批次與效期", { exact: true })).toHaveCount(0);
   await dialog.getByRole("button", { name: "銷售退貨", exact: true }).click();
   await dialog.getByLabel("葉黃素膠囊本次退貨數量", { exact: true }).fill("5");
   await dialog.getByLabel("退貨原因", { exact: true }).fill("客戶退回");
@@ -181,22 +151,11 @@ test("@critical 折扣、多批次結帳、歷史與部分退貨待退款／確�
     dialog.getByRole("button", { name: /^確認退款 REF-/ }),
   ).toHaveCount(0);
 });
-test("@critical 付款確認、藥品專業確認與安全重試", async ({ page }) => {
+test("@critical 付款確認與藥品專業確認", async ({ page }) => {
   await scan(page, "MED0001");
   await page.getByRole("button", { name: "前往結帳", exact: true }).click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByLabel("實收金額", { exact: true }).fill("0");
-  await dialog
-    .getByRole("button", { name: "確認完成結帳", exact: true })
-    .click();
-  await expect(dialog.getByRole("alert")).toBeVisible();
   await dialog.getByLabel("付款方式", { exact: true }).selectOption("信用卡");
-  await dialog
-    .getByRole("checkbox", {
-      name: "已確認銷售主體具備該品項及單據資格（展示）",
-      exact: true,
-    })
-    .check();
   await dialog
     .getByRole("button", { name: "確認完成結帳", exact: true })
     .click();
@@ -214,19 +173,8 @@ test("@critical 付款確認、藥品專業確認與安全重試", async ({ page
       exact: true,
     })
     .check();
-  await dialog.getByText("展示失敗與安全重試", { exact: true }).click();
-  await dialog
-    .getByRole("checkbox", {
-      name: "模擬外部已收款、本地提交失敗一次",
-      exact: true,
-    })
-    .check();
   await dialog
     .getByRole("button", { name: "確認完成結帳", exact: true })
-    .click();
-  await expect(dialog.getByRole("alert")).toContainText("勿重刷或重收");
-  await dialog
-    .getByRole("button", { name: "以相同交易識別碼重試", exact: true })
     .click();
   await expect(dialog).toContainText("信用卡");
   await expect(
@@ -257,7 +205,7 @@ test("@critical 作廢與退款分離、紀錄篩選匯出", async ({ page }) =>
     dialog.getByRole("button", { name: "作廢交易", exact: true }),
   ).toBeDisabled();
   await dialog.getByRole("button", { name: "關閉", exact: true }).click();
-  await page.getByRole("button", { name: "銷售紀錄", exact: true }).click();
+  await page.getByRole("tab", { name: "銷售紀錄", exact: true }).click();
   await page.getByLabel("銷售狀態", { exact: true }).selectOption("作廢");
   await expect(page.locator("tbody tr:visible")).toHaveCount(2);
   const download = page.waitForEvent("download");
@@ -291,9 +239,11 @@ test("無障礙、取消保留購物車與桌面／手機畫面", async ({ page 
   await page.getByRole("button", { name: "前往結帳", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await audit();
+  await page.screenshot({ path: testInfo.outputPath("pos-checkout.png") });
   await expect(
     dialog.getByRole("button", { name: "確認完成結帳", exact: true }),
   ).toBeInViewport();
+  await dialog.getByText("備註（選填）", { exact: true }).click();
   await dialog.getByLabel("銷售備註", { exact: true }).fill("尚未儲存");
   await dialog.getByRole("button", { name: "取消", exact: true }).click();
   await expect(dialog).toContainText("尚有未儲存變更");
@@ -303,7 +253,9 @@ test("無障礙、取消保留購物車與桌面／手機畫面", async ({ page 
   );
   await page.keyboard.press("Escape");
   await dialog.getByRole("button", { name: "放棄變更", exact: true }).click();
-  await expect(page.getByText("購物車（1 項）", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "銷售明細 1 項", exact: true }),
+  ).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth + 1,
@@ -323,4 +275,209 @@ test("/pos 直接進入與重新整理", { tag: "@critical" }, async ({ page }) 
   await page.reload();
   await expect(page).toHaveURL(entryURL);
   await expect(page.locator("#workspace").first()).toBeVisible();
+});
+
+test("@critical 表格式收銀、連續挑選商品與數量 Enter 接續掃碼", async ({
+  page,
+}, testInfo) => {
+  await page.getByRole("button", { name: "挑選商品", exact: true }).click();
+  const picker = page.getByRole("dialog");
+  await expect(
+    picker.getByRole("heading", { name: "挑選商品", exact: true }),
+  ).toBeVisible();
+  await picker
+    .getByRole("button", { name: "加入葉黃素膠囊", exact: true })
+    .click();
+  await picker
+    .getByRole("button", { name: "加入葉黃素膠囊", exact: true })
+    .click();
+  await picker
+    .getByRole("button", { name: "加入隱形眼鏡保養液", exact: true })
+    .click();
+  await expect(picker).toContainText("本單已選 2 盒");
+  await picker.getByRole("button", { name: "完成選品", exact: true }).click();
+  const table = page.getByRole("table", { name: "銷售明細", exact: true });
+  await expect(table.locator("tbody tr")).toHaveCount(2);
+  if (testInfo.project.name === "desktop") {
+    const lines = await page.locator(".pos-lines-wrap").boundingBox();
+    const sheet = await page
+      .getByRole("region", { name: "銷售單", exact: true })
+      .boundingBox();
+    const summary = await page
+      .getByRole("region", { name: "結帳摘要", exact: true })
+      .boundingBox();
+    expect(lines!.height).toBeGreaterThan(400);
+    expect(summary!.x).toBeGreaterThanOrEqual(sheet!.x + sheet!.width);
+  }
+  await expect(table.locator('[data-recent="true"]')).toContainText(
+    "隱形眼鏡保養液",
+  );
+  const quantity = page.getByLabel("葉黃素膠囊數量", { exact: true });
+  await expect(quantity).toHaveValue("2");
+  await quantity.fill("3");
+  await quantity.press("Enter");
+  await expect(
+    page.getByLabel("掃碼／搜尋商品", { exact: true }),
+  ).toBeFocused();
+  await expect(
+    page.getByLabel("葉黃素膠囊成交單價", { exact: true }),
+  ).toHaveAttribute("readonly", "");
+  await page.getByLabel("展示角色", { exact: true }).selectOption("manager");
+  await expect(table.getByText("批次與效期", { exact: true })).toHaveCount(0);
+  await page.getByLabel("葉黃素膠囊單品折扣", { exact: true }).fill("5");
+  await page.screenshot({
+    path: testInfo.outputPath("pos-register.png"),
+    fullPage: true,
+  });
+  if (testInfo.project.name === "desktop") {
+    for (const width of [1024, 768, 320]) {
+      await page.setViewportSize({ width, height: 900 });
+      if (width === 320) {
+        expect(
+          (await page
+            .getByLabel("整單折扣金額", { exact: true })
+            .boundingBox())!.width,
+        ).toBeGreaterThan(100);
+        expect(
+          (await page.locator(".pos-settlement .pos-amount").boundingBox())!
+            .width,
+        ).toBeGreaterThan(100);
+      }
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= window.innerWidth + 1,
+        ),
+      ).toBeTruthy();
+      await page.screenshot({
+        path: testInfo.outputPath(`pos-register-${width}.png`),
+        fullPage: true,
+      });
+    }
+    await page.setViewportSize({ width: 1440, height: 1000 });
+  }
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth + 1,
+    ),
+  ).toBeTruthy();
+  await page
+    .getByRole("button", { name: "移除隱形眼鏡保養液", exact: true })
+    .click();
+  await expect(table.locator("tbody tr")).toHaveCount(1);
+  await scan(page, "OTC");
+  await expect(
+    picker.getByRole("heading", { name: "挑選商品", exact: true }),
+  ).toBeVisible();
+  await picker.getByLabel("搜尋可選商品", { exact: true }).fill("no-result");
+  await expect(
+    picker.getByText("查無符合商品。", { exact: true }),
+  ).toBeVisible();
+  await picker.getByRole("button", { name: "完成選品", exact: true }).click();
+  await expect(quantity).toHaveValue("3");
+});
+
+test("@critical 查單及返回保留購物車、顧客、折扣與主管角色", async ({
+  page,
+}, testInfo) => {
+  await page.getByLabel("展示角色", { exact: true }).selectOption("manager");
+  await scan(page, "OTC0001");
+  await page.getByLabel("葉黃素膠囊數量", { exact: true }).fill("2");
+  await page.getByLabel("整單折扣金額", { exact: true }).fill("10");
+  await page.getByLabel("顧客", { exact: true }).selectOption("C001");
+  const shortcuts = page.getByLabel("快速結帳", { exact: true });
+  if (testInfo.project.name === "mobile") {
+    await expect(
+      shortcuts.getByRole("button", { name: "結帳", exact: true }),
+    ).toBeInViewport();
+    await shortcuts.getByRole("button", { name: "結帳", exact: true }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("付款方式", { exact: true }).selectOption("信用卡");
+    await expect(dialog.getByText(/找零/)).toHaveCount(0);
+    await dialog.getByRole("button", { name: "取消", exact: true }).click();
+    await dialog.getByRole("button", { name: "放棄變更", exact: true }).click();
+  }
+  const nav = page.getByRole("tablist", { name: "銷售工作區" });
+  await nav.getByRole("tab", { name: "銷售紀錄", exact: true }).click();
+  await expect(page).toHaveURL(/\/sales/);
+  await expect(
+    nav.getByRole("tab", { name: "銷售紀錄", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(
+    page.getByRole("tabpanel", { name: "銷售紀錄", exact: true }),
+  ).toBeVisible();
+  await expect(
+    nav.getByRole("tab", { name: "銷售紀錄", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("ArrowLeft");
+  await expect(
+    nav.getByRole("tab", { name: "收銀（1 項未結帳）", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("ArrowRight");
+  await expect(
+    nav.getByRole("tab", { name: "銷售紀錄", exact: true }),
+  ).toBeFocused();
+  await page
+    .getByRole("button", { name: "待退款（目前日期區間）", exact: true })
+    .click();
+  await expect(page.locator("tbody tr:visible")).toHaveCount(2);
+  await nav
+    .getByRole("tab", { name: "收銀（1 項未結帳）", exact: true })
+    .click();
+  await expect(page.getByLabel("葉黃素膠囊數量", { exact: true })).toHaveValue(
+    "2",
+  );
+  await expect(page.getByLabel("整單折扣金額", { exact: true })).toHaveValue(
+    "10",
+  );
+  await expect(page.getByLabel("顧客", { exact: true })).toHaveValue("C001");
+  await expect(page.getByLabel("展示角色", { exact: true })).toHaveValue(
+    "manager",
+  );
+  await nav.getByRole("tab", { name: "銷售紀錄", exact: true }).click();
+  await expect(page.getByLabel("退款狀態", { exact: true })).toHaveValue(
+    "待處理",
+  );
+  await page.screenshot({
+    path: testInfo.outputPath("sales-refund-filter.png"),
+    fullPage: true,
+  });
+});
+
+test("@critical 無需 Enter 自動加入、避免重複成交與櫃檯折扣", async ({
+  page,
+}) => {
+  const scanInput = page.getByLabel("掃碼／搜尋商品", { exact: true });
+  await scanInput.fill("OTC000");
+  await expect(
+    page.getByRole("table", { name: "銷售明細" }).locator("tbody tr"),
+  ).toContainText("尚未加入商品");
+  await scanInput.fill("OTC0001");
+  const quantity = page.getByLabel("葉黃素膠囊數量", { exact: true });
+  await expect(quantity).toHaveValue("1");
+  await expect(scanInput).toHaveValue("");
+  await scanInput.press("Enter");
+  await expect(quantity).toHaveValue("1");
+  await scanInput.fill("OTC0001");
+  await expect(quantity).toHaveValue("2");
+  await expect(
+    page.locator(".items-toast").filter({ hasText: "本單數量 2" }),
+  ).toBeVisible();
+  await expect(page.getByText("批次與效期", { exact: true })).toHaveCount(0);
+  const discount = page.getByLabel("葉黃素膠囊單品折扣", { exact: true });
+  await expect(discount).toBeEditable();
+  await discount.fill("10");
+  await page.getByLabel("整單折扣金額", { exact: true }).fill("5");
+  await page.getByRole("button", { name: "前往結帳", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("region", { name: "結帳金額" })).toContainText(
+    "$695",
+  );
+  await expect(dialog.getByText(/出庫批次/)).toHaveCount(0);
+  await dialog
+    .getByRole("button", { name: "確認完成結帳", exact: true })
+    .click();
+  await expect(
+    dialog.getByRole("heading", { name: "銷售明細與交易憑證", exact: true }),
+  ).toBeVisible();
+  await expect(dialog.getByText("原成交 $695", { exact: true })).toBeVisible();
 });
