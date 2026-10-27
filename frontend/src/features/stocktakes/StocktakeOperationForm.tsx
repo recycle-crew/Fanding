@@ -17,7 +17,13 @@ import {
   invalidateCount,
   requestRecount,
 } from "@/store/stocktakes";
-import { countFor, expectedFor, stocktakePeople, varianceFor } from "./model";
+import {
+  countFor,
+  expectedFor,
+  varianceFor,
+  roundQty,
+  stocktakeRoundLabel,
+} from "./model";
 import type { Stocktake } from "@/types/stocktakes";
 export type StocktakeOperation =
   | "close"
@@ -28,13 +34,13 @@ export type StocktakeOperation =
   | "confirm-item"
   | "approve";
 const submitLabels: Record<StocktakeOperation, string> = {
-  close: "確認關閉盤點",
+  close: "確認結束初盤",
   cancel: "確認作廢盤點",
   invalidate: "確認標記無效",
   recount: "建立複盤任務",
-  round: "採用此輪次",
+  round: "確認採用結果",
   "confirm-item": "儲存品項核對",
-  approve: "確認完成展示調整",
+  approve: "確認盤點結果",
 };
 export function StocktakeOperationForm({
   order,
@@ -56,8 +62,13 @@ export function StocktakeOperationForm({
   const dispatch = useAppDispatch(),
     scope = order.scope.find((row) => row.itemId === itemId);
   const [reason, setReason] = useState(""),
-    [person, setPerson] = useState(stocktakePeople[0]),
-    [round, setRound] = useState(order.selectedRounds[itemId || ""] || 1);
+    [round, setRound] = useState(
+      order.recounts
+        .filter((entry) => entry.itemId === itemId && entry.status === "已提交")
+        .sort((a, b) => b.round - a.round)[0]?.round ||
+        order.selectedRounds[itemId || ""] ||
+        1,
+    );
   const [checks, setChecks] = useState<Record<string, boolean>>({}),
     [plans, setPlans] = useState<Record<string, number>>(
       Object.fromEntries(
@@ -79,6 +90,12 @@ export function StocktakeOperationForm({
       />
     );
   }
+  const allocated = roundQty(
+    Object.values(plans).reduce((sum, quantity) => sum + quantity, 0),
+  );
+  const remaining = scope
+    ? roundQty((varianceFor(order, scope) ?? 0) - allocated)
+    : 0;
   return (
     <BaseForm
       submitText={submitLabels[operation]}
@@ -90,7 +107,6 @@ export function StocktakeOperationForm({
           result = dispatch(
             closeCounting({
               id: order.id,
-              people: Boolean(checks.people),
               partition: Boolean(checks.partition),
               time: Boolean(checks.time),
               his: Boolean(checks.his),
@@ -104,7 +120,7 @@ export function StocktakeOperationForm({
           );
         else if (operation === "recount")
           result = dispatch(
-            requestRecount({ id: order.id, itemId: itemId!, person, reason }),
+            requestRecount({ id: order.id, itemId: itemId!, reason }),
           );
         else if (operation === "round")
           result = dispatch(
@@ -137,17 +153,19 @@ export function StocktakeOperationForm({
         <h3>
           {order.number} {scope?.name || order.name}
         </h3>
+        {scope && ["recount", "round"].includes(operation) && (
+          <p>
+            目前採用第 {order.selectedRounds[scope.itemId] || 1} 輪：預期{" "}
+            {expectedFor(scope)} {scope.unit}，實盤{" "}
+            {countFor(order, scope.itemId).counted
+              ? countFor(order, scope.itemId).quantity
+              : "未盤點"}
+            ，差異 {varianceFor(order, scope) ?? "尚未盤點"}。
+          </p>
+        )}
         {operation === "close" && (
           <>
-            <p>關閉後停止初盤輸入，才開放主管查看差異。未盤點不可當作零。</p>
-            <ul>
-              {order.people.map((entry) => (
-                <li key={entry}>
-                  {entry}：
-                  {order.finished.includes(entry) ? "已完成" : "尚未完成"}
-                </li>
-              ))}
-            </ul>
+            <p>結束初盤後停止輸入，才開放主管查看差異。未盤點不可當作零。</p>
             <p>
               已登錄{" "}
               {
@@ -155,22 +173,14 @@ export function StocktakeOperationForm({
                   (row) => countFor(order, row.itemId, 1).counted,
                 ).length
               }
-              ／{order.scope.length}{" "}
-              品項。未完成的人員需切換展示身分完成本人分區盤點。
+              ／{order.scope.length} 品項。請確認所有現場數量都已登錄。
             </p>
-            {check("people", "已確認所有指派人員完成盤點（展示）")}
-            {check(
-              "partition",
-              "已確認分區分工無重複計算或未處理輸入疑慮（展示）",
-            )}
-            {check(
-              "time",
-              "已確認盤點截止時間、期間異動與基準可靠對齊（展示）",
-            )}
-            {check("his", "已確認 HIS 同步無延遲，否則暫停或重新盤點（展示）")}
+            {check("partition", "已確認所有品項清點完成，且沒有重複計算")}
+            {check("time", "已核對盤點截止時間及期間入出庫紀錄")}
+            {check("his", "已確認帳面資料可供本次核對")}
           </>
         )}
-        {["cancel", "invalidate", "recount", "round"].includes(operation) && (
+        {["cancel", "invalidate", "recount"].includes(operation) && (
           <Field
             name="stocktake-operation-reason"
             label={
@@ -178,9 +188,7 @@ export function StocktakeOperationForm({
                 ? "無效原因"
                 : operation === "cancel"
                   ? "作廢原因"
-                  : operation === "round"
-                    ? "採用輪次原因"
-                    : "複盤原因"
+                  : "複盤原因"
             }
             required
           >
@@ -198,25 +206,73 @@ export function StocktakeOperationForm({
           <p>作廢保留快照、原始輸入與稽核，不更新庫存；已完成單據不能作廢。</p>
         )}
         {operation === "recount" && (
-          <>
-            <Field name="stocktake-recount-person" label="複盤人員" required>
-              <Select
-                value={person}
-                onChange={(event) => setPerson(event.target.value)}
-              >
-                {stocktakePeople.map((entry) => (
-                  <Option key={entry}>{entry}</Option>
-                ))}
-              </Select>
-            </Field>
-            <p>
-              建立新的盲盤輪次，初盤與複盤不相加；提交後需主管選擇有效輪次。
-            </p>
-          </>
+          <p>
+            建立新一輪複盤後，任何盤點人員都可開始輸入，每筆保留實際輸入人員；提交後由主管選擇採用哪一輪的結果。
+          </p>
         )}
         {operation === "round" && (
           <>
-            <Field name="stocktake-round" label="最終採用輪次" required>
+            <p>
+              選擇一份清點結果作為本次實盤數量。其他結果仍會保留，數量不相加。
+            </p>
+            <div
+              className="stocktake-round-comparison"
+              aria-label="各次盤點結果比較"
+            >
+              {[
+                1,
+                ...order.recounts
+                  .filter((entry) => entry.itemId === itemId)
+                  .map((entry) => entry.round),
+              ].map((number) => {
+                const count = countFor(order, itemId!, number);
+                const records = order.records.filter(
+                  (record) =>
+                    record.itemId === itemId &&
+                    record.round === number &&
+                    record.valid,
+                );
+                const recount = order.recounts.find(
+                  (entry) => entry.itemId === itemId && entry.round === number,
+                );
+                return (
+                  <article
+                    key={number}
+                    className={round === number ? "is-selected" : ""}
+                  >
+                    <strong>
+                      {stocktakeRoundLabel(number)}
+                      {(order.selectedRounds[itemId || ""] || 1) === number
+                        ? "（目前採用）"
+                        : ""}
+                    </strong>
+                    <p>
+                      實盤{" "}
+                      {count.counted
+                        ? `${count.quantity} ${scope?.unit}`
+                        : "尚未盤點"}
+                      ；差異{" "}
+                      {count.counted && scope
+                        ? roundQty(count.quantity - expectedFor(scope))
+                        : "—"}
+                    </p>
+                    <small>
+                      輸入人員：
+                      {[
+                        ...new Set(records.map((record) => record.person)),
+                      ].join("、") || "尚無紀錄"}{" "}
+                      ／{" "}
+                      {number === 1
+                        ? "初盤已結束"
+                        : recount?.status === "已提交"
+                          ? "已提交，可採用"
+                          : recount?.status}
+                    </small>
+                  </article>
+                );
+              })}
+            </div>
+            <Field name="stocktake-round" label="採用結果" required>
               <Select
                 value={round}
                 onChange={(event) => setRound(Number(event.target.value))}
@@ -227,17 +283,51 @@ export function StocktakeOperationForm({
                     .filter((entry) => entry.itemId === itemId)
                     .map((entry) => entry.round),
                 ].map((number) => (
-                  <Option key={number} value={number}>
-                    第 {number} 輪：
+                  <Option
+                    key={number}
+                    value={number}
+                    disabled={
+                      !countFor(order, itemId!, number).counted ||
+                      (number > 1 &&
+                        order.recounts.some(
+                          (entry) =>
+                            entry.itemId === itemId &&
+                            entry.round === number &&
+                            entry.status === "待複盤",
+                        ))
+                    }
+                  >
+                    {stocktakeRoundLabel(number)}：
                     {countFor(order, itemId!, number).counted
                       ? countFor(order, itemId!, number).quantity
                       : "尚未盤點"}{" "}
                     {scope?.unit}
+                    {number > 1 &&
+                    order.recounts.some(
+                      (entry) =>
+                        entry.itemId === itemId &&
+                        entry.round === number &&
+                        entry.status === "待複盤",
+                    )
+                      ? "（尚未提交，不能採用）"
+                      : ""}
                   </Option>
                 ))}
               </Select>
             </Field>
-            <p>各輪僅擇一採用，尚未提交的必要複盤會阻擋確認。</p>
+            <p role="status">
+              採用後實盤為 {countFor(order, itemId!, round).quantity}{" "}
+              {scope?.unit}；仍需回到清單確認品項
+              {scope?.trackBatch ? "與批次差異" : ""}。
+            </p>
+            <Field name="stocktake-round-reason" label="採用原因" required>
+              <BaseTextarea
+                maxLength={500}
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                placeholder="例如：再次清點後確認數量，採用本次複盤結果"
+              />
+            </Field>
           </>
         )}
         {operation === "confirm-item" && scope && (
@@ -254,6 +344,11 @@ export function StocktakeOperationForm({
                 <h4>主管確認實際批次差異</h4>
                 <p>
                   盤盈填正數，盤虧填負數，合計須等於總差異。沒有可合理確認的批次時請暫停，不會任意指定。
+                </p>
+                <p className="stocktake-completion-status" role="status">
+                  需分配差異 {varianceFor(order, scope)} {scope.unit} ／ 已分配{" "}
+                  {allocated} ／ 尚差 {remaining}
+                  {remaining === 0 ? "（已分配完成）" : "（請繼續分配）"}
                 </p>
                 {scope.batches.map((batch) => (
                   <Field
@@ -289,12 +384,9 @@ export function StocktakeOperationForm({
           <>
             <p>
               已確認 {order.confirmedItems.length}／{order.scope.length}{" "}
-              品項；仍有未確認或必要複盤時將阻擋。完成後鎖定，僅建立本模組展示調整與稽核紀錄。
+              品項；仍有未確認或必要複盤時將阻擋。完成後鎖定。預覽不修改正式庫存；正式調整方式待確認。
             </p>
-            {check(
-              "approve",
-              "已確認全部結果、HIS 同步及盤點基準安全，完成展示調整",
-            )}
+            {check("approve", "已核對全部盤點結果，確認完成後鎖定單據")}
           </>
         )}
       </section>

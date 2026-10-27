@@ -66,8 +66,6 @@ export interface Stocktake {
   warehouse: string;
   type: "全盤" | "部分盤點";
   status: StocktakeStatus;
-  people: string[];
-  finished: string[];
   createdBy: string;
   createdAt: string;
   snapshotAt: string;

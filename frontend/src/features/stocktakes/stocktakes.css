@@ -6,20 +6,6 @@
   min-width: 0;
   margin-bottom: 18px;
 }
-.stocktake-stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-}
-.stocktake-stats .stocktake-card {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.stocktake-stats strong {
-  font-size: 28px;
-  color: #0758cf;
-}
 .stocktake-actions {
   display: flex;
   flex-wrap: wrap;
@@ -68,7 +54,105 @@
   overflow-y: auto;
   padding: 8px;
   border: 1px solid #dce6f0;
+  border-radius: 6px;
   margin-top: 10px;
+}
+.stocktake-new-intro {
+  margin: 0 0 16px;
+}
+.stocktake-scope-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-bottom: 1px solid #e8eef7;
+}
+.stocktake-scope-option:last-child {
+  border-bottom: 0;
+}
+.stocktake-scope-option > label {
+  min-width: 0;
+}
+.stocktake-scope-status {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.stocktake-scope-option--available .stocktake-scope-status {
+  color: #17623d;
+  background: #e7f6ee;
+}
+.stocktake-unavailable-results {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid #f2c9ce;
+  border-radius: 6px;
+  background: #fff7f7;
+}
+.stocktake-unavailable-results > strong {
+  display: block;
+  color: #8d2435;
+  font-size: 13px;
+  margin: 0 0 6px;
+}
+.stocktake-scope-option--unavailable {
+  border-color: #f2dce0;
+  color: #6b5560;
+}
+.stocktake-scope-option--unavailable .stocktake-scope-status {
+  color: #9f2840;
+  background: #ffe8ec;
+}
+.stocktake-scope-empty {
+  margin: 8px;
+  color: #53647d;
+}
+.stocktake-selected-scope,
+.stocktake-full-scope {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f5f9fe;
+  border: 1px solid #e1eaf6;
+  border-radius: 6px;
+}
+.stocktake-selected-scope > p,
+.stocktake-full-scope > p {
+  margin: 8px 0 0;
+  color: #53647d;
+}
+.stocktake-selected-scope ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.stocktake-selected-scope li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid #dce6f0;
+  min-height: 40px;
+}
+.stocktake-selected-scope li span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.stocktake-new-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 20px;
+  background: #f5f9fe;
+  border-top: 1px solid #e1eaf6;
+  color: #415276;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.stocktake-new-summary strong {
+  color: #173e73;
 }
 .stocktake-modal-slot {
   display: flex;
@@ -100,9 +184,207 @@
 .stocktake-card ul {
   padding-left: 22px;
 }
+.stocktake-review-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+.stocktake-review-summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  min-height: 76px;
+  padding: 12px;
+  background: #f5f9fe;
+  border: 1px solid #dce6f0;
+  border-radius: 8px;
+  color: #173e73;
+  cursor: pointer;
+  text-align: left;
+}
+.stocktake-review-summary-item strong {
+  font-size: 20px;
+}
+.stocktake-review-summary-item[aria-pressed="true"] {
+  border-color: #0758cf;
+  box-shadow: 0 0 0 1px #0758cf;
+}
+.stocktake-review-summary-item--gain {
+  background: #eff8f1;
+  color: #17623d;
+}
+.stocktake-review-summary-item--loss {
+  background: #fff3f3;
+  color: #9f2840;
+}
+.stocktake-review-summary-item--pending-recount,
+.stocktake-review-summary-item--adopt {
+  background: #fff8e9;
+  color: #795316;
+}
+.stocktake-review-product {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 150px;
+}
+.stocktake-review-product small {
+  color: #53647d;
+}
+.stocktake-review-difference {
+  display: inline-block;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.stocktake-review-difference--gain {
+  color: #17623d;
+}
+.stocktake-review-difference--loss {
+  color: #9f2840;
+}
+.stocktake-review-difference--match {
+  color: #415276;
+}
+.stocktake-review-difference--pending {
+  color: #795316;
+}
+.stocktake-review-state {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #eaf3fb;
+  color: #173e73;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+}
+.stocktake-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 170px;
+}
+.stocktake-review-actions button {
+  white-space: nowrap;
+}
+.stocktake-review-table details {
+  min-width: 110px;
+}
+.stocktake-review-table details div {
+  width: 180px;
+  line-height: 1.6;
+  margin-top: 6px;
+}
+.stocktake-review-cards {
+  display: none;
+}
+.stocktake-review-history {
+  margin: 18px 0;
+}
+.stocktake-review-filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+  align-items: end;
+}
+.stocktake-round-comparison {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0;
+}
+.stocktake-round-comparison article {
+  padding: 12px;
+  border: 1px solid #dce6f0;
+  border-radius: 8px;
+}
+.stocktake-round-comparison article.is-selected {
+  border-color: #0758cf;
+  background: #f5f9fe;
+}
+.stocktake-round-comparison p {
+  margin: 6px 0;
+}
+.stocktake-round-comparison small {
+  color: #53647d;
+}
+.stocktake-completion-status {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: #f5f9fe;
+  border: 1px solid #dce6f0;
+  border-radius: 8px;
+  color: #415276;
+  line-height: 1.7;
+}
+.stocktake-completion-status ul {
+  margin: 6px 0 0;
+}
+.stocktake-completion-status p {
+  margin: 0;
+}
 @media (max-width: 640px) {
-  .stocktake-stats {
-    grid-template-columns: 1fr 1fr;
+  .stocktake-review-filters {
+    grid-template-columns: 1fr;
+  }
+  .stocktake-review-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .stocktake-review-table .table-wrap {
+    display: none;
+  }
+  .stocktake-review-table
+    .table-pagination
+    > :not([data-export-excel]):not(.export-status) {
+    display: none;
+  }
+  .stocktake-review-cards {
+    display: grid;
+    gap: 12px;
+    margin: 12px 0;
+  }
+  .stocktake-review-item {
+    border: 1px solid #dce6f0;
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .stocktake-review-item-heading {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .stocktake-review-item-heading > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .stocktake-review-item-heading small {
+    color: #53647d;
+  }
+  .stocktake-review-quantities {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 14px 0 8px;
+  }
+  .stocktake-review-quantities span {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .stocktake-review-quantities span[aria-hidden] {
+    display: block;
+  }
+  .stocktake-review-quantities strong {
+    font-size: 20px;
+  }
+  .stocktake-review-item > details {
+    margin: 12px 0;
+  }
+  .stocktake-review-item .stocktake-review-actions {
+    margin-top: 14px;
   }
   .stocktake-form-grid {
     grid-template-columns: 1fr;
@@ -116,4 +398,127 @@
     min-height: 44px;
     white-space: normal;
   }
+  .stocktake-scope-option {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0;
+  }
+  .stocktake-scope-option small {
+    margin-left: 28px;
+  }
+}
+
+.stocktake-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  list-style: none;
+  padding: 0 !important;
+  margin-bottom: 16px;
+}
+.stocktake-steps li {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid #dce6f0;
+  border-radius: 8px;
+  padding: 12px;
+}
+.stocktake-steps li[aria-current="step"] {
+  background: #f4f8ff;
+  border-color: #0758cf;
+  color: #0758cf;
+}
+@media (max-width: 640px) {
+  .stocktake-steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stocktake-preview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: -4px 0 16px;
+  color: #53647d;
+  font-size: 13px;
+}
+.stocktakes-page .stocktake-preview-toolbar > label {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 8px;
+  white-space: nowrap;
+}
+.stocktake-preview-toolbar select {
+  width: 160px;
+}
+.stocktake-list-card .table-wrap {
+  border: 0;
+  border-radius: 0;
+}
+.stocktake-list-card th {
+  background: #eaf3fb;
+  color: #111;
+  font-weight: 700;
+  padding: 13px 9px;
+}
+.stocktake-list-card td {
+  padding: 14px 9px;
+}
+.stocktake-list-card th:last-child,
+.stocktake-list-card td:last-child {
+  position: sticky;
+  right: 0;
+  background: white;
+  border-left: 1px solid #e1e9f4;
+  z-index: 1;
+}
+.stocktake-list-card th:last-child {
+  background: #eaf3fb;
+}
+@media (max-width: 640px) {
+  .stocktake-preview-toolbar {
+    justify-content: space-between;
+    margin-top: 0;
+  }
+  .stocktakes-page > .purchase-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+.stocktakes-page > .items-tabs {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.stocktake-list-caption {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+  color: #53647d;
+  font-size: 13px;
+}
+.stocktake-cell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.stocktake-cell-stack small {
+  font-size: 12px;
+  color: #53647d;
+}
+.stocktake-cell-stack strong {
+  font-weight: 600;
+}
+.stocktake-next-step {
+  display: block;
+  max-width: 180px;
+  white-space: normal;
+  min-width: 120px;
 }

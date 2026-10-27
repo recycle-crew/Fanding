@@ -8,13 +8,20 @@ import reducer, {
   closeCounting,
   confirmCountItem,
   createStocktake,
-  finishCounting,
   invalidateCount,
   requestRecount,
   setStocktakePersona,
   submitRecount,
 } from "@/store/stocktakes";
-import { canSeeOrder, countFor, supervisor } from "./model";
+import {
+  countFor,
+  supervisor,
+  seedStocktakes,
+  stocktakeListContent,
+  sortStocktakeOrders,
+  stocktakeReviewBlockers,
+  sortStocktakeReviewScope,
+} from "./model";
 function freshStore() {
   const initial: RootState = rootStore.getState();
   return configureStore({
@@ -28,7 +35,7 @@ function freshStore() {
   });
 }
 describe("盤點展示：盲盤、快照、關閉與複盤", () => {
-  it("主管才可建立，範圍與人員必填，同倉同商品有效單衝突被阻擋", () => {
+  it("主管才可建立，範圍必填，同倉同商品有效單衝突被阻擋", () => {
     const store = freshStore(),
       base = {
         name: "新盤點",
@@ -36,13 +43,15 @@ describe("盤點展示：盲盤、快照、關閉與複盤", () => {
         warehouse: "主倉庫",
         type: "部分盤點" as const,
         itemIds: ["item-1"],
-        people: ["王小明"],
         remark: "A 區",
       };
     expect(store.dispatch(createStocktake(base)).error).toContain("已有盤點");
     expect(
       store.dispatch(createStocktake({ ...base, itemIds: [] })).error,
     ).not.toBe("");
+    expect(
+      store.dispatch(createStocktake({ ...base, itemIds: ["item-5"] })).error,
+    ).toContain("沒有庫存紀錄");
     store.dispatch(setStocktakePersona("王小明"));
     expect(
       store.dispatch(createStocktake({ ...base, itemIds: ["item-8"] })).error,
@@ -54,7 +63,22 @@ describe("盤點展示：盲盤、快照、關閉與複盤", () => {
     expect(result.error).toBe("");
     const order = store.getState().stocktakes.orders[0];
     expect(order.scope[0].baseline).toBe(8);
-    expect(canSeeOrder(order, "李護理師")).toBe(false);
+    store.dispatch(setStocktakePersona("李護理師"));
+    expect(
+      store.dispatch(
+        addCount({
+          id: order.id,
+          recordId: "OTHER",
+          itemId: "item-8",
+          quantity: 1,
+          zero: false,
+          area: "",
+        }),
+      ).error,
+    ).toBe("");
+    expect(store.getState().stocktakes.orders[0].records[0].person).toBe(
+      "李護理師",
+    );
   });
   it("每筆輸入累加，無效紀錄保留；零值需明確且不覆蓋正數，範圍外不能輸入", () => {
     const store = freshStore();
@@ -98,21 +122,14 @@ describe("盤點展示：盲盤、快照、關閉與複盤", () => {
     );
     expect(countFor(order, "item-3").quantity).toBe(2);
   });
-  it("未盤點不能當零，所有指派人員與時間對齊確認後才關閉", () => {
+  it("未盤點不能當零，確認基準時間後才關閉", () => {
     const store = freshStore(),
       close = {
         id: "ST1",
-        people: true,
         partition: true,
         time: true,
         his: true,
       };
-    expect(store.dispatch(closeCounting(close)).error).toContain("未確認完成");
-    for (const person of ["王小明", "李護理師"]) {
-      store.dispatch(setStocktakePersona(person));
-      expect(store.dispatch(finishCounting("ST1")).error).toBe("");
-    }
-    store.dispatch(setStocktakePersona(supervisor));
     expect(store.dispatch(closeCounting(close)).error).toContain("未盤點");
     expect(
       store.dispatch(
@@ -151,7 +168,6 @@ describe("盤點展示：盲盤、快照、關閉與複盤", () => {
         requestRecount({
           id: "ST2",
           itemId: "item-1",
-          person: "王小明",
           reason: "差異複查",
         }),
       ).error,
@@ -170,6 +186,7 @@ describe("盤點展示：盲盤、快照、關閉與複盤", () => {
       ).error,
     ).toBe("");
     const recount = store.getState().stocktakes.orders[1].recounts[0];
+    expect(recount.person).toBe("王小明");
     expect(
       store.dispatch(submitRecount({ id: "ST2", recountId: recount.id })).error,
     ).toBe("");
@@ -229,6 +246,69 @@ describe("盤點展示：盲盤、快照、關閉與複盤", () => {
     ).toContain("唯讀");
     expect(store.getState().items.batches).toEqual(
       rootStore.getState().items.batches,
+    );
+  });
+});
+
+describe("盤點主列表待辦內容", () => {
+  it("核對優先處理未盤與差異，確認完成前列出缺漏且不改動原範圍", () => {
+    const order = seedStocktakes().orders[0];
+    const original = order.scope.map((scope) => scope.itemId);
+    order.confirmedItems = ["item-1"];
+    expect(
+      sortStocktakeReviewScope(order).map((scope) => scope.itemId),
+    ).toEqual(["item-3", "item-2", "item-1"]);
+    expect(order.scope.map((scope) => scope.itemId)).toEqual(original);
+    expect(stocktakeReviewBlockers(order)).toContain("1 項尚未完成盤點");
+    const ready = seedStocktakes().orders[2];
+    expect(stocktakeReviewBlockers(ready)).toEqual([]);
+  });
+  it("主管按階段看到初盤與核對進度，完成與作廢單僅提供查閱", () => {
+    const { orders } = seedStocktakes();
+    expect(stocktakeListContent(orders[0], supervisor).progress).toBe(
+      "已登錄 2／3 項",
+    );
+    expect(stocktakeListContent(orders[0], supervisor).next).toBe(
+      "尚有 1 項未登錄",
+    );
+    expect(stocktakeListContent(orders[1], supervisor).progress).toBe(
+      "已核對 0／1 項",
+    );
+    expect(stocktakeListContent(orders[2], supervisor).action).toBe("查看結果");
+    expect(stocktakeListContent(orders[3], supervisor).action).toBe(
+      "查看作廢紀錄",
+    );
+    expect(sortStocktakeOrders(orders).map((order) => order.id)).toEqual([
+      "ST5",
+      "ST2",
+      "ST1",
+      "ST3",
+      "ST4",
+    ]);
+    expect(orders[0].id).toBe("ST1");
+  });
+  it("員工僅看本人待辦，複盤提交後改為等待主管", () => {
+    const order = seedStocktakes().orders[1];
+    order.recounts.push({
+      id: "RE1",
+      itemId: "item-1",
+      round: 2,
+      person: "",
+      reason: "確認數量",
+      status: "待複盤",
+    });
+    expect(stocktakeListContent(order, "王小明").action).toBe("進入複盤");
+    expect(stocktakeListContent(order, "李護理師").next).toBe("完成並提交複盤");
+    order.recounts[0].person = "王小明";
+    order.recounts[0].status = "已提交";
+    expect(stocktakeListContent(order, "王小明").detail).toBe(
+      "本人已提交複盤 1 項",
+    );
+    expect(stocktakeListContent(order, supervisor).next).toBe("選擇採用輪次");
+    order.recounts[0].status = "已採用";
+    order.confirmedItems = ["item-1"];
+    expect(stocktakeListContent(order, supervisor).next).toBe(
+      "主管確認盤點結果",
     );
   });
 });

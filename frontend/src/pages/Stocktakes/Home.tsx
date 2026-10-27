@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
-import { ClipboardCheck, Plus } from "lucide-react";
+import { ClipboardCheck, Plus, Search, Clock3, X } from "lucide-react";
+import { BaseTabs } from "@/components/ui/BaseTabs";
+import { BaseBadge } from "@/components/ui/BaseBadge";
 import { BaseButton } from "@/components/ui/BaseButton";
 import { BaseField as Field } from "@/components/ui/BaseForm";
 import { BaseInput } from "@/components/ui/BaseInput";
@@ -16,10 +18,12 @@ import { setModuleDirty } from "@/store/moduleUi";
 import { useWorkspaceDirty } from "@/features/workspace/useWorkspaceDirty";
 import { relativeDate, taipeiToday } from "@/features/items/model";
 import {
-  canSeeOrder,
   countFor,
   stocktakePeople,
+  stocktakeListContent,
+  sortStocktakeOrders,
   stocktakeStatuses,
+  stocktakeReviewBlockers,
   supervisor,
 } from "@/features/stocktakes/model";
 import { NewStocktakeForm } from "@/features/stocktakes/NewStocktakeForm";
@@ -40,13 +44,13 @@ type Dialog = {
 const labels: Record<Dialog["kind"], string> = {
   new: "新增盤點單",
   records: "品項輸入歷史",
-  close: "關閉盤點前檢查",
+  close: "結束初盤前檢查",
   cancel: "作廢盤點單",
   invalidate: "標記輸入無效",
-  recount: "指派盲盤複盤",
-  round: "選擇最終盤點輪次",
+  recount: "發起盲盤複盤",
+  round: "比較並選擇盤點結果",
   "confirm-item": "確認品項與批次差異",
-  approve: "確認盤點展示調整",
+  approve: "確認盤點結果",
 };
 const emptyFilters = () => ({
   search: "",
@@ -65,7 +69,7 @@ export function StocktakesPage() {
     params = useParams();
   const manager = state.persona === supervisor,
     order = state.orders.find((row) => row.id === params.id),
-    accessible = order && canSeeOrder(order, state.persona);
+    accessible = Boolean(order);
   const [filters, setFilters] = useState(emptyFilters),
     [view, setView] = useState<Dialog | null>(null),
     [modalDirty, setModalDirty] = useState(false),
@@ -85,20 +89,22 @@ export function StocktakesPage() {
   }
   const invalidDates =
     !filters.from || !filters.to || filters.from > filters.to;
-  const visible = state.orders.filter((row) => canSeeOrder(row, state.persona));
-  const list = visible.filter(
+  const visible = state.orders;
+  const filtered = visible.filter(
     (row) =>
       !invalidDates &&
       row.date >= filters.from &&
       row.date <= filters.to &&
       (!filters.warehouse || row.warehouse === filters.warehouse) &&
-      (!filters.status || row.status === filters.status) &&
       (!filters.type || row.type === filters.type) &&
       (!filters.creator || row.createdBy === filters.creator) &&
       [row.number, row.name, row.remark]
         .join(" ")
         .toLowerCase()
         .includes(filters.search.trim().toLowerCase()),
+  );
+  const list = sortStocktakeOrders(
+    filtered.filter((row) => !filters.status || row.status === filters.status),
   );
   const reviewed = Boolean(
     order &&
@@ -107,6 +113,7 @@ export function StocktakesPage() {
     order.closedAt &&
     location.pathname.endsWith("/review"),
   );
+  const reviewBlockers = order ? stocktakeReviewBlockers(order) : [];
   return (
     <div className="items-page stocktakes-page">
       <header className="items-heading">
@@ -123,26 +130,41 @@ export function StocktakesPage() {
             <p>
               {params.id && accessible
                 ? `${order.number} ／ ${order.warehouse} ／ ${order.status}`
-                : "建立盤點、分區登錄與主管核對的展示流程"}
+                : "管理盤點單據、分區清點與盤點差異核對"}
             </p>
           </div>
         </div>
-        <div className="stocktake-actions">
-          <Field name="stocktake-persona" label="展示身分">
-            <Select
-              value={state.persona}
-              disabled={modalDirty || countDirty}
-              onChange={(event) => {
-                dispatch(setStocktakePersona(event.target.value));
-                setView(null);
-                setNotice("");
-              }}
-            >
-              {[supervisor, ...stocktakePeople].map((person) => (
-                <Option key={person}>{person}</Option>
-              ))}
-            </Select>
-          </Field>
+        <div className="items-heading-tools">
+          {!params.id && (
+            <div className="items-search">
+              <Search size={17} aria-hidden="true" />
+              <BaseInput
+                aria-label="搜尋盤點單"
+                value={filters.search}
+                placeholder="搜尋單號、名稱、備註…"
+                onChange={(event) =>
+                  setFilters({ ...filters, search: event.target.value })
+                }
+              />
+            </div>
+          )}
+          {params.id && (
+            <Field name="stocktake-persona" label="預覽角色">
+              <Select
+                value={state.persona}
+                disabled={modalDirty || countDirty}
+                onChange={(event) => {
+                  dispatch(setStocktakePersona(event.target.value));
+                  setView(null);
+                  setNotice("");
+                }}
+              >
+                {[supervisor, ...stocktakePeople].map((person) => (
+                  <Option key={person}>{person}</Option>
+                ))}
+              </Select>
+            </Field>
+          )}
           {params.id ? (
             <BaseButton
               variant="outline"
@@ -153,166 +175,212 @@ export function StocktakesPage() {
           ) : (
             manager && (
               <BaseButton onClick={() => setView({ kind: "new" })}>
-                <Plus aria-hidden="true" />
+                <Plus size={17} aria-hidden="true" />
                 新增盤點單
               </BaseButton>
             )
           )}
         </div>
       </header>
-      <p role="status" aria-live="polite">
-        {notice}
-      </p>
+      {notice && (
+        <p role="status" aria-live="polite">
+          {notice}
+        </p>
+      )}
       {!params.id ? (
         <>
-          <div className="stocktake-stats" aria-label="盤點狀態摘要">
-            {stocktakeStatuses.map((status) => (
-              <div className="stocktake-card" key={status}>
-                <span>{status}</span>
-                <strong>
-                  {list.filter((row) => row.status === status).length}
-                </strong>
-                <small>
-                  共{" "}
-                  {list
-                    .filter((row) => row.status === status)
-                    .reduce((sum, row) => sum + row.scope.length, 0)}{" "}
-                  項
-                </small>
-              </div>
-            ))}
+          <div className="stocktake-preview-toolbar">
+            <span>介面預覽</span>
+            <Field name="stocktake-persona" label="預覽角色">
+              <Select
+                value={state.persona}
+                onChange={(event) => {
+                  dispatch(setStocktakePersona(event.target.value));
+                  setView(null);
+                  setNotice("");
+                }}
+              >
+                {[supervisor, ...stocktakePeople].map((person) => (
+                  <Option key={person}>{person}</Option>
+                ))}
+              </Select>
+            </Field>
           </div>
-          <div className="stocktake-card stocktake-filters">
-            <Field name="stocktakes-search" label="搜尋盤點單">
-              <BaseInput
-                value={filters.search}
-                placeholder="單號、名稱或備註"
-                onChange={(event) =>
-                  setFilters({ ...filters, search: event.target.value })
-                }
-              />
-            </Field>
-            <Field name="stocktakes-from" label="開始日期">
-              <BaseInput
-                type="date"
-                value={filters.from}
-                onChange={(event) =>
-                  setFilters({ ...filters, from: event.target.value })
-                }
-              />
-            </Field>
-            <Field name="stocktakes-to" label="結束日期">
-              <BaseInput
-                type="date"
-                value={filters.to}
-                onChange={(event) =>
-                  setFilters({ ...filters, to: event.target.value })
-                }
-              />
-            </Field>
-            {(
-              [
-                [
-                  "warehouse",
-                  "倉別",
-                  [...new Set(visible.map((row) => row.warehouse))],
-                ],
-                ["type", "盤點類型", ["全盤", "部分盤點"]],
-                ["status", "盤點狀態", stocktakeStatuses],
-                [
-                  "creator",
-                  "建立人員",
-                  [...new Set(visible.map((row) => row.createdBy))],
-                ],
-              ] as const
-            ).map(([key, label, values]) => (
-              <Field key={key} name={`stocktakes-${key}`} label={label}>
-                <Select
-                  value={filters[key]}
-                  onChange={(event) =>
-                    setFilters({ ...filters, [key]: event.target.value })
-                  }
-                >
-                  <Option value="">全部</Option>
-                  {values.map((value) => (
-                    <Option key={value}>{value}</Option>
-                  ))}
-                </Select>
-              </Field>
-            ))}
-            <BaseButton
-              variant="outline"
-              onClick={() => setFilters(emptyFilters())}
-            >
-              清除
-            </BaseButton>
+          <div className="purchase-summary" aria-label="盤點狀態摘要">
+            <span>
+              盤點單 <strong>{filtered.length}</strong> 筆
+            </span>
+            <span className="purchase-summary-pending">
+              <Clock3 size={15} aria-hidden="true" />
+              盤點中 {
+                filtered.filter((row) => row.status === "盤點中").length
+              }{" "}
+              筆 ／ 待核對{" "}
+              {filtered.filter((row) => row.status === "待核對").length} 筆
+            </span>
           </div>
-          {invalidDates && (
-            <p role="alert" className="items-error">
-              請填寫有效日期區間；開始日期不可晚於結束日期。
-            </p>
-          )}
-          <BaseDataTable
-            tableKey={`stocktakes-list-${state.persona}`}
-            exportable={manager}
-            headers={[
-              "盤點單號",
-              "盤點名稱",
-              "盤點日期",
-              "倉別",
-              "類型",
-              "品項數",
-              manager ? "已盤品項" : "我已盤品項",
-              "盤點人員",
-              "狀態",
-              "建立人員",
-              "建立時間",
-              "完成時間",
-              "操作",
+          <BaseTabs
+            id="stocktakes-status"
+            label="盤點狀態"
+            value={filters.status}
+            onChange={(status) => setFilters({ ...filters, status })}
+            options={[
+              { value: "", label: `全部（${filtered.length}）` },
+              ...stocktakeStatuses.map((status) => ({
+                value: status,
+                label: `${status}（${filtered.filter((row) => row.status === status).length}）`,
+              })),
             ]}
-            rows={list.map((row) => [
-              row.number,
-              row.name,
-              row.date,
-              row.warehouse,
-              row.type,
-              row.scope.length,
-              row.scope.filter(
-                (scope) =>
-                  countFor(
-                    row,
-                    scope.itemId,
-                    1,
-                    manager ? undefined : state.persona,
-                  ).counted,
-              ).length,
-              row.people.join("、"),
-              row.status,
-              row.createdBy,
-              row.createdAt,
-              row.completedAt || "—",
+          />
+          <div
+            id="stocktakes-status-panel"
+            role="tabpanel"
+            aria-labelledby={`stocktakes-status-${filters.status}`}
+            tabIndex={0}
+          >
+            <div className="items-filter-bar purchase-filters stocktake-list-filters">
+              <Field name="stocktakes-from" label="盤點日期起">
+                <BaseInput
+                  type="date"
+                  value={filters.from}
+                  onChange={(event) =>
+                    setFilters({ ...filters, from: event.target.value })
+                  }
+                />
+              </Field>
+              <Field name="stocktakes-to" label="盤點日期迄">
+                <BaseInput
+                  type="date"
+                  value={filters.to}
+                  onChange={(event) =>
+                    setFilters({ ...filters, to: event.target.value })
+                  }
+                />
+              </Field>
+              {(
+                [
+                  [
+                    "warehouse",
+                    "倉別",
+                    [...new Set(visible.map((row) => row.warehouse))],
+                  ],
+                  ["type", "盤點類型", ["全盤", "部分盤點"]],
+                  [
+                    "creator",
+                    "建立人員",
+                    [...new Set(visible.map((row) => row.createdBy))],
+                  ],
+                ] as const
+              ).map(([key, label, values]) => (
+                <Field key={key} name={`stocktakes-${key}`} label={label}>
+                  <Select
+                    value={filters[key]}
+                    onChange={(event) =>
+                      setFilters({ ...filters, [key]: event.target.value })
+                    }
+                  >
+                    <Option value="">全部</Option>
+                    {values.map((value) => (
+                      <Option key={value}>{value}</Option>
+                    ))}
+                  </Select>
+                </Field>
+              ))}
               <BaseButton
                 variant="outline"
-                aria-label={`開啟盤點 ${row.number}`}
-                onClick={() =>
-                  navigate(
-                    `/stocktakes/${row.id}/${manager && row.status !== "盤點中" && row.closedAt ? "review" : "count"}`,
-                  )
-                }
+                onClick={() => setFilters(emptyFilters())}
               >
-                {row.status === "盤點中"
-                  ? "進入盤點"
-                  : manager && row.closedAt
-                    ? "查看／核對"
-                    : "我的紀錄"}
-              </BaseButton>,
-            ])}
-          />
+                <X size={15} aria-hidden="true" />
+                清除
+              </BaseButton>
+            </div>
+            {invalidDates && (
+              <p role="alert" className="items-error">
+                請填寫有效日期區間；開始日期不可晚於結束日期。
+              </p>
+            )}
+            <div className="stocktake-list-caption">
+              <span>
+                目前顯示 {list.length} 筆
+                {filters.status ? `・${filters.status}` : "・全部狀態"}
+              </span>
+              <span>待核對、盤點中優先，同狀態依盤點日期由新到舊</span>
+            </div>
+            <div className="purchase-list-card stocktake-list-card">
+              <BaseDataTable
+                tableKey={`stocktakes-list-${state.persona}-${JSON.stringify(filters)}`}
+                exportable={manager}
+                headers={[
+                  "盤點單",
+                  "盤點日期",
+                  "倉別／類型",
+                  manager ? "處理進度" : "我的進度",
+                  "狀態",
+                  "下一步",
+                  "建立資訊",
+                  "操作",
+                ]}
+                rows={list.map((row) => {
+                  const content = stocktakeListContent(row, state.persona);
+                  return [
+                    <div className="stocktake-cell-stack">
+                      <strong>{row.number}</strong>
+                      {"\n"}
+                      <span>{row.name}</span>
+                    </div>,
+                    row.date,
+                    <div className="stocktake-cell-stack">
+                      <span>{row.warehouse}</span>
+                      {"\n"}
+                      <small>
+                        {row.type}・{row.scope.length} 項
+                      </small>
+                    </div>,
+                    <div className="stocktake-cell-stack">
+                      <span>{content.progress}</span>
+                      {"\n"}
+                      <small>{content.detail}</small>
+                    </div>,
+                    <BaseBadge
+                      variant={
+                        row.status === "待核對"
+                          ? "warning"
+                          : row.status === "已作廢"
+                            ? "muted"
+                            : row.status === "已完成"
+                              ? "secondary"
+                              : "outline"
+                      }
+                    >
+                      {row.status}
+                    </BaseBadge>,
+                    <span className="stocktake-next-step">{content.next}</span>,
+                    <div className="stocktake-cell-stack">
+                      <span>{row.createdBy}</span>
+                      {"\n"}
+                      <small>{row.createdAt}</small>
+                    </div>,
+                    <BaseButton
+                      variant="outline"
+                      aria-label={`開啟盤點 ${row.number}`}
+                      onClick={() =>
+                        navigate(
+                          `/stocktakes/${row.id}/${manager && row.status !== "盤點中" && row.closedAt ? "review" : "count"}`,
+                        )
+                      }
+                    >
+                      {content.action}
+                    </BaseButton>,
+                  ];
+                })}
+              />
+            </div>
+          </div>
         </>
       ) : !accessible ? (
         <section className="stocktake-card">
           <h3>無法查看此盤點單</h3>
-          <p>員工僅可查看被指派的盤點或複盤；可切換展示身分或返回列表。</p>
+          <p>找不到此盤點單，請返回列表。</p>
         </section>
       ) : (
         <>
@@ -320,9 +388,9 @@ export function StocktakesPage() {
             <h3>{order.name}</h3>
             <p>
               盤點日 {order.date} ／ {order.type} ／ 範圍 {order.scope.length}{" "}
-              項，建立後鎖定。
+              項。
             </p>
-            <p>分工備註：{order.remark || "—"}</p>
+            {order.remark && <p>盤點備註：{order.remark}</p>}
             {order.status === "已作廢" && <p>作廢原因：{order.cancelReason}</p>}
             {manager && (
               <div className="stocktake-actions">
@@ -331,22 +399,31 @@ export function StocktakesPage() {
                     disabled={countDirty}
                     onClick={() => setView({ kind: "close" })}
                   >
-                    關閉盤點
+                    結束初盤，送交核對
                   </BaseButton>
                 )}
                 {order.status === "待核對" && (
                   <>
+                    {!reviewed && (
+                      <BaseButton
+                        variant="outline"
+                        onClick={() =>
+                          navigate(`/stocktakes/${order.id}/review`)
+                        }
+                      >
+                        主管差異核對
+                      </BaseButton>
+                    )}
                     <BaseButton
-                      variant="outline"
-                      onClick={() => navigate(`/stocktakes/${order.id}/review`)}
-                    >
-                      主管差異核對
-                    </BaseButton>
-                    <BaseButton
-                      disabled={countDirty}
+                      disabled={countDirty || reviewBlockers.length > 0}
+                      aria-describedby={
+                        reviewBlockers.length
+                          ? "stocktake-review-blockers"
+                          : undefined
+                      }
                       onClick={() => setView({ kind: "approve" })}
                     >
-                      確認展示調整
+                      確認盤點結果
                     </BaseButton>
                   </>
                 )}
@@ -361,9 +438,101 @@ export function StocktakesPage() {
                 )}
               </div>
             )}
+            {manager && order.status === "待核對" && (
+              <div
+                id="stocktake-review-blockers"
+                className="stocktake-completion-status"
+                role="status"
+              >
+                {reviewBlockers.length ? (
+                  <>
+                    <strong>完成盤點前，請先處理：</strong>
+                    <ul>
+                      {reviewBlockers.map((message) => (
+                        <li key={message}>{message}</li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <p>所有品項已核對完成，可以確認盤點結果。</p>
+                )}
+              </div>
+            )}
           </section>
+          {!reviewed && (
+            <section className="stocktake-card" aria-label="盤點流程與進度">
+              {order.status !== "已作廢" && (
+                <ol className="stocktake-steps">
+                  {["盤點中", "待核對", "已完成"].map((step, index) => (
+                    <li
+                      key={step}
+                      aria-current={order.status === step ? "step" : undefined}
+                    >
+                      <strong>
+                        {index + 1}. {step}
+                      </strong>
+                      <small>
+                        {
+                          [
+                            "盤點人員清點品項",
+                            "主管核對與安排複盤",
+                            "主管確認，結果唯讀",
+                          ][index]
+                        }
+                      </small>
+                    </li>
+                  ))}
+                </ol>
+              )}
+              <p>
+                {order.status === "盤點中"
+                  ? "下一步：全部品項登錄後，由主管結束初盤。"
+                  : order.status === "待核對"
+                    ? "下一步：主管核對所有品項；有疑慮時發起複盤，再確認結果。"
+                    : order.status === "已完成"
+                      ? "盤點已完成，可查閱明細及匯出結果。"
+                      : "此單已作廢，保留紀錄供查閱。"}
+              </p>
+              <p>
+                {manager ? "已盤" : "本人已盤"}{" "}
+                {
+                  order.scope.filter(
+                    (scope) =>
+                      countFor(
+                        order,
+                        scope.itemId,
+                        1,
+                        manager ? undefined : state.persona,
+                      ).counted,
+                  ).length
+                }
+                ／{order.scope.length} 項；{manager ? "未盤" : "本人未盤"}{" "}
+                {
+                  order.scope.filter(
+                    (scope) =>
+                      !countFor(
+                        order,
+                        scope.itemId,
+                        1,
+                        manager ? undefined : state.persona,
+                      ).counted,
+                  ).length
+                }{" "}
+                項；待提交複盤{" "}
+                {
+                  order.recounts.filter(
+                    (row) =>
+                      row.status === "待複盤" &&
+                      (manager || !row.person || row.person === state.persona),
+                  ).length
+                }{" "}
+                項
+              </p>
+            </section>
+          )}
           {reviewed ? (
             <StocktakeReviewPanel
+              key={`${order.id}-${order.status}`}
               order={order}
               onAction={(kind, itemId) => setView({ kind, itemId })}
             />
@@ -380,13 +549,24 @@ export function StocktakesPage() {
           )}
         </>
       )}
-      <p className="stocktake-note">
-        展示模式：身分切換僅模擬角色，未串接正式權限或多使用者服務。盤點輸入不改庫存；確認後僅建立本模組展示調整紀錄，不更新模組一。原始紀錄保留，重新整理即重置。
-      </p>
+      <p className="stocktake-note">介面展示，資料重新整理後重置。</p>
+      <details className="stocktake-note">
+        <summary>展示說明與待確認規則</summary>
+        <p>
+          切換預覽角色可查看主管與員工畫面。盤點結果僅供展示，不修改正式庫存。
+        </p>
+        <p>
+          待確認：盤點期間是否允許入出庫、如何核對期間異動，以及盤點差異是否產生庫存調整單。
+        </p>
+      </details>
       <BaseWorkspaceModal
         open={Boolean(view)}
         title={view ? labels[view.kind] : "盤點作業"}
-        description="依盤點狀態與展示角色處理，原始輸入與快照保留。"
+        description={
+          view?.kind === "new"
+            ? "設定盤點資料與品項範圍，建立後即可開始輸入。"
+            : "依盤點狀態與展示角色處理，原始輸入與快照保留。"
+        }
         onClose={() => close()}
       >
         {discard && (
@@ -433,7 +613,7 @@ export function StocktakesPage() {
                 onDone={() => {
                   const kind = view.kind;
                   close(true);
-                  setNotice("盤點展示操作已完成，原始紀錄與稽核保留。");
+                  setNotice("操作已完成，原始紀錄與操作歷程已保留。");
                   if (kind === "close")
                     navigate(`/stocktakes/${order.id}/review`);
                   else if (kind === "cancel") navigate("/stocktakes");

@@ -5,8 +5,13 @@ import { BaseField as Field } from "@/components/ui/BaseForm";
 import { BaseCheckField } from "@/components/ui/BaseCheckField";
 import { BaseDataTable } from "@/components/ui/BaseDataTable";
 import { useAppDispatch } from "@/store/hooks";
-import { addCount, finishCounting, submitRecount } from "@/store/stocktakes";
-import { countFor, countableRound, supervisor } from "./model";
+import { addCount, submitRecount } from "@/store/stocktakes";
+import {
+  countFor,
+  countableRound,
+  supervisor,
+  stocktakeRoundLabel,
+} from "./model";
 import type { Stocktake } from "@/types/stocktakes";
 export function StocktakeCountPanel({
   order,
@@ -45,7 +50,7 @@ export function StocktakeCountPanel({
     (record) => person === supervisor || record.person === person,
   );
   const pendingRecounts = order.recounts.filter(
-    (row) => row.person === person && row.status === "待複盤",
+    (row) => (!row.person || row.person === person) && row.status === "待複盤",
   );
   function fail(message: string) {
     setError(message);
@@ -82,9 +87,7 @@ export function StocktakeCountPanel({
           輸入本次實際清點數量，多次登錄會累加。員工只看本人紀錄，無批號選擇或帳面數量。
         </p>
         {!canInput && (
-          <p>
-            本人已完成、盤點已關閉或目前沒有被指派的待複盤任務；可在下方查看本人紀錄。
-          </p>
+          <p>初盤已結束，目前沒有可輸入的複盤；可在下方查看本人紀錄。</p>
         )}
         <form
           onSubmit={(event) => {
@@ -97,7 +100,7 @@ export function StocktakeCountPanel({
               fail(
                 choices.length
                   ? "符合多筆商品，請選擇後輸入。"
-                  : "查無可盤點商品，或不在本人可輸入範圍。",
+                  : "查無可盤點商品，或目前沒有可輸入的品項。",
               );
           }}
         >
@@ -158,7 +161,7 @@ export function StocktakeCountPanel({
                     }}
                   />
                 </Field>
-                <Field name="stocktake-area" label="存放位置／分工備註">
+                <Field name="stocktake-area" label="存放位置／備註">
                   <BaseInput
                     value={area}
                     maxLength={200}
@@ -194,22 +197,6 @@ export function StocktakeCountPanel({
             {notice}
           </p>
         </form>
-        {order.status === "盤點中" && order.people.includes(person) && (
-          <BaseButton
-            variant="outline"
-            disabled={order.finished.includes(person)}
-            onClick={() => {
-              if (selected || search) return fail("請先完成或清除目前輸入。");
-              const result = dispatch(finishCounting(order.id));
-              if (result.error) fail(result.error);
-              else setNotice("已確認本人分區盤點完成；如需更正請由主管核對。");
-            }}
-          >
-            {order.finished.includes(person)
-              ? "本人已完成"
-              : "本人分區盤點完成"}
-          </BaseButton>
-        )}
         {pendingRecounts.map((recount) => (
           <div className="stocktake-recount-task" key={recount.id}>
             <p>
@@ -220,15 +207,42 @@ export function StocktakeCountPanel({
               }{" "}
               ／ 第 {recount.round} 輪 ／ {recount.reason}
             </p>
+            <p>
+              本次已登錄{" "}
+              {countFor(order, recount.itemId, recount.round).quantity}{" "}
+              {
+                order.scope.find((scope) => scope.itemId === recount.itemId)
+                  ?.unit
+              }
+              ，提交後不能繼續輸入本次複盤。
+            </p>
             <BaseButton
               variant="outline"
+              disabled={Boolean(selected || search)}
+              onClick={() => {
+                setSelected(recount.itemId);
+                setQuantity("1");
+                setZero(false);
+                setArea("");
+                setError("");
+                onDirty(true);
+              }}
+            >
+              開始{stocktakeRoundLabel(recount.round)}
+            </BaseButton>
+            <BaseButton
+              variant="outline"
+              disabled={
+                Boolean(selected || search) ||
+                !countFor(order, recount.itemId, recount.round).counted
+              }
               onClick={() => {
                 if (selected || search) return fail("請先完成或清除目前輸入。");
                 const result = dispatch(
                   submitRecount({ id: order.id, recountId: recount.id }),
                 );
                 if (result.error) fail(result.error);
-                else setNotice("複盤已提交，等待主管選擇有效輪次。");
+                else setNotice("複盤已提交，等待主管比較並採用結果。");
               }}
             >
               提交第 {recount.round} 輪複盤
@@ -252,7 +266,7 @@ export function StocktakeCountPanel({
             "單位",
             "輪次",
             "位置／備註",
-            ...(person === supervisor ? ["盤點人員"] : []),
+            "輸入人員",
             "狀態",
             ...(person === supervisor ? ["操作"] : []),
           ]}
@@ -268,7 +282,7 @@ export function StocktakeCountPanel({
               scope.unit,
               record.round,
               record.area || "—",
-              ...(person === supervisor ? [record.person] : []),
+              record.person,
               record.valid
                 ? "有效"
                 : `無效：${record.invalidReason}（${record.invalidatedBy} ${record.invalidatedAt}）`,

@@ -7,7 +7,6 @@ import {
 } from "@reduxjs/toolkit";
 import type { RootState } from "./index";
 import {
-  canSeeOrder,
   countFor,
   countableRound,
   expectedFor,
@@ -40,6 +39,14 @@ const slice = createSlice({
       const order = state.orders.find((row) => row.id === payload.id)!;
       if (order.records.some((row) => row.id === payload.record.id)) return;
       order.records.push(payload.record);
+      if (payload.record.round > 1) {
+        const recount = order.recounts.find(
+          (row) =>
+            row.itemId === payload.record.itemId &&
+            row.round === payload.record.round,
+        );
+        if (recount && !recount.person) recount.person = payload.record.person;
+      }
       order.audit.push(
         `${payload.record.time} ${payload.record.person}：登錄 ${payload.record.id}（輪次 ${payload.record.round}）。`,
       );
@@ -47,16 +54,6 @@ const slice = createSlice({
         (id) => id !== payload.record.itemId,
       );
       delete order.batchPlans[payload.record.itemId];
-    },
-    finishStocktakePerson(state, { payload }: PayloadAction<string>) {
-      const order = state.orders.find((row) => row.id === payload)!;
-      if (order.status !== "盤點中" || !order.people.includes(state.persona))
-        return;
-      if (!order.finished.includes(state.persona))
-        order.finished.push(state.persona);
-      order.audit.push(
-        `${stocktakeNow()} ${state.persona}：已完成本人的分區盤點。`,
-      );
     },
     invalidateStocktakeCount(
       state,
@@ -84,7 +81,7 @@ const slice = createSlice({
       order.closedAt = stocktakeNow();
       order.alignmentConfirmed = true;
       order.audit.push(
-        `${order.closedAt} ${supervisor}：關閉盤點，已確認分工、基準時間與 HIS 同步情境。`,
+        `${order.closedAt} ${supervisor}：結束初盤，已確認全品項登錄、基準時間與帳面資料。`,
       );
     },
     cancelStocktake(
@@ -105,7 +102,6 @@ const slice = createSlice({
       }: PayloadAction<{
         id: string;
         itemId: string;
-        person: string;
         reason: string;
         round: number;
       }>,
@@ -115,7 +111,7 @@ const slice = createSlice({
         id: crypto.randomUUID(),
         itemId: payload.itemId,
         round: payload.round,
-        person: payload.person,
+        person: "",
         reason: payload.reason,
         status: "待複盤",
       });
@@ -124,7 +120,7 @@ const slice = createSlice({
       );
       delete order.batchPlans[payload.itemId];
       order.audit.push(
-        `${stocktakeNow()} ${supervisor}：指派 ${payload.person} 複盤 ${payload.itemId} 第 ${payload.round} 輪，原因 ${payload.reason}。`,
+        `${stocktakeNow()} ${supervisor}：發起 ${payload.itemId} 第 ${payload.round} 輪複盤，原因 ${payload.reason}。`,
       );
     },
     submitStocktakeRecount(
@@ -223,8 +219,7 @@ export const { setStocktakePersona } = slice.actions;
 export default slice.reducer;
 function editable(state: RootState, id: string, manager = true) {
   const order = state.stocktakes.orders.find((row) => row.id === id);
-  if (!order || !canSeeOrder(order, state.stocktakes.persona))
-    return { error: "無法查看此盤點單。" };
+  if (!order) return { error: "無法查看此盤點單。" };
   if (manager && state.stocktakes.persona !== supervisor)
     return { error: "此操作需主管展示身分。" };
   if (order.status === "已完成" || order.status === "已作廢")
@@ -238,13 +233,8 @@ export const createStocktake =
     const state = getState();
     if (state.stocktakes.persona !== supervisor)
       return { error: "只有主管可建立盤點單。" };
-    if (
-      !input.name.trim() ||
-      !input.date ||
-      !input.warehouse ||
-      !input.people.length
-    )
-      return { error: "請填寫名稱、盤點日期、倉別並指派至少一位盤點人員。" };
+    if (!input.name.trim() || !input.date || !input.warehouse)
+      return { error: "請填寫名稱、盤點日期與倉別。" };
     const ids =
       input.type === "全盤"
         ? [
@@ -255,6 +245,19 @@ export const createStocktake =
             ),
           ]
         : [...new Set(input.itemIds)];
+    if (
+      input.type === "部分盤點" &&
+      ids.some(
+        (id) =>
+          !state.items.batches.some(
+            (batch) =>
+              batch.warehouse === input.warehouse && batch.itemId === id,
+          ),
+      )
+    )
+      return {
+        error: "所選品項在此倉別沒有庫存紀錄，請選擇此倉有紀錄的商品。",
+      };
     const scope = state.items.items
       .filter((item) => ids.includes(item.id))
       .map((item) => scopeFromItem(item, input.warehouse, state.items.batches));
@@ -282,8 +285,6 @@ export const createStocktake =
         warehouse: input.warehouse,
         type: input.type,
         status: "盤點中",
-        people: input.people,
-        finished: [],
         createdBy: supervisor,
         createdAt: now,
         snapshotAt: now,
@@ -322,7 +323,7 @@ export const addCount =
       person = state.stocktakes.persona,
       round = countableRound(order, input.itemId, person);
     if (!order.scope.some((scope) => scope.itemId === input.itemId) || !round)
-      return { error: "此商品不在可輸入範圍、本人已完成或盤點已關閉。" };
+      return { error: "此商品不在可輸入範圍，或盤點輸入已結束。" };
     if (
       !Number.isFinite(input.quantity) ||
       roundQty(input.quantity) !== input.quantity ||
@@ -356,16 +357,6 @@ export const addCount =
     );
     return { error: "", id: order.id };
   };
-export const finishCounting =
-  (id: string): StocktakeThunk =>
-  (dispatch, getState) => {
-    const check = editable(getState(), id, false);
-    if (check.error) return check;
-    if (check.order!.status !== "盤點中")
-      return { error: "此單已關閉，請提交被指派的複盤。" };
-    dispatch(slice.actions.finishStocktakePerson(id));
-    return { error: "", id };
-  };
 export const invalidateCount =
   (input: { id: string; recordId: string; reason: string }): StocktakeThunk =>
   (dispatch, getState) => {
@@ -389,7 +380,6 @@ export const invalidateCount =
 export const closeCounting =
   (input: {
     id: string;
-    people: boolean;
     partition: boolean;
     time: boolean;
     his: boolean;
@@ -399,16 +389,14 @@ export const closeCounting =
     if (check.error) return check;
     const order = check.order!;
     if (order.status !== "盤點中") return { error: "只有盤點中單據可以關閉。" };
-    if (order.people.some((person) => !order.finished.includes(person)))
-      return { error: "仍有指派人員未確認完成盤點。" };
     if (order.scope.some((scope) => !countFor(order, scope.itemId, 1).counted))
       return {
         error: "仍有未盤點品項，不能視為零；請補登或明確確認實盤為零。",
       };
-    if (!input.people || !input.partition || !input.time || !input.his)
+    if (!input.partition || !input.time || !input.his)
       return {
         error:
-          "需確認人員完成、分工無重複、基準時間與異動對齊及 HIS 無延遲；不符合時請暫停或重新盤點。",
+          "需確認沒有重複計算、基準時間與異動對齊及帳面資料；不符合時請暫停或重新盤點。",
       };
     dispatch(slice.actions.closeStocktake(order.id));
     return { error: "", id: order.id };
@@ -423,12 +411,7 @@ export const cancelCounting =
     return { error: "", id: input.id };
   };
 export const requestRecount =
-  (input: {
-    id: string;
-    itemId: string;
-    person: string;
-    reason: string;
-  }): StocktakeThunk =>
+  (input: { id: string; itemId: string; reason: string }): StocktakeThunk =>
   (dispatch, getState) => {
     const check = editable(getState(), input.id);
     if (check.error) return check;
@@ -436,10 +419,9 @@ export const requestRecount =
     if (
       order.status !== "待核對" ||
       !order.scope.some((scope) => scope.itemId === input.itemId) ||
-      !input.person ||
       !input.reason.trim()
     )
-      return { error: "請在待核對單據指定商品、複盤人員與原因。" };
+      return { error: "請在待核對單據選擇商品並填寫複盤原因。" };
     if (
       order.recounts.some(
         (row) =>
@@ -473,7 +455,7 @@ export const submitRecount =
       recount.status !== "待複盤" ||
       !countFor(check.order!, recount.itemId, recount.round).counted
     )
-      return { error: "請先完成本人被指派的複盤輸入，未盤點不代表零。" };
+      return { error: "請由複盤輸入者提交紀錄；未盤點不代表零。" };
     dispatch(slice.actions.submitStocktakeRecount(input));
     return { error: "", id: input.id };
   };
