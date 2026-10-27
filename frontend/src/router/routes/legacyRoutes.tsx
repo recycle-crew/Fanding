@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Navigate, useLocation } from "react-router";
 import type { RouteObject } from "react-router";
+import { staticAssetHref } from "@/helpers/deployment";
 const documentPaths: Record<string, string> = {
   "/planning": "/docs/planning.html",
   "/planning.html": "/docs/planning.html",
@@ -23,7 +24,9 @@ function LegacyRedirect() {
   const documentPath = documentPaths[location.pathname.replace(/\/+$/, "")];
   useEffect(() => {
     if (documentPath)
-      window.location.replace(documentPath + location.search + location.hash);
+      window.location.replace(
+        staticAssetHref(documentPath) + location.search + location.hash,
+      );
   }, [documentPath, location.search, location.hash]);
   if (documentPath) return <p role="status">正在開啟規劃文件…</p>;
   let path =

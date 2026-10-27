@@ -38,7 +38,13 @@ function staticDocuments(): Plugin {
         this.emitFile({
           type: "asset",
           fileName: `docs/${file}`,
-          source: readFileSync(new URL(`../docs/${file}`, import.meta.url)),
+          source:
+            process.env.VITE_GITHUB_PAGES === "true" && file.endsWith(".html")
+              ? readFileSync(
+                  new URL(`../docs/${file}`, import.meta.url),
+                  "utf8",
+                ).replaceAll('href="../board"', 'href="../#/board"')
+              : readFileSync(new URL(`../docs/${file}`, import.meta.url)),
         });
       }
     },
@@ -47,7 +53,7 @@ function staticDocuments(): Plugin {
 export default defineConfig({
   root: import.meta.dirname,
   cacheDir: process.env.VITE_CACHE_DIR || "node_modules/.vite",
-  base: "/",
+  base: process.env.VITE_BASE_PATH || "/",
   plugins: [react(), tailwindcss(), staticDocuments()],
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   build: {

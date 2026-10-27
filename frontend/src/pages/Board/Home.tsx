@@ -2,6 +2,7 @@ import { BaseButton } from "@/components/ui/BaseButton";
 import { useEffect, useRef, useState } from "react";
 import { planningPages } from "@/features/planning/scenes";
 import { scenePath } from "@/features/planning/presentation";
+import { workspaceHref } from "@/helpers/deployment";
 import type { SceneRequest, SceneResponse } from "@/features/planning/scenes";
 import { BaseModal } from "@/components/ui/BaseModal";
 export function BoardPage() {
@@ -252,7 +253,9 @@ export function BoardPage() {
                     </div>
                     <div className="frame-preview" inert>
                       <iframe
-                        src={`${scenePath(f.scene)}?embed=1&preview=1&scene=${f.scene}`}
+                        src={workspaceHref(
+                          `${scenePath(f.scene)}?embed=1&preview=1&scene=${f.scene}`,
+                        )}
                         title={`${f.title}初始畫面`}
                         tabIndex={-1}
                         loading="lazy"
@@ -311,7 +314,7 @@ export function BoardPage() {
                 <iframe
                   ref={frame}
                   id="interactive-workspace"
-                  src="/items?embed=1"
+                  src={workspaceHref("/items?embed=1")}
                   title="可操作的庫存管理系統"
                 />
               </section>
