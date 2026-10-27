@@ -284,7 +284,7 @@ export function PurchasesPage() {
   return (
     <section
       className="items-page purchases-page"
-      aria-label="新版進貨管理"
+      aria-label="進貨管理"
       onClick={(e) => e.stopPropagation()}
       onSubmit={(e) => e.stopPropagation()}
     >

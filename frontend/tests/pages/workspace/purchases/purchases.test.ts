@@ -410,7 +410,7 @@ test(
     const mobile = await page.locator("#menu-toggle").isVisible();
     if (mobile) await page.locator("#menu-toggle").click();
     await page
-      .getByRole("button", { name: "品項與庫存管理（新版）", exact: true })
+      .getByRole("button", { name: "品項與庫存管理", exact: true })
       .click();
     await expect(
       page

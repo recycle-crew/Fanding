@@ -294,7 +294,7 @@ export function ItemsPage() {
   return (
     <section
       className="items-page"
-      aria-label="新版品項與庫存管理"
+      aria-label="品項與庫存管理"
       onSubmit={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >

@@ -4,9 +4,7 @@ import { describe, expect, it } from "vitest";
 import { workspaceModulePaths, itemGroupPaths } from "./workspaceRoutes";
 
 const consumptionSource = readFileSync(
-  fileURLToPath(
-    new URL("../pages/Consumptions/Home.tsx", import.meta.url),
-  ),
+  fileURLToPath(new URL("../pages/Consumptions/Home.tsx", import.meta.url)),
   "utf8",
 );
 const consumptionRoutes = [
@@ -16,8 +14,18 @@ const routes = [
   ...new Set([
     "/",
     "/board",
-    "/overview",
-    ...Object.values(workspaceModulePaths),
+    ...[
+      "items",
+      "purchases",
+      "base-data",
+      "consumptions",
+      "pos",
+      "sales",
+      "stocktakes",
+    ].map(
+      (module) =>
+        workspaceModulePaths[module as keyof typeof workspaceModulePaths],
+    ),
     ...Object.values(itemGroupPaths),
     ...consumptionRoutes,
   ]),
@@ -25,7 +33,11 @@ const routes = [
 describe("route 與頁面測試對應", () => {
   it.each(routes)("%s 有所屬的 Playwright 頁面測試", (route) => {
     const folder =
-      route === "/" ? "index" : route === "/board" ? "board" : `workspace${route}`;
+      route === "/"
+        ? "index"
+        : route === "/board"
+          ? "board"
+          : `workspace${route}`;
     const directory = new URL(`../../tests/pages/${folder}/`, import.meta.url);
     expect(
       existsSync(directory),

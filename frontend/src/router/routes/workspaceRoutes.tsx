@@ -1,10 +1,8 @@
 import { lazy } from "react";
+import { redirect } from "react-router";
 import type { RouteObject } from "react-router";
 import { WorkspaceLayout } from "@/pages/Workspace/Layout";
 import { Workspace } from "@/features/workspace/Workspace";
-const OverviewPage = lazy(() =>
-  import("@/pages/Overview/Home").then((m) => ({ default: m.OverviewPage })),
-);
 const BaseDataPage = lazy(() =>
   import("@/pages/BaseData/Home").then((m) => ({ default: m.BaseDataPage })),
 );
@@ -27,21 +25,6 @@ const PurchasesPage = lazy(() =>
 const ItemsPage = lazy(() =>
   import("@/pages/Items/Home").then((m) => ({ default: m.ItemsPage })),
 );
-const HistoricalCostPage = lazy(() =>
-  import("@/pages/HistoricalCost/Home").then((m) => ({
-    default: m.HistoricalCostPage,
-  })),
-);
-const InventoryRecordsPage = lazy(() =>
-  import("@/pages/InventoryRecords/Home").then((m) => ({
-    default: m.InventoryRecordsPage,
-  })),
-);
-const InventoryOperationsPage = lazy(() =>
-  import("@/pages/InventoryOperations/Home").then((m) => ({
-    default: m.InventoryOperationsPage,
-  })),
-);
 export const workspaceRoutes: RouteObject[] = [
   {
     path: "/",
@@ -52,8 +35,10 @@ export const workspaceRoutes: RouteObject[] = [
         children: [
           {
             index: true,
-            Component: OverviewPage,
-            handle: { module: "overview" },
+            loader: ({ request }) => {
+              const url = new URL(request.url);
+              return redirect(`/items${url.search}${url.hash}`);
+            },
           },
           {
             path: "base-data",
@@ -83,51 +68,6 @@ export const workspaceRoutes: RouteObject[] = [
             handle: { module: "purchases" },
           },
           { path: "items", Component: ItemsPage, handle: { module: "items" } },
-          {
-            path: "vendors",
-            Component: InventoryRecordsPage,
-            handle: { module: "vendors" },
-          },
-          {
-            path: "his",
-            Component: InventoryRecordsPage,
-            handle: { module: "his" },
-          },
-          {
-            path: "products",
-            Component: InventoryRecordsPage,
-            handle: { module: "products" },
-          },
-          {
-            path: "historical-cost",
-            Component: HistoricalCostPage,
-            handle: { module: "historical-cost" },
-          },
-          {
-            path: "receipt",
-            Component: InventoryOperationsPage,
-            handle: { module: "receipt" },
-          },
-          {
-            path: "issue",
-            Component: InventoryOperationsPage,
-            handle: { module: "issue" },
-          },
-          {
-            path: "requisitions",
-            Component: InventoryRecordsPage,
-            handle: { module: "requisitions" },
-          },
-          {
-            path: "stocktake/current",
-            Component: InventoryOperationsPage,
-            handle: { module: "stocktake" },
-          },
-          {
-            path: "stocktake/history",
-            Component: InventoryOperationsPage,
-            handle: { module: "stocktake-history" },
-          },
           {
             path: "consumptions/:view",
             Component: ConsumptionsPage,

@@ -16,7 +16,7 @@ test(
     const stock = page.getByRole("combobox", { name: "庫存狀態", exact: true });
     const item = results.getByRole("row").filter({ hasText: "MED0001" });
     const count = page
-      .getByRole("region", { name: "新版品項與庫存管理", exact: true })
+      .getByRole("region", { name: "品項與庫存管理", exact: true })
       .getByRole("status");
 
     await test.step("進入 HIS 品項頁，確認初始資料", async () => {

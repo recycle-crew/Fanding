@@ -1,6 +1,6 @@
 # 測試：依頁面與程式歸屬
 
-目前系統網址已移到根路徑（例如 `/items/his`、`/stocktake/history`），`pages/workspace/` 測試目錄暫保留名稱及截圖位置。首頁測試位於 `pages/index/`，靜態 HTML 文件測試位於 `pages/architecture/`；文件位於 repo 的 `docs/`，無需 React。
+工作區僅保留品項、進貨、基礎資料、耗用、銷售與盤點模組；首頁導向 `/items/his`。舊工作區網址改轉址至對應模組，轉址案例集中在 `pages/workspace/routes.test.ts`；已移除舊畫面的專用測試。首頁測試位於 `pages/index/`，靜態 HTML 文件測試位於 `pages/architecture/`；文件位於 repo 的 `docs/`，無需 React。
 
 UI 行為用 Playwright，非 UI 邏輯用 Vitest。頁面的定義沿用現有 route，檔名統一使用 `.test`，由搜尋目錄區分執行工具。
 

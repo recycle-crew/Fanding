@@ -4,32 +4,10 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { workspaceModulePaths } from "@/constants/workspaceRoutes";
 import { WORKSPACE_LOGIN_ENABLED } from "@/constants/workspaceAccess";
 import { executeWorkspaceCommand } from "@/store/workspace";
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { useWindowScroll, useWindowSize } from "react-use";
 
-// 導覽圖示使用本機 SVG 線條，沿用按鈕文字及作用中顏色。
-const icons: Record<string, React.ReactNode> = {
-  overview: (
-    <>
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="7" height="7" rx="1" />
-    </>
-  ),
-  his: <path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" />,
-  products: (
-    <path d="m3 7 9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10M7.5 5l9 4" />
-  ),
-  stocktake: (
-    <>
-      <rect x="5" y="5" width="14" height="16" rx="2" />
-      <rect x="9" y="3" width="6" height="4" rx="1" />
-      <path d="m8 14 3 3 5-6" />
-    </>
-  ),
-};
 // 導覽區塊的寬度只影響目前頁面，不改動模組資料或登入權限。
 export type BaseSidebarProps = {
   open: boolean;
@@ -51,7 +29,6 @@ export function BaseSidebar(props: BaseSidebarProps) {
   const [availableHeight, setAvailableHeight] = useState(viewport.height);
   const [adjusting, setAdjusting] = useState(false);
   const [status, setStatus] = useState("");
-  const [legacyPagesExpanded, setLegacyPagesExpanded] = useState(true);
   const root = useRef<HTMLElement>(null);
   const gesture = useRef<{
     pointerId: number;
@@ -133,151 +110,30 @@ export function BaseSidebar(props: BaseSidebarProps) {
         >
           庫存管理工作區
         </p>
-        <BaseButton
-          variant={s.activeModule === "items" ? "module-active" : "module"}
-          className="mb-4 h-auto w-full whitespace-normal py-3 text-left"
-          aria-current={s.activeModule === "items" ? "page" : undefined}
-          onClick={() => navigate(`/items${location.search}`)}
-        >
-          品項與庫存管理（新版）
-        </BaseButton>
-        <BaseButton
-          variant={s.activeModule === "purchases" ? "module-active" : "module"}
-          className="mb-4 h-auto w-full whitespace-normal py-3 text-left"
-          aria-current={s.activeModule === "purchases" ? "page" : undefined}
-          onClick={() => navigate(`/purchases${location.search}`)}
-        >
-          進貨管理（新版）
-        </BaseButton>
-        <BaseButton
-          variant={s.activeModule === "base-data" ? "module-active" : "module"}
-          className="mb-4 h-auto w-full whitespace-normal py-3 text-left"
-          aria-current={s.activeModule === "base-data" ? "page" : undefined}
-          onClick={() => navigate(`/base-data${location.search}`)}
-        >
-          基礎資料管理（新版）
-        </BaseButton>
-        <BaseButton
-          variant={
-            s.activeModule === "consumptions" ? "module-active" : "module"
-          }
-          className="mb-4 h-auto w-full whitespace-normal py-3 text-left"
-          aria-current={s.activeModule === "consumptions" ? "page" : undefined}
-          onClick={() => navigate(`/consumptions${location.search}`)}
-        >
-          耗用查詢（新版）
-        </BaseButton>
-        {(["pos", "stocktakes"] as const).map((key) => (
-          <BaseButton
-            key={key}
-            variant={
-              s.activeModule === key ||
-              (key === "pos" && s.activeModule === "sales")
-                ? "module-active"
-                : "module"
-            }
-            className="mb-4 h-auto w-full whitespace-normal py-3 text-left"
-            aria-current={
-              s.activeModule === key ||
-              (key === "pos" && s.activeModule === "sales")
-                ? "page"
-                : undefined
-            }
-            onClick={() =>
-              navigate(`${workspaceModulePaths[key]}${location.search}`)
-            }
-          >
-            {key === "pos" ? "銷售管理（新版）" : "盤點管理（新版）"}
-          </BaseButton>
-        ))}
-        <BaseButton
-          variant="disclosure"
-          id="legacy-pages-toggle"
-          className="h-auto min-h-11 w-full justify-between gap-2 whitespace-normal px-3 py-2 text-left"
-          aria-expanded={legacyPagesExpanded}
-          aria-controls="module-nav"
-          aria-describedby="legacy-pages-description"
-          onClick={() => setLegacyPagesExpanded(!legacyPagesExpanded)}
-        >
-          <span>舊頁面區</span>
-          <svg
-            className={`size-4 shrink-0 transition-transform motion-reduce:transition-none${legacyPagesExpanded ? " rotate-180" : ""}`}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            aria-hidden="true"
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
-        </BaseButton>
-        <p
-          id="legacy-pages-description"
-          className="mx-3 mb-2 mt-1 text-[12px] leading-5 text-[var(--muted)]"
-        >
-          舊版頁面，保留供參考；後續依新規格開發。
-        </p>
-        <nav
-          id="module-nav"
-          hidden={!legacyPagesExpanded}
-          className={legacyPagesExpanded ? "grid gap-[5px]" : "hidden"}
-          aria-label="舊頁面功能選單"
-        >
+        <nav id="module-nav" aria-label="功能選單">
           {s.modules
-            .filter(
-              (module) =>
-                ![
-                  "items",
-                  "purchases",
-                  "base-data",
-                  "consumptions",
-                  "pos",
-                  "sales",
-                  "stocktakes",
-                ].includes(module.key),
-            )
-            .map((module) => (
-              <Fragment key={module.key}>
-                {module.group && (
-                  <div className="nav-group m-[20px_12px_5px] flex items-center gap-2 text-[11px] tracking-[1px] text-[var(--muted)]">
-                    <svg
-                      className="navigation-icon block flex-[0_0_18px]"
-                      viewBox="0 0 24 24"
-                      width="18"
-                      height="18"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.7"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                      focusable="false"
-                    >
-                      {icons[module.key]}
-                    </svg>
-                    <span>{module.group}</span>
-                  </div>
-                )}
+            .filter((module) => module.key !== "sales")
+            .map((module) => {
+              const active =
+                s.activeModule === module.key ||
+                (module.key === "pos" && s.activeModule === "sales");
+              return (
                 <BaseButton
-                  variant={
-                    s.activeModule === module.key
-                      ? "navigation-active"
-                      : "navigation"
-                  }
+                  key={module.key}
+                  variant={active ? "module-active" : "module"}
+                  className="mb-4 h-auto w-full whitespace-normal py-3 text-left"
                   data-module={module.key}
-                  aria-current={
-                    s.activeModule === module.key ? "page" : undefined
-                  }
+                  aria-current={active ? "page" : undefined}
                   onClick={() =>
                     navigate(
                       `${workspaceModulePaths[module.key]}${location.search}`,
                     )
                   }
                 >
-                  <span>{module.label}</span>
+                  {module.label}
                 </BaseButton>
-              </Fragment>
-            ))}
+              );
+            })}
         </nav>
         <p className="small muted mx-3 mb-[14px]">所有操作僅影響當次假資料</p>
       </div>

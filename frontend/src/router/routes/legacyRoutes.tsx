@@ -7,6 +7,17 @@ const documentPaths: Record<string, string> = {
   "/architecture": "/docs/architecture.html",
   "/architecture.html": "/docs/architecture.html",
 };
+const retiredWorkspacePaths: Record<string, string> = {
+  "/vendors": "/base-data",
+  "/his": "/items/his",
+  "/products": "/items/general",
+  "/historical-cost": "/items",
+  "/receipt": "/purchases",
+  "/issue": "/consumptions",
+  "/requisitions": "/consumptions",
+  "/stocktake/current": "/stocktakes",
+  "/stocktake/history": "/stocktakes",
+};
 function LegacyRedirect() {
   const location = useLocation();
   const documentPath = documentPaths[location.pathname.replace(/\/+$/, "")];
@@ -31,10 +42,12 @@ function LegacyRedirect() {
     path = hash.slice(1);
     hash = "";
   }
+  path = retiredWorkspacePaths[path.replace(/\/+$/, "")] || path;
   return <Navigate replace to={path + location.search + hash} />;
 }
 export const legacyRoutes: RouteObject[] = [
   ...Object.keys(documentPaths),
+  ...Object.keys(retiredWorkspacePaths),
   "/index.html",
   "/overview",
   "/board.html",

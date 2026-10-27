@@ -1,10 +1,11 @@
 import { BaseButton } from "@/components/ui/BaseButton";
 import { useEffect, useRef, useState } from "react";
 import { planningPages } from "@/features/planning/scenes";
+import { scenePath } from "@/features/planning/presentation";
 import type { SceneRequest, SceneResponse } from "@/features/planning/scenes";
 import { BaseModal } from "@/components/ui/BaseModal";
 export function BoardPage() {
-  const [pageId, setPageId] = useState("login");
+  const [pageId, setPageId] = useState(planningPages[0].id);
   const page = planningPages.find((page) => page.id === pageId);
   const [zoom, setZoom] = useState(0.7);
   const [open, setOpen] = useState(false);
@@ -251,7 +252,7 @@ export function BoardPage() {
                     </div>
                     <div className="frame-preview" inert>
                       <iframe
-                        src={`/?embed=1&preview=1&scene=${f.scene}`}
+                        src={`${scenePath(f.scene)}?embed=1&preview=1&scene=${f.scene}`}
                         title={`${f.title}初始畫面`}
                         tabIndex={-1}
                         loading="lazy"
@@ -310,7 +311,7 @@ export function BoardPage() {
                 <iframe
                   ref={frame}
                   id="interactive-workspace"
-                  src="/?embed=1"
+                  src="/items?embed=1"
                   title="可操作的庫存管理系統"
                 />
               </section>

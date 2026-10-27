@@ -9,8 +9,6 @@ import { useEffect, useMemo, useRef } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { executeWorkspaceCommand } from "@/store/workspace";
 
-import { EditorPage } from "@/features/inventory/EditorPage";
-
 import type { ModuleKey } from "@/types/workspace";
 import { Outlet, useMatches } from "react-router";
 import { useLayoutEffect } from "react";
@@ -85,14 +83,15 @@ export function Workspace() {
           tabIndex={-1}
           hidden={Boolean(s.editor)}
         >
-          {module === s.activeModule && <Outlet key={module} />}
+          {(!module || module === s.activeModule) && (
+            <Outlet key={module || "home"} />
+          )}
           {s.errors.page && (
             <p className="error" role="alert">
               {s.errors.page}
             </p>
           )}
         </main>
-        <EditorPage />
       </div>
       <WorkspaceNotice />
       <WorkspaceConfirmation />

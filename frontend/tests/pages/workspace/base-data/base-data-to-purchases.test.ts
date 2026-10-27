@@ -18,7 +18,7 @@ test("新增主檔提供進貨選項，既有單據仍維持快照", async ({ pa
   const menu = page.getByRole("button", { name: "☰ 功能選單", exact: true });
   if (await menu.isVisible()) await menu.click();
   await page
-    .getByRole("button", { name: "進貨管理（新版）", exact: true })
+    .getByRole("button", { name: "進貨管理", exact: true })
     .click();
   await page.getByRole("button", { name: "新增進貨單", exact: true }).click();
   await expect(

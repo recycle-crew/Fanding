@@ -6,16 +6,13 @@ import { planningPages } from "./scenes";
 
 describe("規劃板場景路由", () => {
   it.each([
-    ["login", "overview"],
-    ["forgot-password", "overview"],
-    ["overview", "overview"],
-    ["vendor-list", "vendors"],
-    ["his-result", "his"],
-    ["receipt-result", "receipt"],
-    ["issue-result", "issue"],
-    ["requisition-new", "requisitions"],
-    ["stocktake-edit", "stocktake"],
-    ["stocktake-result", "stocktake-history"],
+    ["items-list", "items"],
+    ["base-data-list", "base-data"],
+    ["purchases-list", "purchases"],
+    ["consumptions-list", "consumptions"],
+    ["pos-list", "pos"],
+    ["sales-list", "sales"],
+    ["stocktakes-review", "stocktakes"],
   ])("%s 使用 %s 的實際路由", (scene, module) => {
     expect(sceneModule(scene)).toBe(module);
   });

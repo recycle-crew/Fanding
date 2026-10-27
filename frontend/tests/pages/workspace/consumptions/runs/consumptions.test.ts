@@ -39,14 +39,14 @@ test("@critical 重複同步略過、部分成功與失敗留存、待人工核�
   // Module-owned data survives unmounting the consumption page.
   if (
     !(await page
-      .getByRole("button", { name: "品項與庫存管理（新版）", exact: true })
+      .getByRole("button", { name: "品項與庫存管理", exact: true })
       .isVisible())
   )
     await page
       .getByRole("button", { name: "☰ 功能選單", exact: true })
       .click();
   await page
-    .getByRole("button", { name: "品項與庫存管理（新版）", exact: true })
+    .getByRole("button", { name: "品項與庫存管理", exact: true })
     .click();
   await expect(page).toHaveURL(/\/items\/his$/);
   const menu = page.getByRole("button", { name: "☰ 功能選單", exact: true });
@@ -56,7 +56,7 @@ test("@critical 重複同步略過、部分成功與失敗留存、待人工核�
     await expect(menu).toHaveAttribute("aria-expanded", "true");
   }
   await page
-    .getByRole("button", { name: "耗用查詢（新版）", exact: true })
+    .getByRole("button", { name: "耗用查詢", exact: true })
     .click();
   await page.getByRole("tab", { name: "同步紀錄", exact: true }).click();
   await expect(page.locator("tbody tr:visible").first()).toContainText(

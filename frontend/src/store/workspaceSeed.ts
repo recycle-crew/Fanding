@@ -207,14 +207,16 @@ export function createWorkspaceState(): WorkspaceState {
     });
   }
   stocktakes[0].confirmed = true;
-  const selectedStocktakeBatchIds: WorkspaceState["selectedStocktakeBatchIds"] = {
-    OTC: null,
-    HIS: null,
-  };
-  const selectedHistoricalBatchIds: WorkspaceState["selectedHistoricalBatchIds"] = {
-    OTC: "ST0001",
-    HIS: "ST0005",
-  };
+  const selectedStocktakeBatchIds: WorkspaceState["selectedStocktakeBatchIds"] =
+    {
+      OTC: null,
+      HIS: null,
+    };
+  const selectedHistoricalBatchIds: WorkspaceState["selectedHistoricalBatchIds"] =
+    {
+      OTC: "ST0001",
+      HIS: "ST0005",
+    };
   const stocktakeRoutes: WorkspaceState["stocktakeRoutes"] = {
     [workspaceModulePaths.stocktake]: "stocktake",
     [workspaceModulePaths["stocktake-history"]]: "stocktake-history",
@@ -223,60 +225,16 @@ export function createWorkspaceState(): WorkspaceState {
   let nextStocktakeOperationId: WorkspaceState["nextStocktakeOperationId"] =
     stocktakeOperations.length + 1;
   const modules: WorkspaceState["modules"] = [
-    { key: "items", label: "品項與庫存管理（新版）" },
-    { key: "purchases", label: "進貨管理（新版）" },
-    { key: "base-data", label: "基礎資料管理（新版）" },
-    { key: "consumptions", label: "耗用查詢（新版）" },
-    { key: "pos", label: "POS 銷售（新版）" },
-    { key: "sales", label: "銷售紀錄（新版）" },
-    { key: "stocktakes", label: "盤點管理（新版）" },
-    {
-      key: "overview",
-      label: "工作區總覽",
-      group: "共同管理",
-    },
-    {
-      key: "vendors",
-      label: "廠商資料維護",
-    },
-    {
-      key: "his",
-      label: "藥品查詢與修改",
-      group: "HIS 工作區",
-    },
-    {
-      key: "products",
-      label: "品項資料維護",
-      group: "OTC 工作區",
-    },
-    {
-      key: "historical-cost",
-      label: "歷史平均成本價",
-    },
-    {
-      key: "receipt",
-      label: "掃碼入庫",
-    },
-    {
-      key: "issue",
-      label: "出庫／耗用",
-    },
-    {
-      key: "requisitions",
-      label: "領用資料",
-    },
-    {
-      key: "stocktake",
-      label: "現有盤點週期",
-      group: "HIS ／ OTC 庫存總覽",
-    },
-    {
-      key: "stocktake-history",
-      label: "歷史盤點紀錄",
-    },
+    { key: "items", label: "品項與庫存管理" },
+    { key: "purchases", label: "進貨管理" },
+    { key: "base-data", label: "基礎資料管理" },
+    { key: "consumptions", label: "耗用查詢" },
+    { key: "pos", label: "銷售管理" },
+    { key: "sales", label: "銷售紀錄" },
+    { key: "stocktakes", label: "盤點管理" },
   ];
 
-  let activeModule: WorkspaceState["activeModule"] = "overview";
+  let activeModule: WorkspaceState["activeModule"] = "items";
   let currentAccount: WorkspaceState["currentAccount"] = WORKSPACE_LOGIN_ENABLED
     ? ""
     : "demo.pharmacy";
@@ -327,12 +285,14 @@ export function createWorkspaceState(): WorkspaceState {
   let stocktakeWorkspace: WorkspaceState["stocktakeWorkspace"] = "OTC";
   let nextMovementId: WorkspaceState["nextMovementId"] = 3;
   const movementVouchers: WorkspaceState["movementVouchers"] = [];
-  const selectedMovementVoucherIds: WorkspaceState["selectedMovementVoucherIds"] = {
-    receipt: null,
-    issue: null,
-  };
+  const selectedMovementVoucherIds: WorkspaceState["selectedMovementVoucherIds"] =
+    {
+      receipt: null,
+      issue: null,
+    };
   let nextRequisitionId: WorkspaceState["nextRequisitionId"] = 2;
-  let nextStocktakeId: WorkspaceState["nextStocktakeId"] = stocktakes.length + 1;
+  let nextStocktakeId: WorkspaceState["nextStocktakeId"] =
+    stocktakes.length + 1;
   return {
     vendors,
     nextVendorId,
