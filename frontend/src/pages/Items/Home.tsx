@@ -77,7 +77,9 @@ export function ItemsPage() {
   const navigate = useNavigate();
   const pathname = location.pathname.replace(/\/+$/, "");
   const group: ItemGroup =
-    pathname === itemGroupPaths.GENERAL ? "GENERAL" : "HIS_MEDICINE";
+    (Object.entries(itemGroupPaths).find(
+      ([, path]) => path === pathname,
+    )?.[0] as ItemGroup) || "HIS_MEDICINE";
   function setGroup(nextGroup: ItemGroup) {
     if (nextGroup !== group) {
       navigate(
@@ -172,9 +174,15 @@ export function ItemsPage() {
   const rows = summaryRows.filter(
     ({ item, batches, stock }) =>
       (!filter.stock ||
-        (filter.stock === "安全庫存不足"
-          ? stock === "低庫存" || (stock === "無庫存" && item.safetyStock > 0)
-          : stock === filter.stock)) &&
+        (filter.stock === "六個月最低庫存不足"
+          ? item.safetyStockSixMonths > 0 &&
+            state.batches
+              .filter((b) => b.itemId === item.id)
+              .reduce((sum, b) => sum + available(b, today), 0) <=
+              item.safetyStockSixMonths
+          : filter.stock === "安全庫存不足"
+            ? stock === "低庫存" || (stock === "無庫存" && item.safetyStock > 0)
+            : stock === filter.stock)) &&
       (!filter.expiry ||
         (filter.expiry === "不適用"
           ? !item.trackExpiry
@@ -258,7 +266,7 @@ export function ItemsPage() {
       color: "blue",
     },
     {
-      title: "安全庫存不足",
+      title: "三個月最低庫存不足",
       stock: "安全庫存不足",
       expiry: "",
       value: number(low),
@@ -267,11 +275,29 @@ export function ItemsPage() {
       color: "red",
     },
     {
+      title: "六個月最低庫存不足",
+      stock: "六個月最低庫存不足",
+      expiry: "",
+      value: number(
+        summaryRows.filter(
+          ({ item }) =>
+            item.safetyStockSixMonths > 0 &&
+            state.batches
+              .filter((b) => b.itemId === item.id)
+              .reduce((sum, b) => sum + available(b, today), 0) <=
+              item.safetyStockSixMonths,
+        ).length,
+      ),
+      note: "依全部倉庫可用庫存與六個月最低庫存判斷",
+      icon: TriangleAlert,
+      color: "orange",
+    },
+    {
       title: "即將到期品項",
       stock: "",
       expiry: "即將到期",
       value: number(expiring),
-      note: "90 天內有到期庫存批次",
+      note: "一年內有到期庫存批次",
       icon: Clock3,
       color: "orange",
     },
@@ -337,8 +363,10 @@ export function ItemsPage() {
       >
         {(
           [
-            ["HIS_MEDICINE", "HIS 藥品", Pill],
-            ["GENERAL", "自費／OTC／其他商品", ShoppingCart],
+            ["NURSING", "護理", Box],
+            ["GLASSES", "眼鏡", Eye],
+            ["HIS_MEDICINE", "藥品", Pill],
+            ["GENERAL", "自費其他商品", ShoppingCart],
           ] as const
         ).map(([key, text, Icon]) => (
           <BaseButton
@@ -391,7 +419,7 @@ export function ItemsPage() {
           <summary>統計說明</summary>
           <p>
             摘要依目前群組、搜尋、分類與啟用條件統計；效期依所選倉別（即將到期為
-            90 天內），安全庫存不足依全倉判斷。點選摘要可篩選列表。
+            一年內），安全庫存不足依全倉判斷。點選摘要可篩選列表。
           </p>
         </details>
         <div className="items-filter-bar">
@@ -402,7 +430,14 @@ export function ItemsPage() {
               [
                 "stock",
                 "全倉庫存狀態",
-                ["全部", "正常", "低庫存", "無庫存", "安全庫存不足"],
+                [
+                  "全部",
+                  "正常",
+                  "低庫存",
+                  "無庫存",
+                  "安全庫存不足",
+                  "六個月最低庫存不足",
+                ],
               ],
               [
                 "expiry",
@@ -562,7 +597,12 @@ export function ItemsPage() {
                         {r.stock}
                       </span>
                       <small className="items-secondary">
-                        安全庫存 {number(r.item.safetyStock)} {r.item.unit}
+                        三個月最低庫存 {number(r.item.safetyStock)}{" "}
+                        {r.item.unit}
+                      </small>
+                      <small className="items-secondary">
+                        六個月最低庫存 {number(r.item.safetyStockSixMonths)}{" "}
+                        {r.item.unit}
                       </small>
                     </BaseTableCell>
                     <BaseTableCell>
@@ -683,7 +723,8 @@ export function ItemsPage() {
                 "基本單位",
                 "倉別",
                 "庫存數量",
-                "安全庫存",
+                "三個月最低庫存",
+                "六個月最低庫存",
                 "最近效期",
                 "建議售價",
                 "啟用狀態",
@@ -707,6 +748,7 @@ export function ItemsPage() {
                   filter.warehouse || "全部倉別",
                   String(r.quantity),
                   String(r.item.safetyStock),
+                  String(r.item.safetyStockSixMonths),
                   r.expiry,
                   r.item.suggestedPrice,
                   r.usage,

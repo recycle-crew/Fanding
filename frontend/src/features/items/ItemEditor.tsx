@@ -9,7 +9,7 @@ import {
   BaseNativeSelectOption,
 } from "@/components/ui/BaseNativeSelect";
 import { useAppSelector } from "@/store/hooks";
-import { categories, units, validateItem } from "./model";
+import { categories, units, validateItem, itemGroupLabels } from "./model";
 import type { Item } from "@/types/items";
 import { useBaseDataOptions } from "@/features/base-data/useBaseDataOptions";
 
@@ -96,7 +96,8 @@ export function ItemEditor({
           }
           type={options.type || "text"}
           value={
-            key === "safetyStock" && Number.isNaN(draft[key])
+            (key === "safetyStock" || key === "safetyStockSixMonths") &&
+            Number.isNaN(draft[key])
               ? ""
               : String(draft[key])
           }
@@ -108,7 +109,7 @@ export function ItemEditor({
           onChange={(e) =>
             change(
               key,
-              key === "safetyStock"
+              key === "safetyStock" || key === "safetyStockSixMonths"
                 ? e.target.value === ""
                   ? NaN
                   : Number(e.target.value)
@@ -176,23 +177,28 @@ export function ItemEditor({
       code: draft.code.trim(),
       name: draft.name.trim(),
       barcode: draft.barcode.trim(),
+      specification: draft.specification.trim(),
     };
     const message = validateItem(normalized, state);
     if (message) {
       setErrorField(
-        message.includes("料號")
-          ? "code"
-          : message.includes("條碼")
-            ? "barcode"
-            : message.includes("日期")
-              ? "effectiveUntil"
-              : message.includes("安全庫存")
-                ? "safetyStock"
-                : message.includes("價格")
-                  ? Number(draft.referenceCost) < 0
-                    ? "referenceCost"
-                    : "suggestedPrice"
-                  : "name",
+        !normalized.specification
+          ? "specification"
+          : message.includes("料號")
+            ? "code"
+            : message.includes("條碼")
+              ? "barcode"
+              : message.includes("日期")
+                ? "effectiveUntil"
+                : message.includes("最低庫存")
+                  ? !Number.isFinite(draft.safetyStock) || draft.safetyStock < 0
+                    ? "safetyStock"
+                    : "safetyStockSixMonths"
+                  : message.includes("價格")
+                    ? Number(draft.referenceCost) < 0
+                      ? "referenceCost"
+                      : "suggestedPrice"
+                    : "name",
       );
       setError(message);
       return;
@@ -221,12 +227,11 @@ export function ItemEditor({
                   change("group", e.target.value as Item["group"])
                 }
               >
-                <BaseNativeSelectOption value="HIS_MEDICINE">
-                  HIS 藥品
-                </BaseNativeSelectOption>
-                <BaseNativeSelectOption value="GENERAL">
-                  自費／OTC／其他商品
-                </BaseNativeSelectOption>
+                {Object.entries(itemGroupLabels).map(([value, label]) => (
+                  <BaseNativeSelectOption key={value} value={value}>
+                    {label}
+                  </BaseNativeSelectOption>
+                ))}
               </BaseNativeSelect>
             </BaseLabel>
             {field("code", "料號", {
@@ -238,7 +243,13 @@ export function ItemEditor({
             {field("name", "品名", { required: true })}
             {select("category", "品項分類", categories, true)}
             {select("unit", "基本單位", units, true, locked)}
-            {field("safetyStock", "安全庫存", {
+            {field("specification", "規格", { required: true })}
+            {field("safetyStock", "三個月最低庫存", {
+              required: true,
+              type: "number",
+              step: "0.001",
+            })}
+            {field("safetyStockSixMonths", "六個月最低庫存", {
               required: true,
               type: "number",
               step: "0.001",
@@ -260,7 +271,6 @@ export function ItemEditor({
           </summary>
           <div className="items-form-grid">
             {field("englishName", "英文名稱")}
-            {field("specification", "規格")}
             {field("barcode", "國際條碼")}
             {field("nhiCode", "健保碼")}
             {select("supplier", "預設供應商", suppliers)}

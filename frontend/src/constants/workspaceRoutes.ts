@@ -1,6 +1,8 @@
 import type { ModuleKey } from "@/types/workspace";
 
 export const itemGroupPaths = {
+  NURSING: "/items/nursing",
+  GLASSES: "/items/glasses",
   HIS_MEDICINE: "/items/his",
   GENERAL: "/items/general",
 } as const;

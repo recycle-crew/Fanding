@@ -38,9 +38,9 @@ describe("品項庫存與效期規則", () => {
     expect(available(batch("2026-10-20"))).toBe(8);
     expect(available(batch("", 1, 3))).toBe(0);
   });
-  it("90 天是即將到期上界，超過則正常", () => {
-    expect(expiryStatus(batch(relativeDate(90)))).toBe("即將到期");
-    expect(expiryStatus(batch(relativeDate(91)))).toBe("正常");
+  it("一年是即將到期上界，超過則正常", () => {
+    expect(expiryStatus(batch("2027-10-20"))).toBe("即將到期");
+    expect(expiryStatus(batch("2027-10-21"))).toBe("正常");
   });
   it("庫存狀態只計入自身可用批次，安全庫存等值仍算低庫存", () => {
     const item = { ...createItemsSeed().items[0], id: "I", safetyStock: 8 };
@@ -51,6 +51,20 @@ describe("品項庫存與效期規則", () => {
       ]),
     ).toBe("低庫存");
     expect(stockStatus(item, [batch("2026-10-19")])).toBe("無庫存");
+  });
+  it("規格必填，兩個最低庫存欄位均須為非負數", () => {
+    const state = createItemsSeed();
+    const item = state.items[0];
+    expect(validateItem({ ...item, specification: "  " }, state)).toContain(
+      "規格",
+    );
+    expect(validateItem({ ...item, safetyStock: -1 }, state)).toContain(
+      "最低庫存",
+    );
+    expect(
+      validateItem({ ...item, safetyStockSixMonths: NaN }, state),
+    ).toContain("最低庫存");
+    expect(validateItem({ ...item, safetyStockSixMonths: 0 }, state)).toBe("");
   });
   it("成本依數量加權，零元成本合法，缺少資料回傳 null", () => {
     const base = {

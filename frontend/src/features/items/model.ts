@@ -6,6 +6,13 @@ import type {
   ItemsState,
 } from "@/types/items";
 
+export const itemGroupLabels: Record<ItemGroup, string> = {
+  NURSING: "護理",
+  GLASSES: "眼鏡",
+  HIS_MEDICINE: "藥品",
+  GENERAL: "自費其他商品",
+};
+
 export const warehouses = ["主倉庫", "診間倉庫", "備用倉庫"];
 export const categories = [
   "眼科用藥",
@@ -36,7 +43,11 @@ export function relativeDate(days: number, today = taipeiToday()) {
 export function expiryStatus(batch: InventoryBatch, today = taipeiToday()) {
   if (!batch.expiryDate) return "不適用";
   if (batch.expiryDate < today) return "已過期";
-  return batch.expiryDate <= relativeDate(90, today) ? "即將到期" : "正常";
+  const nextYear = new Date(`${today}T00:00:00Z`);
+  nextYear.setUTCFullYear(nextYear.getUTCFullYear() + 1);
+  return batch.expiryDate <= nextYear.toISOString().slice(0, 10)
+    ? "即將到期"
+    : "正常";
 }
 export function available(batch: InventoryBatch, today = taipeiToday()) {
   return expiryStatus(batch, today) === "已過期"
@@ -71,7 +82,12 @@ export function batchAverage(batchId: string, costs: PurchaseCost[]) {
     : null;
 }
 export function blankItem(group: ItemGroup, items: Item[]): Item {
-  const prefix = group === "HIS_MEDICINE" ? "MED" : "OTC";
+  const prefix = {
+    NURSING: "NUR",
+    GLASSES: "GLS",
+    HIS_MEDICINE: "MED",
+    GENERAL: "OTC",
+  }[group];
   let next = 1;
   while (
     items.some((i) => i.code === `${prefix}${String(next).padStart(4, "0")}`)
@@ -90,6 +106,7 @@ export function blankItem(group: ItemGroup, items: Item[]): Item {
     unit: "",
     supplier: "",
     safetyStock: 0,
+    safetyStockSixMonths: 0,
     trackBatch: true,
     trackExpiry: true,
     referenceCost: "",
@@ -104,11 +121,12 @@ export function validateItem(item: Item, state: ItemsState): string {
   if (
     !item.code.trim() ||
     !item.name.trim() ||
+    !item.specification.trim() ||
     !item.category ||
     !item.unit ||
     !item.effectiveFrom
   )
-    return "請填妥料號、品名、分類、基本單位及開始使用日期。";
+    return "請填妥料號、品名、規格、分類、基本單位及開始使用日期。";
   if (
     state.items.some(
       (i) =>
@@ -124,8 +142,12 @@ export function validateItem(item: Item, state: ItemsState): string {
     )
   )
     return "國際條碼已存在，請確認品項。";
-  if (!Number.isFinite(item.safetyStock) || item.safetyStock < 0)
-    return "安全庫存不可為負數。";
+  if (
+    [item.safetyStock, item.safetyStockSixMonths].some(
+      (value) => !Number.isFinite(value) || value < 0,
+    )
+  )
+    return "三個月及六個月最低庫存必須是非負數。";
   for (const price of [item.referenceCost, item.suggestedPrice])
     if (price !== "" && (!Number.isFinite(Number(price)) || Number(price) < 0))
       return "價格必須是非負數。";
@@ -174,7 +196,14 @@ export function createItemsSeed(): ItemsState {
     "清潔護理液",
   ];
   names.forEach((name, index) => {
-    const group: ItemGroup = index < 7 ? "HIS_MEDICINE" : "GENERAL";
+    const group: ItemGroup =
+      index < 7
+        ? "HIS_MEDICINE"
+        : index === 10 || index === 11 || index === 13
+          ? "NURSING"
+          : index === 8
+            ? "GLASSES"
+            : "GENERAL";
     const item = blankItem(group, state.items);
     item.id = `item-${index + 1}`;
     item.name = name;
@@ -193,6 +222,7 @@ export function createItemsSeed(): ItemsState {
       specification: index < 5 ? "0.5% 10ml" : "60 入",
       supplier: suppliers[index % 3],
       safetyStock: 20,
+      safetyStockSixMonths: 40,
       referenceCost: String(100 + index * 12),
       suggestedPrice: String(180 + index * 25),
       effectiveFrom: relativeDate(-180),

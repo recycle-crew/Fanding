@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/BaseNativeSelect";
 import { BaseDataTable } from "@/components/ui/BaseDataTable";
 import {
+  itemGroupLabels,
   available,
   batchAverage,
   expiryStatus,
@@ -76,9 +77,7 @@ export function ItemDetails({
     <div className="items-modal-scroll items-details">
       <div className="items-product-summary">
         <div>
-          <span className="items-kicker">
-            {item.group === "HIS_MEDICINE" ? "HIS 藥品" : "自費／OTC／其他商品"}
-          </span>
+          <span className="items-kicker">{itemGroupLabels[item.group]}</span>
           <h3>{item.name}</h3>
           <div className="items-product-meta">
             <span>料號 {item.code}</span>
@@ -359,7 +358,8 @@ export function ItemDetails({
             ["規格", item.specification || "—"],
             ["分類", item.category],
             ["基本單位", item.unit],
-            ["安全庫存", String(item.safetyStock)],
+            ["三個月最低庫存", String(item.safetyStock)],
+            ["六個月最低庫存", String(item.safetyStockSixMonths)],
             ["預設供應商", item.supplier || "—"],
             [
               "參考成本",

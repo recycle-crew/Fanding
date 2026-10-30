@@ -84,6 +84,16 @@ export const workspaceRoutes: RouteObject[] = [
             handle: { module: "stocktakes" },
           },
           {
+            path: "items/nursing",
+            Component: ItemsPage,
+            handle: { module: "items" },
+          },
+          {
+            path: "items/glasses",
+            Component: ItemsPage,
+            handle: { module: "items" },
+          },
+          {
             path: "items/his",
             Component: ItemsPage,
             handle: { module: "items" },

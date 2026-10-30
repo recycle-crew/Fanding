@@ -1,4 +1,4 @@
-export type ItemGroup = "HIS_MEDICINE" | "GENERAL";
+export type ItemGroup = "NURSING" | "GLASSES" | "HIS_MEDICINE" | "GENERAL";
 
 export interface Item {
   id: string;
@@ -13,6 +13,7 @@ export interface Item {
   unit: string;
   supplier: string;
   safetyStock: number;
+  safetyStockSixMonths: number;
   trackBatch: boolean;
   trackExpiry: boolean;
   referenceCost: string;
