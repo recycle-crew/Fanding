@@ -22,9 +22,6 @@ export interface PurchaseLine {
 
 export interface Settlement {
   number: string;
-  invoice: string;
-  invoiceDate: string;
-  tax: string;
   amount: number;
   accountingDate: string;
   differenceReason: string;
@@ -106,7 +103,14 @@ export interface ExchangeOrder {
   receipt?: ExchangeReceipt;
 }
 
-export interface Purchase {
+export interface PurchaseInvoice {
+  supplierShippingDate: string;
+  invoice: string;
+  invoiceDate: string;
+  tax: string;
+}
+
+export interface Purchase extends PurchaseInvoice {
   id: string;
   number: string;
   date: string;

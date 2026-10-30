@@ -12,7 +12,7 @@ import { BaseButton } from "@/components/ui/BaseButton";
 import type { Purchase } from "@/types/purchases";
 import { reversalStatus, lineBalance } from "./model";
 export type OrderAction =
-  "view" | "settle" | "reversal" | "return" | "correction";
+  "view" | "edit" | "settle" | "reversal" | "return" | "correction";
 export function OrderActions({
   order,
   onAction,
@@ -38,6 +38,7 @@ export function OrderActions({
           {(
             [
               ["view", "查看進貨明細"],
+              ["edit", "修改出貨與發票資料"],
               ["settle", "核對單據"],
               ["reversal", "進貨沖銷"],
               ["return", "進貨退貨"],
@@ -54,6 +55,11 @@ export function OrderActions({
                   )) ||
                 ((key === "settle" || key === "reversal") &&
                   !!order.settlement) ||
+                (key === "edit" &&
+                  (!!order.settlement ||
+                    order.records.some(
+                      (record) => record.kind === "reversal",
+                    ))) ||
                 (key === "correction" && !order.settlement)
               }
               onSelect={() => onAction(key)}

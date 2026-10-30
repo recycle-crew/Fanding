@@ -1079,3 +1079,147 @@
     grid-column: 1 / -1;
   }
 }
+.purchase-line-movements {
+  white-space: normal;
+  text-align: left;
+  min-width: 0;
+}
+.purchase-movement-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  background: #f1f5fb;
+}
+.purchase-movement-summary dt {
+  font-size: 12px;
+  color: #52647c;
+}
+.purchase-movement-summary dd {
+  margin: 4px 0 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.purchase-movement-summary > div:last-child dd {
+  color: #1451a0;
+}
+.purchase-movement-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.purchase-movement {
+  --movement-color: #17633e;
+  padding: 12px 14px;
+  border-left: 4px solid var(--movement-color);
+  border-radius: 5px;
+  background: #eff9f3;
+  color: #26374b;
+  overflow-wrap: anywhere;
+}
+.purchase-movement-return {
+  --movement-color: #924308;
+  background: #fff6e9;
+}
+.purchase-movement-reversal {
+  --movement-color: #aa2837;
+  background: #fff0f1;
+}
+.purchase-movement-correction {
+  --movement-color: #2257a0;
+  background: #edf4ff;
+}
+.purchase-movement-main,
+.purchase-movement-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+.purchase-movement-main strong,
+.purchase-movement-quantity {
+  color: var(--movement-color);
+  font-weight: 700;
+}
+.purchase-movement-main > span:last-child {
+  margin-left: auto;
+  font-size: 13px;
+}
+.purchase-movement-meta,
+.purchase-movement p {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.purchase-movement-meta [data-slot="button"] {
+  padding: 2px 4px;
+  height: auto;
+  white-space: normal;
+  text-align: left;
+  text-decoration: underline;
+}
+.purchase-history article.purchase-history-linked {
+  outline: 2px solid #2257a0;
+  outline-offset: 2px;
+}
+@media (min-width: 761px) {
+  .purchase-detail-lines [data-slot="table"],
+  .purchase-detail-lines tbody {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+  .purchase-detail-lines thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .purchase-detail-lines tbody tr {
+    display: grid;
+    grid-template-columns: 2fr 1.3fr repeat(4, 1fr);
+    gap: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+    border: 1px solid #dfe8f4;
+    border-radius: 7px;
+  }
+  .purchase-detail-lines tbody td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .purchase-detail-lines tbody td::before {
+    display: block;
+    color: #62728a;
+    font-size: 12px;
+    margin-bottom: 5px;
+  }
+  .purchase-detail-lines td:nth-child(2)::before {
+    content: "批號／效期";
+  }
+  .purchase-detail-lines td:nth-child(3)::before {
+    content: "進貨數量";
+  }
+  .purchase-detail-lines td:nth-child(4)::before {
+    content: "單位成本";
+  }
+  .purchase-detail-lines td:nth-child(5)::before {
+    content: "小計";
+  }
+  .purchase-detail-lines td:nth-child(6)::before {
+    content: "本單剩餘";
+  }
+  .purchase-detail-lines td:nth-child(7),
+  .purchase-detail-lines td[colspan] {
+    grid-column: 1 / -1;
+  }
+}

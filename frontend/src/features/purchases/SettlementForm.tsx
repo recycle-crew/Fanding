@@ -1,10 +1,6 @@
 import { BaseTextarea } from "@/components/ui/BaseTextarea";
 import { useState } from "react";
 import { BaseInput } from "@/components/ui/BaseInput";
-import {
-  BaseNativeSelect,
-  BaseNativeSelectOption as Option,
-} from "@/components/ui/BaseNativeSelect";
 import { taipeiToday } from "@/features/items/model";
 import { Field, PurchaseForm } from "./FormParts";
 import {
@@ -29,12 +25,8 @@ export function SettlementForm({
 }) {
   const amounts = reconciliationAmounts(order);
   const [draft, setDraft] = useState({
-    invoice: "",
-    invoiceDate: taipeiToday(),
-    tax: "免稅",
     amount: String(amounts.reference),
     accountingDate: taipeiToday(),
-    differenceReason: "",
     remark: "",
   });
   const amount = Number(draft.amount);
@@ -58,15 +50,10 @@ export function SettlementForm({
             message: "請輸入有效核對金額，不可為負數，最多小數 2 位。",
             field: "settlement-amount",
           };
-        if (hasDifference && !draft.differenceReason.trim())
-          return {
-            message: "核對金額與應核對參考金額不同，請填寫差異原因。",
-            field: "settlement-difference",
-          };
         onSubmit({
           ...draft,
           amount,
-          differenceReason: hasDifference ? draft.differenceReason.trim() : "",
+          differenceReason: hasDifference ? draft.remark.trim() : "",
         });
       }}
     >
@@ -95,7 +82,7 @@ export function SettlementForm({
           </div>
         </dl>
         <p className="items-note">
-          參考金額依原成本扣除沖銷與退貨；供應商實際折讓或退款不同時，請調整核對金額並填寫原因。
+          參考金額依原成本扣除沖銷與退貨；供應商實際折讓或退款不同時，請調整核對金額，可於核對備註補充說明。
         </p>
         <div className="purchase-settlement-amounts">
           <div>
@@ -133,64 +120,10 @@ export function SettlementForm({
             </small>
           </div>
         </div>
-        {hasDifference && (
-          <div className="purchase-settlement-reason">
-            <Field
-              name="settlement-difference"
-              label="差異原因"
-              required
-              hint="核對金額不同時，請說明原因後再繼續。"
-            >
-              <BaseInput
-                value={draft.differenceReason}
-                onChange={(e) =>
-                  setDraft({ ...draft, differenceReason: e.target.value })
-                }
-              />
-            </Field>
-          </div>
-        )}
       </section>
       <section>
-        <h3>發票與帳務資料</h3>
+        <h3>帳務資料</h3>
         <div className="items-form-grid">
-          <Field name="settlement-invoice" label="發票號碼">
-            <BaseInput
-              value={draft.invoice}
-              onChange={(e) => setDraft({ ...draft, invoice: e.target.value })}
-              placeholder="例如 AB12345678（選填）"
-            />
-          </Field>
-          <Field
-            name="settlement-invoice-date"
-            label="發票日期"
-            required
-            hint="預設今天，請依此次核對的發票日期調整。"
-          >
-            <BaseInput
-              type="date"
-              value={draft.invoiceDate}
-              onChange={(e) =>
-                setDraft({ ...draft, invoiceDate: e.target.value })
-              }
-            />
-          </Field>
-          <Field
-            name="settlement-tax"
-            label="稅別"
-            required
-            hint="預設免稅，可依本張單據調整。"
-          >
-            <BaseNativeSelect
-              value={draft.tax}
-              onChange={(e) => setDraft({ ...draft, tax: e.target.value })}
-            >
-              <Option value="">請選擇稅別</Option>
-              {["應稅", "免稅", "零稅率"].map((t) => (
-                <Option key={t}>{t}</Option>
-              ))}
-            </BaseNativeSelect>
-          </Field>
           <Field
             name="settlement-accounting-date"
             label="帳務歸屬日期"

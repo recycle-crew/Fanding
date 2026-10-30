@@ -17,6 +17,7 @@ import {
   BaseTableRow,
 } from "@/components/ui/BaseTable";
 import { taipeiToday, usageStatus } from "@/features/items/model";
+import { PurchaseInvoiceFields } from "./PurchaseInvoiceFields";
 import { Field, PurchaseForm } from "./FormParts";
 import { currency, rounded, snapshot } from "./model";
 import type { PurchaseLine } from "@/types/purchases";
@@ -35,6 +36,10 @@ export function NewPurchaseForm({
   const { suppliers, warehouses } = useBaseDataOptions();
   const [header, setHeader] = useState({
     date: taipeiToday(),
+    supplierShippingDate: "",
+    invoice: "",
+    invoiceDate: taipeiToday(),
+    tax: "免稅",
     supplier: "",
     warehouse: "",
     remark: "",
@@ -173,6 +178,7 @@ export function NewPurchaseForm({
           return { message: "數量必須大於 0，單位成本不可為負數。" };
         onSubmit({
           ...header,
+          invoice: header.invoice.trim(),
           relatedReturn: "",
           lines: lines.map((l) => ({ ...l, traceableQuantity: l.quantity })),
         });
@@ -233,6 +239,10 @@ export function NewPurchaseForm({
           </div>
         </details>
       </section>
+      <PurchaseInvoiceFields
+        value={header}
+        onChange={(value) => setHeader({ ...header, ...value })}
+      />
       <section>
         <h3>進貨商品（必填，至少加入一筆）</h3>
         <div className="purchase-product-search">

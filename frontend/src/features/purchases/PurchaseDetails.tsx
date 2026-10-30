@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BaseButton } from "@/components/ui/BaseButton";
+import { PurchaseLineMovements } from "./PurchaseLineMovements";
 import { BaseDataTable } from "@/components/ui/BaseDataTable";
 import { moveTabFocus } from "@/features/items/tabKeyboard";
 import {
@@ -25,6 +26,13 @@ export function PurchaseDetails({
   initialTab?: string;
 }) {
   const [tab, setTab] = useState(initialTab);
+  const [linkedRecord, setLinkedRecord] = useState("");
+  useEffect(() => {
+    if (tab !== "history" || !linkedRecord) return;
+    const target = document.getElementById(`purchase-history-${linkedRecord}`);
+    target?.focus({ preventScroll: true });
+    target?.scrollIntoView({ block: "nearest" });
+  }, [tab, linkedRecord]);
   const correctionTotal = order.records
     .filter((r) => r.kind === "correction")
     .reduce((sum, r) => sum + r.amount, 0);
@@ -75,6 +83,7 @@ export function PurchaseDetails({
         </div>
         <div className="purchase-order-meta">
           <span>收貨日期 {order.date}</span>
+          <span>廠商出貨日期 {order.supplierShippingDate || "未填寫"}</span>
           <span>入庫倉別 {order.warehouse}</span>
         </div>
         <div className="purchase-order-status">
@@ -101,6 +110,21 @@ export function PurchaseDetails({
           {order.settlement && <small>核對完成不代表已付款</small>}
         </div>
       </div>
+      <section aria-label="發票資料">
+        <h3>發票資料</h3>
+        <dl className="purchase-facts">
+          {[
+            ["發票號碼", order.invoice || "未填寫"],
+            ["發票日期", order.invoiceDate || "未填寫"],
+            ["稅別", order.tax],
+          ].map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
       {pendingAccounting(order).length > 0 && (
         <section aria-label="待處理帳務">
           <h3>待處理帳務（{pendingAccounting(order).length}）</h3>
@@ -165,7 +189,7 @@ export function PurchaseDetails({
                   "單位成本",
                   "小計",
                   "單據剩餘量",
-                  "其他資訊",
+                  "數量異動紀錄",
                 ]}
                 rows={order.lines.map((l) => [
                   <>
@@ -182,13 +206,14 @@ export function PurchaseDetails({
                   l.unitCost.toFixed(4),
                   currency(l.quantity * l.unitCost),
                   `${lineBalance(order, l).remaining} ${l.unit}`,
-                  <details className="purchase-line-extra">
-                    <summary>處理量與備註</summary>
-                    <p>
-                      已處理量：{lineBalance(order, l).processed} {l.unit}
-                    </p>
-                    <p>{l.remark || "無備註"}</p>
-                  </details>,
+                  <PurchaseLineMovements
+                    order={order}
+                    line={l}
+                    onOpenRecord={(record) => {
+                      setLinkedRecord(record.id);
+                      setTab("history");
+                    }}
+                  />,
                 ])}
               />
             </div>
@@ -220,9 +245,6 @@ export function PurchaseDetails({
               <dl className="purchase-facts">
                 {[
                   ["原核對單號", order.settlement.number],
-                  ["發票號碼", order.settlement.invoice || "未填寫"],
-                  ["發票日期", order.settlement.invoiceDate],
-                  ["稅別", order.settlement.tax],
                   ["帳務歸屬日期", order.settlement.accountingDate],
                   ["核對人員", order.settlement.operator],
                   ["差異原因", order.settlement.differenceReason || "—"],
@@ -282,7 +304,16 @@ export function PurchaseDetails({
               const record = entry.record;
               if (!record) return null;
               return (
-                <article key={record.id}>
+                <article
+                  key={record.id}
+                  id={`purchase-history-${record.id}`}
+                  tabIndex={-1}
+                  className={
+                    linkedRecord === record.id
+                      ? "purchase-history-linked"
+                      : undefined
+                  }
+                >
                   <header>
                     <div>
                       <strong>

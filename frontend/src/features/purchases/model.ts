@@ -142,6 +142,10 @@ export function createPurchasesSeed(): PurchasesState {
       id: `po-${index + 1}`,
       number: `PO${date.replaceAll("-", "")}${String(9 - index).padStart(3, "0")}`,
       date,
+      supplierShippingDate: relativeDate(-index - 1),
+      invoice: index % 3 !== 0 ? `AB${String(12345670 + index)}` : "",
+      invoiceDate: date,
+      tax: index % 3 !== 0 ? "應稅" : "免稅",
       supplier: suppliers[index % suppliers.length],
       warehouse: warehouses[index % warehouses.length],
       remark: ["例行補貨", "診間備品補充", "藥品及耗材到貨"][index % 3],
@@ -155,9 +159,6 @@ export function createPurchasesSeed(): PurchasesState {
     if (index % 3 !== 0)
       order.settlement = {
         number: `PS-${index + 1}`,
-        invoice: `AB${String(12345670 + index)}`,
-        invoiceDate: date,
-        tax: "應稅",
         amount: originalAmount(order),
         accountingDate: date,
         differenceReason: "",

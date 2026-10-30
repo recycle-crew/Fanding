@@ -1,6 +1,6 @@
-import type { PurchaseLine } from "@/types/purchases";
+import type { PurchaseLine, PurchaseInvoice } from "@/types/purchases";
 
-export interface NewPurchaseInput {
+export interface NewPurchaseInput extends PurchaseInvoice {
   date: string;
   supplier: string;
   warehouse: string;

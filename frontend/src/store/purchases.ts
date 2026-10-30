@@ -4,6 +4,7 @@ import type {
   ExchangeReceipt,
   ExchangeOrder,
   Purchase,
+  PurchaseInvoice,
   PurchaseRecord,
   Settlement,
 } from "@/types/purchases";
@@ -14,6 +15,18 @@ const slice = createSlice({
     addPurchase(state, { payload }: PayloadAction<Purchase>) {
       if (!state.orders.some((o) => o.id === payload.id))
         state.orders.unshift(payload);
+    },
+    updatePurchaseInvoice(
+      state,
+      { payload }: PayloadAction<{ id: string; value: PurchaseInvoice }>,
+    ) {
+      const order = state.orders.find((order) => order.id === payload.id);
+      if (
+        order &&
+        !order.settlement &&
+        !order.records.some((record) => record.kind === "reversal")
+      )
+        Object.assign(order, payload.value);
     },
     settlePurchase(
       state,
@@ -73,6 +86,7 @@ const slice = createSlice({
   },
 });
 export const {
+  updatePurchaseInvoice,
   addPurchase,
   settlePurchase,
   addPurchaseRecord,

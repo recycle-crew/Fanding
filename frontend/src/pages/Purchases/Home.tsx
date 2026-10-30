@@ -1,17 +1,10 @@
 import { useWorkspaceDirty } from "@/features/workspace/useWorkspaceDirty";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ArrowDownUp,
-  Clock3,
-  Eye,
-  Plus,
-  Search,
-  Truck,
-  X,
-} from "lucide-react";
+import { ArrowDownUp, Clock3, Eye, Plus, Search, Truck, X } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   addPurchase,
+  updatePurchaseInvoice,
   addExchangeOrder,
   settlePurchase,
   addPurchaseRecord,
@@ -39,6 +32,7 @@ import { BaseTableFrame } from "@/components/ui/BaseDataTable";
 import { suppliers, warehouses } from "@/features/items/model";
 import { moveTabFocus } from "@/features/items/tabKeyboard";
 import { NewPurchaseForm } from "@/features/purchases/NewPurchaseForm";
+import { PurchaseInvoiceEditor } from "@/features/purchases/PurchaseInvoiceFields";
 import { SettlementForm } from "@/features/purchases/SettlementForm";
 import { OperationForm } from "@/features/purchases/OperationForm";
 import { PurchaseDetails } from "@/features/purchases/PurchaseDetails";
@@ -269,17 +263,19 @@ export function PurchasesPage() {
   const title =
     modal?.kind === "new"
       ? "新增進貨單"
-      : modal?.kind === "view"
-        ? "進貨單明細"
-        : modal?.kind === "settle"
-          ? "進貨單核對"
-          : modal?.kind === "resolve"
-            ? record?.resolution === "換貨"
-              ? "換貨單收貨"
-              : "完成帳務處理"
-            : modal
-              ? operationLabels[modal.kind as keyof typeof operationLabels]
-              : "進貨單";
+      : modal?.kind === "edit"
+        ? "修改出貨與發票資料"
+        : modal?.kind === "view"
+          ? "進貨單明細"
+          : modal?.kind === "settle"
+            ? "進貨單核對"
+            : modal?.kind === "resolve"
+              ? record?.resolution === "換貨"
+                ? "換貨單收貨"
+                : "完成帳務處理"
+              : modal
+                ? operationLabels[modal.kind as keyof typeof operationLabels]
+                : "進貨單";
   const tableKey = `purchase-list-${tab}-${JSON.stringify(filter)}-${sort.key}-${sort.direction}`;
   return (
     <section
@@ -1042,7 +1038,7 @@ export function PurchasesPage() {
                 onSubmit={(input) =>
                   review(
                     `建立進貨單 · ${currency(input.lines.reduce((s, l) => s + l.quantity * l.unitCost, 0))}`,
-                    `${input.supplier}／${input.warehouse}，共 ${input.lines.length} 筆明細，確認後列為待核對。`,
+                    `${input.supplier}／${input.warehouse}，共 ${input.lines.length} 筆明細。廠商出貨日期：${input.supplierShippingDate || "未填寫"}；發票號碼：${input.invoice || "未填寫"}；發票日期：${input.invoiceDate}；稅別：${input.tax}。確認後列為待核對。`,
                     () => {
                       const id = crypto.randomUUID();
                       dispatch(
@@ -1085,6 +1081,23 @@ export function PurchasesPage() {
                   </BaseButton>
                 </footer>
               </>
+            )}
+            {modal?.kind === "edit" && order && (
+              <PurchaseInvoiceEditor
+                order={order}
+                onCancel={() => close()}
+                onDirty={() => setDirty(true)}
+                onSubmit={(value) =>
+                  review(
+                    "修改出貨與發票資料",
+                    `${order.number}，廠商出貨日期：${value.supplierShippingDate || "未填寫"}；發票號碼：${value.invoice || "未填寫"}；發票日期：${value.invoiceDate}；稅別：${value.tax}。`,
+                    () => {
+                      dispatch(updatePurchaseInvoice({ id: order.id, value }));
+                      complete("已更新出貨與發票資料。");
+                    },
+                  )
+                }
+              />
             )}
             {modal?.kind === "settle" && order && (
               <SettlementForm

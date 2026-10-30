@@ -160,28 +160,29 @@ test("新增商品欄位、手機卡片與收合備註", async ({ page }, testIn
   );
 });
 
-test("診所核對預設免稅、中文錯誤定位與備註收合", async ({ page }, testInfo) => {
+test("診所核對僅三欄、中文錯誤定位與備註收合", async ({ page }, testInfo) => {
   await action(page, "PO20261020009", "核對單據");
-  await expect(page.locator("#settlement-tax")).toHaveValue("免稅");
-  await page.locator("#settlement-tax").selectOption("應稅");
-  await page.locator("#settlement-tax").selectOption("免稅");
+  await expect(modal(page).locator("input, select, textarea")).toHaveCount(3);
+  await expect(page.locator("#settlement-tax")).toHaveCount(0);
   await expect(page.locator("#settlement-remark")).toBeHidden();
   const notes = modal(page).locator(".purchase-optional-fields summary");
   await notes.click();
   await page.locator("#settlement-remark").fill("診所進貨核對備註");
   await notes.click();
   await expect(notes).toContainText("已填寫");
-  await page.locator("#settlement-invoice-date").fill("");
+  await page.locator("#settlement-accounting-date").fill("");
   await modal(page)
     .getByRole("button", { name: "下一步：確認內容", exact: true })
     .click();
-  await expect(modal(page).getByRole("alert")).toHaveText("請填寫發票日期。");
+  await expect(modal(page).getByRole("alert")).toHaveText(
+    "請填寫帳務歸屬日期。",
+  );
   await expect(modal(page).getByRole("alert")).toBeInViewport({ ratio: 1 });
-  await expect(page.locator("#settlement-invoice-date")).toBeFocused();
+  await expect(page.locator("#settlement-accounting-date")).toBeFocused();
   await modal(page).screenshot({
     path: testInfo.outputPath("settlement-chinese-error.png"),
   });
-  await page.locator("#settlement-invoice-date").fill("2026-10-20");
+  await page.locator("#settlement-accounting-date").fill("2026-10-20");
   await page.locator("#settlement-amount").fill("-1");
   await modal(page)
     .getByRole("button", { name: "下一步：確認內容", exact: true })
@@ -219,14 +220,7 @@ test("核對差額即時更新、無效金額及二次確認", async ({ page }, 
   await amount.fill("1900");
   await expect(comparison).toContainText("低於應核對參考金額");
   await expect(comparison).toContainText("NT$ -100.00");
-  await expect(page.locator("#settlement-difference")).toHaveAttribute(
-    "required",
-    "",
-  );
-  await expect(page.locator("#settlement-difference")).toBeInViewport({
-    ratio: 1,
-  });
-  await page.locator("#settlement-difference").fill("折扣");
+  await expect(page.locator("#settlement-difference")).toHaveCount(0);
   await modal(page).screenshot({
     path: testInfo.outputPath("settlement-edit.png"),
   });
@@ -234,7 +228,6 @@ test("核對差額即時更新、無效金額及二次確認", async ({ page }, 
   await expect(comparison).toContainText("高於應核對參考金額");
   await amount.fill("2000");
   await expect(comparison).toContainText("金額一致");
-  await page.locator("#settlement-tax").selectOption("應稅");
   await modal(page)
     .getByRole("button", { name: "下一步：確認內容", exact: true })
     .click();
@@ -542,16 +535,9 @@ test(
   },
 );
 
-test("核對差異原因及已核對入口限制", async ({ page }) => {
+test("核對差額備註及已核對入口限制", async ({ page }) => {
   await action(page, "PO20261020009", "核對單據");
-  await page.locator("#settlement-tax").selectOption("應稅");
   await page.locator("#settlement-amount").fill("1900");
-  await modal(page)
-    .getByRole("button", { name: "下一步：確認內容", exact: true })
-    .click();
-  await expect(modal(page).getByRole("alert")).toBeVisible();
-  await page.locator("#settlement-difference").fill("發票折扣差異");
-  await page.locator("#settlement-invoice").fill("AB12345678");
   await modal(page)
     .getByRole("button", { name: "下一步：確認內容", exact: true })
     .click();
