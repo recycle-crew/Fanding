@@ -17,16 +17,9 @@ async function scan(page: Page, code: string) {
   await input.fill(code);
   await input.press("Enter");
 }
-async function checkout(page: Page, { medicine = false } = {}) {
+async function checkout(page: Page) {
   await page.getByRole("button", { name: "前往結帳", exact: true }).click();
   const dialog = page.getByRole("dialog");
-  if (medicine)
-    await dialog
-      .getByRole("checkbox", {
-        name: "已由專業人員確認藥品銷售（展示）",
-        exact: true,
-      })
-      .check();
   await dialog
     .getByRole("button", { name: "確認完成結帳", exact: true })
     .click();
@@ -35,9 +28,7 @@ async function checkout(page: Page, { medicine = false } = {}) {
   ).toBeVisible();
   return dialog;
 }
-test("@critical 精簡結帳與非現金付款確認，未確認時保留銷售明細", async ({
-  page,
-}) => {
+test("@critical 精簡結帳，非現金付款直接完成", async ({ page }) => {
   await scan(page, "OTC0001");
   await page.getByRole("button", { name: "前往結帳", exact: true }).click();
   const dialog = page.getByRole("dialog");
@@ -50,16 +41,10 @@ test("@critical 精簡結帳與非現金付款確認，未確認時保留銷售�
   );
   await expect(dialog.getByLabel("實收金額", { exact: true })).toHaveCount(0);
   await expect(dialog.getByText(/找零|展示失敗|折扣分攤/)).toHaveCount(0);
-  await dialog.getByLabel("付款方式", { exact: true }).selectOption("信用卡");
-  await submit.click();
-  await expect(dialog.getByRole("alert")).toContainText("請先確認外部付款成功");
+  await dialog.getByLabel("付款方式", { exact: true }).selectOption("刷卡");
   await expect(
-    dialog.getByRole("heading", { name: "銷售明細與交易憑證", exact: true }),
+    dialog.getByRole("checkbox", { name: /外部付款成功/ }),
   ).toHaveCount(0);
-  await expect(page.locator(".pos-lines-heading")).toContainText("1 項");
-  await dialog
-    .getByRole("checkbox", { name: "已確認外部付款成功（展示）", exact: true })
-    .check();
   await submit.click();
   await expect(
     dialog.getByRole("heading", { name: "銷售明細與交易憑證", exact: true }),
@@ -126,14 +111,10 @@ test("@critical 折扣、多批次結帳、歷史與部分退貨待退款／確�
       exact: true,
     })
     .check();
-  await dialog
-    .getByRole("button", { name: "建立退貨單", exact: true })
-    .click();
+  await dialog.getByRole("button", { name: "建立退貨單", exact: true }).click();
   await expect(dialog.getByRole("alert")).toBeVisible();
   await dialog.getByLabel("葉黃素膠囊本次退貨數量", { exact: true }).fill("1");
-  await dialog
-    .getByRole("button", { name: "建立退貨單", exact: true })
-    .click();
+  await dialog.getByRole("button", { name: "建立退貨單", exact: true }).click();
   await expect(dialog).toContainText("部分退貨");
   await expect(dialog).toContainText("尚未實際退款");
   await dialog.getByRole("button", { name: /^確認退款 REF-/ }).click();
@@ -155,36 +136,23 @@ test("@critical 折扣、多批次結帳、歷史與部分退貨待退款／確�
     dialog.getByRole("button", { name: /^確認退款 REF-/ }),
   ).toHaveCount(0);
 });
-test("@critical 付款確認與藥品專業確認", async ({ page }) => {
+test("@critical 藥品刷卡結帳無需額外付款或專業確認勾選", async ({ page }) => {
   await scan(page, "MED0001");
   await page.getByRole("button", { name: "前往結帳", exact: true }).click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByLabel("付款方式", { exact: true }).selectOption("信用卡");
+  await dialog.getByLabel("付款方式", { exact: true }).selectOption("刷卡");
+  await expect(
+    dialog.getByRole("checkbox", { name: /外部付款成功|專業人員確認藥品銷售/ }),
+  ).toHaveCount(0);
   await dialog
     .getByRole("button", { name: "確認完成結帳", exact: true })
     .click();
-  await expect(dialog.getByRole("alert")).toContainText("外部付款");
-  await dialog
-    .getByRole("checkbox", { name: "已確認外部付款成功（展示）", exact: true })
-    .check();
-  await dialog
-    .getByRole("button", { name: "確認完成結帳", exact: true })
-    .click();
-  await expect(dialog.getByRole("alert")).toContainText("專業人員確認");
-  await dialog
-    .getByRole("checkbox", {
-      name: "已由專業人員確認藥品銷售（展示）",
-      exact: true,
-    })
-    .check();
-  await dialog
-    .getByRole("button", { name: "確認完成結帳", exact: true })
-    .click();
-  await expect(dialog).toContainText("信用卡");
   await expect(
     dialog.getByRole("heading", { name: "銷售明細與交易憑證", exact: true }),
   ).toBeVisible();
+  await expect(dialog).toContainText("刷卡");
 });
+
 test("@critical 作廢與退款分離、紀錄篩選匯出", async ({ page }) => {
   await page.getByLabel("展示角色", { exact: true }).selectOption("manager");
   await scan(page, "OTC0001");
@@ -395,7 +363,7 @@ test("@critical 查單及返回保留購物車、顧客、折扣與主管角色"
     ).toBeInViewport();
     await shortcuts.getByRole("button", { name: "結帳", exact: true }).click();
     const dialog = page.getByRole("dialog");
-    await dialog.getByLabel("付款方式", { exact: true }).selectOption("信用卡");
+    await dialog.getByLabel("付款方式", { exact: true }).selectOption("刷卡");
     await expect(dialog.getByText(/找零/)).toHaveCount(0);
     await dialog.getByRole("button", { name: "取消", exact: true }).click();
     await dialog.getByRole("button", { name: "放棄變更", exact: true }).click();

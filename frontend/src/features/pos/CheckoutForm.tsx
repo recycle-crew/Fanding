@@ -9,6 +9,7 @@ import {
 import { BaseCheckField } from "@/components/ui/BaseCheckField";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { checkoutPos } from "@/store/pos";
+import { usePosDraft } from "./usePosDraft";
 import { cents, money, paymentMethods, policyFor, priceCart } from "./model";
 import type { CartLine, Customer, PaymentMethod } from "@/types/pos";
 
@@ -35,11 +36,9 @@ export function CheckoutForm({
   const state = useAppSelector((root) => root.pos);
   const items = useAppSelector((root) => root.items.items);
   const priced = priceCart(cart, orderDiscount);
-  const [method, setMethod] = useState<PaymentMethod>("現金");
+  const [method, setMethod] = usePosDraft("paymentMethod");
   const [reference, setReference] = useState("");
   const [remark, setRemark] = useState("");
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
-  const [professional, setProfessional] = useState(false);
   const [prescription, setPrescription] = useState(false);
   const requestId = useRef(crypto.randomUUID());
   const submitted = useRef(false);
@@ -75,8 +74,6 @@ export function CheckoutForm({
             method,
             received: priced.total,
             reference: method === "現金" ? "" : reference,
-            paymentConfirmed,
-            professional,
             prescription,
             sellerConfirmed: true,
             authorized,
@@ -108,7 +105,6 @@ export function CheckoutForm({
               value={method}
               onChange={(event) => {
                 setMethod(event.target.value as PaymentMethod);
-                setPaymentConfirmed(false);
                 setReference("");
               }}
             >
@@ -129,11 +125,6 @@ export function CheckoutForm({
                   onChange={(event) => setReference(event.target.value)}
                 />
               </Field>
-              <BaseCheckField
-                label="已確認外部付款成功（展示）"
-                checked={paymentConfirmed}
-                onChange={setPaymentConfirmed}
-              />
             </>
           )}
           {policies.some((policy) => policy.prescription) && (
@@ -141,13 +132,6 @@ export function CheckoutForm({
               label="已完成處方與調劑流程確認（展示）"
               checked={prescription}
               onChange={setPrescription}
-            />
-          )}
-          {policies.some((policy) => policy.professional) && (
-            <BaseCheckField
-              label="已由專業人員確認藥品銷售（展示）"
-              checked={professional}
-              onChange={setProfessional}
             />
           )}
           <details className="pos-payment-remark">

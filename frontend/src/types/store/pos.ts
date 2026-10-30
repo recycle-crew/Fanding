@@ -13,8 +13,6 @@ export interface CheckoutInput {
   method: PaymentMethod;
   received: number;
   reference: string;
-  paymentConfirmed: boolean;
-  professional: boolean;
   prescription: boolean;
   sellerConfirmed: boolean;
   authorized: boolean;

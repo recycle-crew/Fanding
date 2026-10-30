@@ -104,17 +104,13 @@ test("@critical 列表部分退貨、可售回庫、確認退款與剩餘全退"
   await dialog
     .getByLabel("退貨原因", { exact: true })
     .fill("顧客退回未使用商品");
-  await dialog
-    .getByRole("button", { name: "建立退貨單", exact: true })
-    .click();
+  await dialog.getByRole("button", { name: "建立退貨單", exact: true }).click();
   await expect(dialog.getByRole("alert")).toBeVisible();
   await quantity.fill("1");
   await dialog
     .getByLabel("商品處理方式", { exact: true })
     .selectOption("可售回庫");
-  await dialog
-    .getByRole("button", { name: "建立退貨單", exact: true })
-    .click();
+  await dialog.getByRole("button", { name: "建立退貨單", exact: true }).click();
   await expect(dialog.getByRole("alert")).toContainText("實體退貨");
   await dialog
     .getByRole("checkbox", {
@@ -124,9 +120,7 @@ test("@critical 列表部分退貨、可售回庫、確認退款與剩餘全退"
     .check();
   await expect(dialog.getByText(/原出庫批次/)).toHaveCount(0);
   await page.screenshot({ path: testInfo.outputPath("sales-return.png") });
-  await dialog
-    .getByRole("button", { name: "建立退貨單", exact: true })
-    .click();
+  await dialog.getByRole("button", { name: "建立退貨單", exact: true }).click();
   await expect(dialog).toContainText("部分退貨");
   await expect(dialog).toContainText("待退款 $340");
   await dialog.getByRole("button", { name: "關閉", exact: true }).click();
@@ -158,9 +152,7 @@ test("@critical 列表部分退貨、可售回庫、確認退款與剩餘全退"
       exact: true,
     })
     .check();
-  await dialog
-    .getByRole("button", { name: "建立退貨單", exact: true })
-    .click();
+  await dialog.getByRole("button", { name: "建立退貨單", exact: true }).click();
   await expect(dialog).toContainText("全部退貨");
   await dialog.getByRole("button", { name: "關閉", exact: true }).click();
   await page
@@ -340,7 +332,7 @@ test("@critical 共用列表排序、分頁、進階篩選與明細", async ({
   await expect(list.locator("tbody tr:visible")).toHaveCount(2);
   await expect(page.locator(".sales-summary")).toContainText("待退款 2 筆");
   await page.getByText("更多篩選", { exact: true }).click();
-  await page.getByLabel("付款方式", { exact: true }).selectOption("信用卡");
+  await page.getByLabel("付款方式", { exact: true }).selectOption("刷卡");
   await page.getByLabel("收銀人員", { exact: true }).selectOption("王小明");
   await expect(list.locator("tbody tr:visible")).toHaveCount(1);
   await list
@@ -352,7 +344,7 @@ test("@critical 共用列表排序、分頁、進階篩選與明細", async ({
     .getByRole("button", { name: "關閉", exact: true })
     .click();
   await expect(page.getByLabel("付款方式", { exact: true })).toHaveValue(
-    "信用卡",
+    "刷卡",
   );
   await page.getByRole("button", { name: "重設篩選", exact: true }).click();
   await expect(page).toHaveURL(/embed=1/);

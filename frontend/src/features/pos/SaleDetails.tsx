@@ -91,6 +91,10 @@ export function SaleDetails({
             <dd>{sale.cashier}</dd>
           </div>
           <div>
+            <dt>付款方式</dt>
+            <dd>{sale.payment.method}</dd>
+          </div>
+          <div>
             <dt>銷售倉別</dt>
             <dd>{sale.warehouse}</dd>
           </div>

@@ -43,8 +43,11 @@ const slice = createSlice({
     draft: {
       cart: [],
       orderDiscount: 0,
+      orderDiscountMode: "amount",
+      orderDiscountPercent: "0",
+      paymentMethod: "現金",
       warehouse: "主倉庫",
-      customer: { id: "", name: "散客", phone: "" },
+      customer: { id: "", name: "一般顧客", phone: "" },
       authorized: false,
     } as PosDraft,
   },
@@ -216,8 +219,6 @@ export const checkoutPos =
         cents(input.received) < cents(priced.total))
     )
       return { error: "現金實收不可小於應收金額。" };
-    if (input.method !== "現金" && !input.paymentConfirmed)
-      return { error: "請先確認外部付款成功；此系統不會自動收款。" };
     const lines: Sale["lines"] = [];
     for (const entry of priced.priced) {
       const item = state.items.items.find((row) => row.id === entry.itemId);
@@ -230,11 +231,8 @@ export const checkoutPos =
         (cents(entry.price) !== cents(policy.price) || entry.batchId)
       )
         return { error: "修改售價需主管展示授權。" };
-      if (
-        (policy.prescription && !input.prescription) ||
-        (policy.professional && !input.professional)
-      )
-        return { error: "請完成處方／專業人員確認（展示）。" };
+      if (policy.prescription && !input.prescription)
+        return { error: "請完成處方與調劑流程確認（展示）。" };
       const allocations = allocate(
         state.pos.batches,
         item,

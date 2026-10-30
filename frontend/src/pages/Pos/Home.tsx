@@ -35,10 +35,12 @@ import {
   money,
   policyFor,
   priceCart,
+  percentageDiscount,
+  paymentMethods,
 } from "@/features/pos/model";
 import { SaleLines } from "@/features/pos/SaleLines";
 import { ProductPicker } from "@/features/pos/ProductPicker";
-import type { SaleDetailTab } from "@/types/pos";
+import type { SaleDetailTab, PaymentMethod } from "@/types/pos";
 import "@/features/items/items.css";
 import "@/features/purchases/purchases.css";
 import "@/features/pos/pos.css";
@@ -80,6 +82,11 @@ export function PosPage() {
   const [cart, setCart] = usePosDraft("cart"),
     [orderDiscount, setOrderDiscount] = usePosDraft("orderDiscount"),
     [warehouse, setWarehouse] = usePosDraft("warehouse");
+  const [discountMode, setDiscountMode] = usePosDraft("orderDiscountMode");
+  const [discountPercent, setDiscountPercent] = usePosDraft(
+    "orderDiscountPercent",
+  );
+  const [paymentMethod, setPaymentMethod] = usePosDraft("paymentMethod");
   const [customer, setCustomer] = usePosDraft("customer"),
     [customerSearch, setCustomerSearch] = useState("");
   const [search, setSearch] = useState("");
@@ -107,7 +114,20 @@ export function PosPage() {
     window.addEventListener("beforeunload", warnOnRefresh);
     return () => window.removeEventListener("beforeunload", warnOnRefresh);
   }, [cart.length]);
-  const priced = priceCart(cart, orderDiscount),
+  const percentage = percentageDiscount(
+    priceCart(cart, 0).subtotal,
+    discountPercent.trim() === "" ? NaN : Number(discountPercent),
+  );
+  const effectiveDiscount =
+    discountMode === "percentage" ? percentage.amount : orderDiscount;
+  const cartPrice = priceCart(cart, effectiveDiscount);
+  const priced = {
+      ...cartPrice,
+      error:
+        discountMode === "percentage" && percentage.error
+          ? percentage.error
+          : cartPrice.error,
+    },
     sale = state.sales.find((record) => record.id === view?.id),
     selected = items.find((item) => item.id === view?.id);
   const stock = (id: string) =>
@@ -355,7 +375,7 @@ export function PosPage() {
                     )
                   }
                 >
-                  <Option value="">散客</Option>
+                  <Option value="">一般顧客</Option>
                   {customers
                     .filter(
                       (entry) =>
@@ -468,17 +488,70 @@ export function PosPage() {
                 </span>
                 <small>顧客：{customer.name}</small>
               </div>
-              <Field name="pos-order-discount" label="整單折扣金額">
-                <BaseInput
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={orderDiscount}
-                  onChange={(event) =>
-                    setOrderDiscount(Number(event.target.value))
-                  }
-                />
-              </Field>
+              <div className="pos-checkout-settings">
+                <Field name="pos-order-discount-mode" label="整單折扣方式">
+                  <Select
+                    value={discountMode}
+                    onChange={(event) =>
+                      setDiscountMode(
+                        event.target.value as "amount" | "percentage",
+                      )
+                    }
+                  >
+                    <Option value="amount">折扣金額</Option>
+                    <Option value="percentage">折扣百分比</Option>
+                  </Select>
+                </Field>
+                {discountMode === "percentage" ? (
+                  <Field
+                    name="pos-order-discount-percent"
+                    label="整單折扣百分比（%）"
+                    hint="輸入 10 表示折讓 10%（九折）；以扣除單品折扣後的小計計算。"
+                  >
+                    <BaseInput
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={discountPercent}
+                      onChange={(event) =>
+                        setDiscountPercent(event.target.value)
+                      }
+                    />
+                  </Field>
+                ) : (
+                  <Field name="pos-order-discount" label="整單折扣金額">
+                    <BaseInput
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={orderDiscount}
+                      onChange={(event) =>
+                        setOrderDiscount(Number(event.target.value))
+                      }
+                    />
+                  </Field>
+                )}
+                {discountMode === "percentage" && !percentage.error && (
+                  <p className="pos-settlement-hint" role="status">
+                    自動折扣金額 {money(effectiveDiscount)}
+                  </p>
+                )}
+                <Field name="pos-payment-method" label="付款方式">
+                  <Select
+                    value={paymentMethod}
+                    onChange={(event) =>
+                      setPaymentMethod(event.target.value as PaymentMethod)
+                    }
+                  >
+                    {paymentMethods.map((method) => (
+                      <Option key={method} value={method}>
+                        {method}
+                      </Option>
+                    ))}
+                  </Select>
+                </Field>
+              </div>
               {priced.error && cart.length > 0 && (
                 <p role="alert" className="items-error pos-settlement-error">
                   {priced.error}
@@ -586,7 +659,7 @@ export function PosPage() {
           {view?.kind === "checkout" && (
             <CheckoutForm
               cart={cart}
-              orderDiscount={orderDiscount}
+              orderDiscount={effectiveDiscount}
               warehouse={warehouse}
               customer={customer}
               authorized={authorized}
@@ -595,6 +668,9 @@ export function PosPage() {
               onSuccess={(id) => {
                 setCart([]);
                 setOrderDiscount(0);
+                setDiscountMode("amount");
+                setDiscountPercent("0");
+                setPaymentMethod("現金");
                 setCustomer(walkIn);
                 setDirty(false);
                 setView({ kind: "sale", id });
@@ -697,6 +773,9 @@ export function PosPage() {
                   onClick={() => {
                     setCart([]);
                     setOrderDiscount(0);
+                    setDiscountMode("amount");
+                    setDiscountPercent("0");
+                    setPaymentMethod("現金");
                     close(true);
                     setNotice("購物車已清空。");
                   }}

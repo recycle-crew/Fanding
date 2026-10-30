@@ -15,6 +15,8 @@ import {
   cents,
   createPosSeed,
   priceCart,
+  percentageDiscount,
+  paymentMethods,
   returnAmount,
   refunded,
   pendingRefund,
@@ -27,6 +29,84 @@ import {
   saleReturnPending,
 } from "./model";
 import { createItemsSeed, available } from "@/features/items/model";
+
+describe("整單百分比折扣", () => {
+  it.each([
+    [355, 10, 35.5],
+    [355, 12.5, 44.38],
+    [0.05, 10, 0.01],
+    [355, 0, 0],
+    [355, 100, 355],
+  ])("小計 %s 折讓 %s%% 為 %s", (subtotal, percent, amount) => {
+    expect(percentageDiscount(subtotal, percent)).toEqual({
+      amount,
+      error: "",
+    });
+  });
+  it.each([-1, 101, NaN, Infinity, 10.001])("拒絕無效百分比 %s", (percent) => {
+    expect(percentageDiscount(355, percent).error).toContain("0% 至 100%");
+  });
+  it("先扣除單品折扣，整單折扣分攤精確到分且結帳保存金額", () => {
+    const store = freshStore();
+    const input = checkoutInput(store, 2);
+    const subtotal = priceCart(input.cart, 0).subtotal;
+    input.orderDiscount = percentageDiscount(subtotal, 12.5).amount;
+    const priced = priceCart(input.cart, input.orderDiscount);
+    expect(
+      priced.priced.reduce((sum, line) => sum + cents(line.orderShare), 0),
+    ).toBe(cents(input.orderDiscount));
+    expect(store.dispatch(checkoutPos(input)).error).toBe("");
+    expect(store.getState().pos.sales[0]).toMatchObject({
+      orderDiscount: input.orderDiscount,
+      total: priced.total,
+    });
+  });
+});
+
+it.each(paymentMethods)("結帳保存付款方式：%s", (method) => {
+  const store = freshStore();
+  const input = { ...checkoutInput(store), method };
+  expect(store.dispatch(checkoutPos(input)).error).toBe("");
+  expect(store.getState().pos.sales[0].payment.method).toBe(method);
+});
+
+it("藥品非現金結帳不需付款與專業確認旗標，處方品項仍檢查處方流程", () => {
+  const store = freshStore();
+  const item = store
+    .getState()
+    .items.items.find((item) => item.code === "MED0001")!;
+  const input = checkoutInput(store, 1);
+  input.cart = [
+    {
+      itemId: item.id,
+      quantity: 1,
+      price: Number(item.suggestedPrice),
+      discount: 0,
+      batchId: "",
+    },
+  ];
+  input.orderDiscount = 0;
+  input.method = "銀行轉帳";
+  expect(store.dispatch(checkoutPos(input)).error).toBe("");
+  const prescriptionItem = store
+    .getState()
+    .items.items.find((item) => item.code === "MED0002")!;
+  const next = {
+    ...input,
+    requestId: crypto.randomUUID(),
+    cart: [
+      {
+        ...input.cart[0],
+        itemId: prescriptionItem.id,
+        price: Number(prescriptionItem.suggestedPrice),
+      },
+    ],
+  };
+  expect(store.dispatch(checkoutPos(next)).error).toContain("處方與調劑流程");
+  expect(
+    store.dispatch(checkoutPos({ ...next, prescription: true })).error,
+  ).toBe("");
+});
 
 it("退貨單依建立日期跨銷售單編號，退款以各退貨單關聯計算", () => {
   const sales = createPosSeed().sales;
@@ -107,8 +187,6 @@ function checkoutInput(
     method: "現金",
     received: 5000,
     reference: "",
-    paymentConfirmed: false,
-    professional: false,
     prescription: false,
     sellerConfirmed: true,
     authorized: true,

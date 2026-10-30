@@ -25,6 +25,9 @@ export interface CartLine {
 export interface PosDraft {
   cart: CartLine[];
   orderDiscount: number;
+  orderDiscountMode: "amount" | "percentage";
+  orderDiscountPercent: string;
+  paymentMethod: PaymentMethod;
   warehouse: string;
   customer: Customer;
   authorized: boolean;

@@ -17,19 +17,14 @@ import {
   usageStatus,
 } from "@/features/items/model";
 import type { InventoryBatch, Item } from "@/types/items";
-export const paymentMethods = [
-  "現金",
-  "信用卡",
-  "銀行轉帳",
-  "其他人工付款",
-] as const;
+export const paymentMethods = ["現金", "刷卡", "銀行轉帳", "電子支付"] as const;
 
 export const customers: Customer[] = [
   { id: "C001", name: "陳小美（展示）", phone: "0900-000-001" },
   { id: "C002", name: "林大明（展示）", phone: "0900-000-002" },
   { id: "C003", name: "王小姐（展示）", phone: "0900-000-003" },
 ];
-export const walkIn: Customer = { id: "", name: "散客", phone: "" };
+export const walkIn: Customer = { id: "", name: "一般顧客", phone: "" };
 
 export function nowTaipei() {
   return new Date().toLocaleString("sv-SE", { timeZone: "Asia/Taipei" });
@@ -44,6 +39,24 @@ export const money = (value: number) =>
     maximumFractionDigits: 2,
   });
 export const qty = (value: number) => Math.round(value * 1000) / 1000;
+export function percentageDiscount(subtotal: number, percent: number) {
+  if (
+    !Number.isFinite(percent) ||
+    percent < 0 ||
+    percent > 100 ||
+    Math.abs(percent * 100 - Math.round(percent * 100)) > 1e-8
+  ) {
+    return {
+      amount: 0,
+      error: "整單折扣百分比須介於 0% 至 100%，最多小數兩位。",
+    };
+  }
+  return {
+    amount:
+      Math.round((cents(subtotal) * Math.round(percent * 100)) / 10000) / 100,
+    error: "",
+  };
+}
 export function policyFor(item: Item): PosPolicy {
   return {
     sellable: item.code !== "MED0003",
@@ -399,7 +412,7 @@ export function createPosSeed(): PosState {
         id: "REF-VOID-SEED",
         sourceId: "VOID-SALE-SEED3",
         amount: sale.total,
-        method: "信用卡",
+        method: "刷卡",
         status: "待退款",
         reference: "",
         actor: "",
