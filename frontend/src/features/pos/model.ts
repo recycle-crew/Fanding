@@ -68,8 +68,8 @@ export function policyFor(item: Item): PosPolicy {
   };
 }
 export function priceCart(lines: CartLine[], orderDiscount: number) {
-  const amounts = lines.map(
-    (line) => cents(line.quantity * line.price) - cents(line.discount),
+  const amounts = lines.map((line) =>
+    line.gift ? 0 : cents(line.quantity * line.price) - cents(line.discount),
   );
   const subtotal = amounts.reduce((sum, value) => sum + value, 0),
     discount = cents(orderDiscount);
@@ -129,6 +129,8 @@ export function priceCart(lines: CartLine[], orderDiscount: number) {
     total: (subtotal - discount) / 100,
     priced: lines.map((line, index) => ({
       ...line,
+      price: line.gift ? 0 : line.price,
+      discount: line.gift ? 0 : line.discount,
       orderShare: shares[index] / 100,
       net: (amounts[index] - shares[index]) / 100,
     })),

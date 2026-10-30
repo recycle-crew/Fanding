@@ -185,6 +185,9 @@ export function SaleDetails({
                     <BaseTableRow key={line.id}>
                       <BaseTableCell className="sale-detail-product">
                         <strong>{line.name}</strong>
+                        {line.gift && (
+                          <span className="pos-gift-badge">贈送</span>
+                        )}
                         <small>
                           {line.code}・{line.specification}
                         </small>

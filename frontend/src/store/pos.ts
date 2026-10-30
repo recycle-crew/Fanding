@@ -228,6 +228,7 @@ export const checkoutPos =
       if (invalid) return { error: `${item.name}：${invalid}。` };
       if (
         !input.authorized &&
+        !entry.gift &&
         (cents(entry.price) !== cents(policy.price) || entry.batchId)
       )
         return { error: "修改售價需主管展示授權。" };
@@ -257,6 +258,7 @@ export const checkoutPos =
         originalPrice: policy.price,
         price: entry.price,
         discount: entry.discount,
+        gift: entry.gift === true,
         orderShare: entry.orderShare,
         net: entry.net,
         allocations,

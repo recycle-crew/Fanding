@@ -47,10 +47,15 @@ export function CheckoutForm({
     return state.policies[item.id] || policyFor(item);
   });
   const itemTotal =
-    cart.reduce((sum, line) => sum + cents(line.quantity * line.price), 0) /
-    100;
+    cart.reduce(
+      (sum, line) => sum + (line.gift ? 0 : cents(line.quantity * line.price)),
+      0,
+    ) / 100;
   const discountTotal =
-    (cart.reduce((sum, line) => sum + cents(line.discount), 0) +
+    (cart.reduce(
+      (sum, line) => sum + (line.gift ? 0 : cents(line.discount)),
+      0,
+    ) +
       cents(orderDiscount)) /
     100;
   return (
@@ -89,6 +94,11 @@ export function CheckoutForm({
           <div className="pos-payment-context">
             <span>{customer.name}</span>
             <span>{cart.length} 項商品</span>
+            {cart.some((line) => line.gift) && (
+              <span>
+                含 {cart.filter((line) => line.gift).length} 項贈送商品（0 元）
+              </span>
+            )}
           </div>
           <p>應收金額</p>
           <strong>{money(priced.total)}</strong>

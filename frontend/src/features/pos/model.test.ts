@@ -63,6 +63,90 @@ describe("整單百分比折扣", () => {
   });
 });
 
+describe("POS 贈送品項", () => {
+  it("贈品為零元且不分攤折扣，取消贈送保留原價與單品折扣", () => {
+    const cart = [
+      {
+        itemId: "gift",
+        quantity: 2,
+        price: 100,
+        discount: 10,
+        batchId: "",
+        gift: true,
+      },
+      { itemId: "paid", quantity: 1, price: 80, discount: 0, batchId: "" },
+    ];
+    const priced = priceCart(cart, 20);
+    expect(priced.error).toBe("");
+    expect(priced.total).toBe(60);
+    expect(priced.priced[0]).toMatchObject({
+      price: 0,
+      discount: 0,
+      orderShare: 0,
+      net: 0,
+      gift: true,
+    });
+    expect(priced.priced[1].orderShare).toBe(20);
+    expect(cart[0]).toMatchObject({ price: 100, discount: 10 });
+    expect(priceCart([{ ...cart[0], gift: false }, cart[1]], 20).total).toBe(
+      250,
+    );
+    expect(
+      priceCart(
+        cart.map((line) => ({ ...line, gift: true })),
+        0,
+      ).total,
+    ).toBe(0);
+  });
+  it("櫃檯可贈送並扣庫存，銷售保存零元快照且退款為零", () => {
+    const store = freshStore();
+    const input = checkoutInput(store, 2);
+    input.authorized = false;
+    input.cart[0].gift = true;
+    input.orderDiscount = 0;
+    const before = store
+      .getState()
+      .pos.batches.reduce((sum, batch) => sum + batch.quantity, 0);
+    expect(store.dispatch(checkoutPos(input)).error).toBe("");
+    const sale = store.getState().pos.sales[0];
+    expect(sale).toMatchObject({ total: 0, subtotal: 0 });
+    expect(sale.lines[0]).toMatchObject({
+      gift: true,
+      price: 0,
+      discount: 0,
+      net: 0,
+      quantity: 2,
+    });
+    expect(
+      store
+        .getState()
+        .pos.batches.reduce((sum, batch) => sum + batch.quantity, 0),
+    ).toBe(before - 2);
+    expect(returnAmount(sale, sale.lines[0], 2)).toBe(0);
+  });
+  it("贈品仍受庫存不足與禁止銷售限制", () => {
+    const store = freshStore();
+    const input = checkoutInput(store, 9999);
+    input.cart[0].gift = true;
+    input.orderDiscount = 0;
+    expect(store.dispatch(checkoutPos(input)).error).toContain("庫存不足");
+    const blocked = store
+      .getState()
+      .items.items.find((item) => item.code === "MED0003")!;
+    input.cart = [
+      {
+        itemId: blocked.id,
+        quantity: 1,
+        price: Number(blocked.suggestedPrice),
+        discount: 0,
+        batchId: "",
+        gift: true,
+      },
+    ];
+    expect(store.dispatch(checkoutPos(input)).error).not.toBe("");
+  });
+});
+
 it.each(paymentMethods)("結帳保存付款方式：%s", (method) => {
   const store = freshStore();
   const input = { ...checkoutInput(store), method };

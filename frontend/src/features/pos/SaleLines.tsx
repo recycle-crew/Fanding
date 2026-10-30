@@ -1,4 +1,4 @@
-import { Trash2 } from "lucide-react";
+import { Gift, Trash2 } from "lucide-react";
 import { BaseButton } from "@/components/ui/BaseButton";
 import { BaseInput } from "@/components/ui/BaseInput";
 import { BaseField as Field } from "@/components/ui/BaseForm";
@@ -68,7 +68,10 @@ export function SaleLines({
               0,
             );
             const overStock = line.quantity > stock;
-            function change(key: keyof CartLine, value: string | number) {
+            function change(
+              key: keyof CartLine,
+              value: string | number | boolean,
+            ) {
               onChange(
                 cart.map((entry) =>
                   entry.itemId === line.itemId
@@ -80,10 +83,16 @@ export function SaleLines({
             return (
               <BaseTableRow
                 key={line.itemId}
+                data-gift={line.gift || undefined}
                 data-recent={recentItemId === line.itemId || undefined}
               >
                 <BaseTableCell className="pos-line-product">
                   <strong>{item.name}</strong>
+                  {line.gift && (
+                    <span className="pos-gift-badge">
+                      贈送 · 本品項整列 0 元
+                    </span>
+                  )}
                   <small>
                     {item.code} ／ {item.specification}
                   </small>
@@ -122,8 +131,8 @@ export function SaleLines({
                       type="number"
                       min="0"
                       step="0.01"
-                      readOnly={!authorized}
-                      value={line.price}
+                      readOnly={!authorized || line.gift}
+                      value={line.gift ? 0 : line.price}
                       onChange={(event) =>
                         change("price", Number(event.target.value))
                       }
@@ -139,7 +148,8 @@ export function SaleLines({
                       type="number"
                       min="0"
                       step="0.01"
-                      value={line.discount}
+                      readOnly={line.gift}
+                      value={line.gift ? 0 : line.discount}
                       onChange={(event) =>
                         change("discount", Number(event.target.value))
                       }
@@ -148,22 +158,36 @@ export function SaleLines({
                 </BaseTableCell>
                 <BaseTableCell data-label="小計" className="pos-line-subtotal">
                   {money(
-                    Math.max(0, line.quantity * line.price - line.discount),
+                    line.gift
+                      ? 0
+                      : Math.max(0, line.quantity * line.price - line.discount),
                   )}
                 </BaseTableCell>
                 <BaseTableCell className="pos-line-remove">
-                  <BaseButton
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`移除${item.name}`}
-                    onClick={() =>
-                      onChange(
-                        cart.filter((entry) => entry.itemId !== line.itemId),
-                      )
-                    }
-                  >
-                    <Trash2 aria-hidden="true" />
-                  </BaseButton>
+                  <div className="pos-line-actions">
+                    <BaseButton
+                      variant={line.gift ? "secondary" : "outline"}
+                      size="sm"
+                      aria-label={`${line.gift ? "取消贈送" : "贈送"}${item.name}`}
+                      aria-pressed={!!line.gift}
+                      onClick={() => change("gift", !line.gift)}
+                    >
+                      <Gift aria-hidden="true" />
+                      {line.gift ? "取消贈送" : "贈送"}
+                    </BaseButton>
+                    <BaseButton
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`移除${item.name}`}
+                      onClick={() =>
+                        onChange(
+                          cart.filter((entry) => entry.itemId !== line.itemId),
+                        )
+                      }
+                    >
+                      <Trash2 aria-hidden="true" />
+                    </BaseButton>
+                  </div>
                 </BaseTableCell>
               </BaseTableRow>
             );

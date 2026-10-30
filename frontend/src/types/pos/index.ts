@@ -15,6 +15,7 @@ export interface PosPolicy {
 }
 
 export interface CartLine {
+  gift?: boolean;
   itemId: string;
   quantity: number;
   price: number;
@@ -42,6 +43,7 @@ export interface Allocation {
 }
 
 export interface SaleLine {
+  gift?: boolean;
   id: string;
   itemId: string;
   code: string;

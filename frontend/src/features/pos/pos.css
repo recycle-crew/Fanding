@@ -388,7 +388,7 @@
   width: 32%;
 }
 .pos-lines-table th:last-child {
-  width: 60px;
+  width: 180px;
 }
 .pos-lines-table thead {
   position: sticky;
@@ -821,6 +821,36 @@
   }
   .pos-checkout-settings {
     grid-template-columns: 1fr;
+  }
+}
+
+.pos-lines-table .pos-line-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.pos-lines-table tbody > tr[data-gift="true"] {
+  background: #eff9f3;
+}
+.pos-gift-badge {
+  display: inline-block;
+  margin: 4px 0;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: #d9f2e3;
+  color: #17633e;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: normal;
+}
+@media (max-width: 760px) {
+  .pos-lines-table .pos-line-product {
+    padding-right: 0;
+  }
+  .pos-lines-table .pos-line-remove {
+    position: static;
+    grid-column: 1 / -1;
   }
 }
 
