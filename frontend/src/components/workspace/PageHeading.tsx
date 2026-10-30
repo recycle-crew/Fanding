@@ -20,7 +20,7 @@ const subtitles: Record<ModuleKey, string> = {
   products: "維護 OTC 品項與條碼，庫存透過作業異動更新。",
   receipt: "建立入庫傳票，掃碼加入明細後整批送出。",
   issue: "建立出庫傳票，掃碼加入明細後整批送出。",
-  requisitions: "維護領用資料與展示扣庫紀錄。",
+  requisitions: "管理領用與報廢單據，追蹤批次扣庫及沖回紀錄。",
   stocktake: "只處理進行中的週期：開始、填寫、確認送出。",
   "stocktake-history": "只查已結束批次：月份紀錄、盤差、操作與更正歷程。",
 };
@@ -41,6 +41,7 @@ export function PageHeading() {
         "pos",
         "sales",
         "stocktakes",
+        "requisitions",
       ].includes(s.activeModule) && (
         <div className="page-heading">
           <div>

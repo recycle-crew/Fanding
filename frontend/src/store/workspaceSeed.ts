@@ -227,6 +227,7 @@ export function createWorkspaceState(): WorkspaceState {
   const modules: WorkspaceState["modules"] = [
     { key: "items", label: "品項與庫存管理" },
     { key: "purchases", label: "進貨管理" },
+    { key: "requisitions", label: "領用／報廢管理" },
     { key: "base-data", label: "基礎資料管理" },
     { key: "consumptions", label: "耗用查詢" },
     { key: "pos", label: "銷售管理" },

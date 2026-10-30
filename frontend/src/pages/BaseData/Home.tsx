@@ -28,12 +28,18 @@ export function BaseDataPage() {
   const purchases = useAppSelector((state) => state.purchases.orders);
   const sales = useAppSelector((state) => state.pos.sales);
   const stocktakes = useAppSelector((state) => state.stocktakes.orders);
+  const inventoryDocuments = useAppSelector(
+    (state) => state.inventoryDocuments.orders,
+  );
   const { state: consumptions } = useConsumptions();
   const records = {
     units: masterData.units.map((row) => ({
       ...row,
       used:
         row.used ||
+        inventoryDocuments.some((order) =>
+          order.lines.some((line) => line.unit === row.name),
+        ) ||
         inventory.items.some((item) => item.unit === row.name) ||
         purchases.some((order) =>
           order.lines.some((line) => line.unit === row.name),
@@ -56,6 +62,7 @@ export function BaseDataPage() {
       ...row,
       used:
         row.used ||
+        inventoryDocuments.some((order) => order.warehouse === row.name) ||
         inventory.batches.some((batch) => batch.warehouse === row.name) ||
         purchases.some((order) => order.warehouse === row.name) ||
         sales.some((order) => order.warehouse === row.name) ||

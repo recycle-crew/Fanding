@@ -8,7 +8,7 @@ test("@critical 舊工作區網址改由現行模組接手", async ({ page }) =>
     ["/historical-cost", "/items/his"],
     ["/receipt", "/purchases"],
     ["/issue", "/consumptions"],
-    ["/requisitions", "/consumptions"],
+    ["/requisitions", "/requisitions"],
     ["/stocktake/current", "/stocktakes"],
     ["/stocktake/history", "/stocktakes"],
   ]) {

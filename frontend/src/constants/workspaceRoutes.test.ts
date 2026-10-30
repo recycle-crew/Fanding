@@ -22,6 +22,7 @@ const routes = [
       "pos",
       "sales",
       "stocktakes",
+      "requisitions",
     ].map(
       (module) =>
         workspaceModulePaths[module as keyof typeof workspaceModulePaths],

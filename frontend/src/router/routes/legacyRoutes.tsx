@@ -15,7 +15,6 @@ const retiredWorkspacePaths: Record<string, string> = {
   "/historical-cost": "/items",
   "/receipt": "/purchases",
   "/issue": "/consumptions",
-  "/requisitions": "/consumptions",
   "/stocktake/current": "/stocktakes",
   "/stocktake/history": "/stocktakes",
 };

@@ -7,6 +7,7 @@ import baseDataReducer from "./baseData";
 import moduleUiReducer from "./moduleUi";
 import posReducer from "./pos";
 import stocktakesReducer from "./stocktakes";
+import inventoryDocumentsReducer from "./inventoryDocuments";
 
 // Redux only owns data shared across modules and the cross-route navigation guard.
 // Keep module-only data in features/<module>; keep UI drafts in component state.
@@ -19,6 +20,7 @@ export const store = configureStore({
     moduleUi: moduleUiReducer,
     pos: posReducer,
     stocktakes: stocktakesReducer,
+    inventoryDocuments: inventoryDocumentsReducer,
   },
 });
 

@@ -3,6 +3,11 @@ import { redirect } from "react-router";
 import type { RouteObject } from "react-router";
 import { WorkspaceLayout } from "@/pages/Workspace/Layout";
 import { Workspace } from "@/features/workspace/Workspace";
+const RequisitionsPage = lazy(() =>
+  import("@/pages/Requisitions/Home").then((m) => ({
+    default: m.RequisitionsPage,
+  })),
+);
 const BaseDataPage = lazy(() =>
   import("@/pages/BaseData/Home").then((m) => ({ default: m.BaseDataPage })),
 );
@@ -44,6 +49,19 @@ export const workspaceRoutes: RouteObject[] = [
             path: "base-data",
             Component: BaseDataPage,
             handle: { module: "base-data" },
+          },
+          {
+            path: "requisitions",
+            Component: RequisitionsPage,
+            handle: { module: "requisitions" },
+          },
+          {
+            path: "disposals",
+            loader: ({ request }) => {
+              const url = new URL(request.url);
+              url.searchParams.set("tab", "disposal");
+              return redirect(`/requisitions${url.search}${url.hash}`);
+            },
           },
           {
             path: "consumptions",
