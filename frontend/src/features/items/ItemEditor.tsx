@@ -9,7 +9,7 @@ import {
   BaseNativeSelectOption,
 } from "@/components/ui/BaseNativeSelect";
 import { useAppSelector } from "@/store/hooks";
-import { categories, units, validateItem, itemGroupLabels } from "./model";
+import { categories, validateItem, itemGroupLabels } from "./model";
 import type { Item } from "@/types/items";
 import { useBaseDataOptions } from "@/features/base-data/useBaseDataOptions";
 
@@ -26,6 +26,9 @@ export function ItemEditor({
 }) {
   const state = useAppSelector((s) => s.items);
   const options = useBaseDataOptions();
+  const units = Array.from(
+    new Set([...options.units, ...(initial.unit ? [initial.unit] : [])]),
+  );
   const suppliers = Array.from(
     new Set([
       ...options.suppliers,

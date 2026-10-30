@@ -4,6 +4,7 @@ import { useAppSelector } from "@/store/hooks";
 export function useBaseDataOptions() {
   const data = useAppSelector((state) => state.baseData);
   return {
+    units: data.units.filter((row) => row.active).map((row) => row.name),
     suppliers: data.suppliers
       .filter((row) => row.active)
       .map((row) => row.name),

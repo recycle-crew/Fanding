@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import { suppliers } from "@/features/items/model";
+import { suppliers, units } from "@/features/items/model";
 import type { BaseDataKind, BaseDataRecord } from "@/types/base-data";
 export type { BaseDataKind, BaseDataRecord } from "@/types/base-data";
 export function blankBaseData(): BaseDataRecord {
@@ -19,6 +19,11 @@ export function blankBaseData(): BaseDataRecord {
   };
 }
 const initialState: Record<BaseDataKind, BaseDataRecord[]> = {
+  units: units.map((name, i) => ({
+    ...blankBaseData(),
+    id: `U${i}`,
+    name,
+  })),
   warehouses: [
     ["MAIN", "主倉庫", "一樓藥局"],
     ["MED", "診間倉庫", "二樓診間"],

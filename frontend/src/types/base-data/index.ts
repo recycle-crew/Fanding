@@ -1,4 +1,4 @@
-export type BaseDataKind = "warehouses" | "suppliers";
+export type BaseDataKind = "warehouses" | "suppliers" | "units";
 export interface BaseDataRecord {
   id: string;
   code: string;

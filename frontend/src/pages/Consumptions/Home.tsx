@@ -14,6 +14,7 @@ import { BaseSwitch } from "@/components/ui/BaseSwitch";
 import { BaseDataTable } from "@/components/ui/BaseDataTable";
 import { BaseWorkspaceModal } from "@/components/ui/BaseWorkspaceModal";
 import { useAppSelector } from "@/store/hooks";
+import { useBaseDataOptions } from "@/features/base-data/useBaseDataOptions";
 import {
   saveConsumptionMapping,
   reviewConsumptionException,
@@ -54,6 +55,7 @@ const emptyFilters = () => ({
   status: "",
 });
 export function ConsumptionsPage() {
+  const options = useBaseDataOptions();
   const { state, dispatch } = useConsumptions();
   const inventory = useAppSelector((root) => root.items);
   const location = useLocation(),
@@ -392,7 +394,10 @@ export function ConsumptionsPage() {
                 ...new Set(state.records.map((row) => row.category)),
               ])}
               {filterSelect("unit", "基本單位", [
-                ...new Set(state.records.map((row) => row.unit)),
+                ...new Set([
+                  ...options.units,
+                  ...state.records.map((row) => row.unit),
+                ]),
               ])}
             </>
           )}
@@ -690,15 +695,41 @@ export function ConsumptionsPage() {
                         label={label}
                         required
                       >
-                        <BaseInput
-                          value={mapping[key]}
-                          onChange={(event) =>
-                            setMapping({
-                              ...mapping,
-                              [key]: event.target.value,
-                            })
-                          }
-                        />
+                        {key === "sourceUnit" ? (
+                          <Select
+                            value={mapping.sourceUnit}
+                            onChange={(event) =>
+                              setMapping({
+                                ...mapping,
+                                sourceUnit: event.target.value,
+                              })
+                            }
+                          >
+                            <Option value="">請選擇</Option>
+                            {Array.from(
+                              new Set([
+                                ...options.units,
+                                ...(modal?.id && mapping.sourceUnit
+                                  ? [mapping.sourceUnit]
+                                  : []),
+                              ]),
+                            ).map((unit) => (
+                              <Option key={unit} value={unit}>
+                                {unit}
+                              </Option>
+                            ))}
+                          </Select>
+                        ) : (
+                          <BaseInput
+                            value={mapping[key]}
+                            onChange={(event) =>
+                              setMapping({
+                                ...mapping,
+                                [key]: event.target.value,
+                              })
+                            }
+                          />
+                        )}
                       </Field>
                     ))}
                     <Field name="mapping-item" label="本系統藥品" required>

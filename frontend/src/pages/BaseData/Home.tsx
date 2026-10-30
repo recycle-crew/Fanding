@@ -17,6 +17,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { blankBaseData, saveBaseData, deleteBaseData } from "@/store/baseData";
 import type { BaseDataKind, BaseDataRecord } from "@/types/base-data";
 import { useWorkspaceDirty } from "@/features/workspace/useWorkspaceDirty";
+import { useConsumptions } from "@/features/consumptions/ConsumptionsProvider";
 import "@/features/items/items.css";
 import "@/features/purchases/purchases.css";
 import "@/features/base-data/base-data.css";
@@ -27,7 +28,30 @@ export function BaseDataPage() {
   const purchases = useAppSelector((state) => state.purchases.orders);
   const sales = useAppSelector((state) => state.pos.sales);
   const stocktakes = useAppSelector((state) => state.stocktakes.orders);
+  const { state: consumptions } = useConsumptions();
   const records = {
+    units: masterData.units.map((row) => ({
+      ...row,
+      used:
+        row.used ||
+        inventory.items.some((item) => item.unit === row.name) ||
+        purchases.some((order) =>
+          order.lines.some((line) => line.unit === row.name),
+        ) ||
+        sales.some((order) =>
+          order.lines.some((line) => line.unit === row.name),
+        ) ||
+        stocktakes.some((order) =>
+          order.scope.some((item) => item.unit === row.name),
+        ) ||
+        consumptions.mappings.some(
+          (mapping) => mapping.sourceUnit === row.name,
+        ) ||
+        consumptions.records.some(
+          (record) =>
+            record.unit === row.name || record.sourceUnit === row.name,
+        ),
+    })),
     warehouses: masterData.warehouses.map((row) => ({
       ...row,
       used:
@@ -54,7 +78,8 @@ export function BaseDataPage() {
   const [dirty, setDirty] = useState(false);
   const [discard, setDiscard] = useState(false);
   const [notice, setNotice] = useState("");
-  const noun = kind === "warehouses" ? "倉別" : "供應商";
+  const noun =
+    kind === "warehouses" ? "倉別" : kind === "units" ? "單位" : "供應商";
   useWorkspaceDirty(dirty);
   const rows = records[kind].filter(
     (row) =>
@@ -68,7 +93,7 @@ export function BaseDataPage() {
         row.phone,
         row.email,
         row.address,
-        row.remark,
+        kind === "units" ? "" : row.remark,
       ]
         .join(" ")
         .toLowerCase()
@@ -116,7 +141,7 @@ export function BaseDataPage() {
           <Building2 aria-hidden="true" />
           <div>
             <h1>基礎資料管理</h1>
-            <p>維護倉別與供應商共用資料</p>
+            <p>維護倉別、供應商與單位共用資料</p>
           </div>
         </div>
         <div className="base-data-heading-actions">
@@ -141,6 +166,7 @@ export function BaseDataPage() {
         options={[
           { value: "warehouses", label: "倉別管理" },
           { value: "suppliers", label: "供應商管理" },
+          { value: "units", label: "單位管理" },
         ]}
         onChange={(value) => {
           setKind(value);
@@ -173,7 +199,9 @@ export function BaseDataPage() {
               placeholder={
                 kind === "warehouses"
                   ? "代碼、名稱、位置或備註"
-                  : "名稱、統編、聯絡人或聯絡方式"
+                  : kind === "units"
+                    ? "單位名稱"
+                    : "名稱、統編、聯絡人或聯絡方式"
               }
               onChange={(event) => setSearch(event.target.value)}
             />
@@ -208,7 +236,26 @@ export function BaseDataPage() {
         <p className="base-data-table-hint">
           列表開關可快速啟用或停用；編輯按鈕可修改資料內容。
         </p>
-        {kind === "warehouses" ? (
+        {kind === "units" ? (
+          <BaseDataTable
+            tableKey="base-data-units"
+            headers={["單位名稱", "狀態", "操作"]}
+            rows={rows.map((row) => [
+              row.name,
+              row.active ? "使用中" : "停用",
+              <BaseButton
+                variant="outline"
+                aria-label={`編輯${row.name}`}
+                onClick={() => {
+                  setDraft({ ...row });
+                  setNotice("");
+                }}
+              >
+                編輯
+              </BaseButton>,
+            ])}
+          />
+        ) : kind === "warehouses" ? (
           <BaseDataTable
             tableKey="base-data-warehouses"
             headers={["倉別代碼", "倉別名稱", "位置", "備註", "狀態", "操作"]}
@@ -439,7 +486,9 @@ export function BaseDataPage() {
               <section>
                 <h3>基本資料</h3>
                 <div className="base-data-form-grid">
-                  {kind === "warehouses" ? (
+                  {kind === "units" ? (
+                    field("name", "單位名稱", true)
+                  ) : kind === "warehouses" ? (
                     <>
                       {field("code", "倉別代碼", true)}
                       {field("name", "倉別名稱", true)}
@@ -455,15 +504,17 @@ export function BaseDataPage() {
                       {field("address", "地址")}
                     </>
                   )}
-                  <BaseField name="base-remark" label="備註">
-                    <BaseTextarea
-                      value={draft.remark}
-                      maxLength={1000}
-                      onChange={(event) =>
-                        setDraft({ ...draft, remark: event.target.value })
-                      }
-                    />
-                  </BaseField>
+                  {kind !== "units" && (
+                    <BaseField name="base-remark" label="備註">
+                      <BaseTextarea
+                        value={draft.remark}
+                        maxLength={1000}
+                        onChange={(event) =>
+                          setDraft({ ...draft, remark: event.target.value })
+                        }
+                      />
+                    </BaseField>
+                  )}
                 </div>
               </section>
               <BaseLabel className="base-data-form-status">
